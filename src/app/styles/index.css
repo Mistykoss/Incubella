@@ -1,0 +1,11 @@
+body{
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.sub-header{
+    width: fit-content;
+    color:  black;
+    background-color: whitesmoke;
+}
