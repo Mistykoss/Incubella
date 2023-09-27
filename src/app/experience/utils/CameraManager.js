@@ -13,11 +13,11 @@ export class CameraManager{
         //configurar valores por defecto para esta camara
         init(){
             //posicion dentro del contenedor por defecto
-            this.camera.position.set(0,0, this.distance);
+            this.camera.position.set(0,0, 0);
             //agregar la camara al contenedor 
             this.container.add(this.camera);
              //posicion del contenedor por defecto
-            this.container.position.set(0,0,0);
+            this.container.position.set(0,0,8);
             console.log("[CAMARA] LISTA");
         }
 }

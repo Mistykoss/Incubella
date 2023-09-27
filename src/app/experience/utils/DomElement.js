@@ -10,13 +10,12 @@ export class DomElement{
         this._scale =   (this.elementScale/Size.x) * this._cameraDistance;
 
         //inicializar este objeto
-        console.log(this._scale)
         this.init();
     }
 
     //init
     init(){
-        this._element.position.set(0, 2,0);
         this._element.scale.set(this._scale, this._scale, this._scale);
+        this._element.position.set(0, 0,0);
     }
 }
