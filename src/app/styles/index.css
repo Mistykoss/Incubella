@@ -1,49 +1,112 @@
-body{
+body {
     margin: 0;
     padding: 0;
     overflow: hidden;
 }
 
-.dot{
-    cursor: pointer;
+:root {
+    --opacity: 0;
+    --position: absolute;
+    --anim-state: paused;
+    --span-color: black;
+    --img: invert();
 }
 
-.dot__sub-header{
-    width: fit-content;
-    margin: 0;
-    color:  black;
-    font-size: 19px;
-    background-color: whitesmoke;
-    padding: 1.2rem 1.6rem;
-
-    transition :all .8s;
+.element h2 {
+    transition: all 0.7s;
+    padding: 0;
+    font-size: unset;
+    z-index: 2;
+    position: var(--position);
+    opacity:var(--opacity);
+    animation-play-state: var(--anim-state);
+    pointer-events: none; /* Evita que el contenido sea interactivo durante la animación */
 }
-.dot__sub-header:hover{
+
+.element {
+    background-color: rgb(201, 201, 201);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    
+    border-radius: 30%;
+    align-items: center;
+    transform: scale(1);
+    transition: all 0.7s;
+}
+
+.element:hover {
+    color: rgb(255, 255, 255);
+    background-color: black;
+    border-radius: 1rem;
+    padding: 5px 10px;
+    overflow: hidden;
+    transition: all 0.7s;
     transform: scale(1.1);
-    transition :all .8s;
-
-    box-shadow: 0px -1px 15px 2px rgba(0,255,235,0.75);
--webkit-box-shadow: 0px -1px 15px 2px rgba(0,255,235,0.75);
--moz-box-shadow: 0px -1px 15px 2px rgba(0,255,235,0.75);
+    --position: relative; /* Oculta y saca del flujo de diseño */
+    --anim-state: running;
+    --opacity: 1;
+    --span-color: black;
 }
 
-.renderer:hover .dot__sub-header:not(:hover) {
-    opacity: 0.5;
-    transition: opacity .5s;
-}
-.renderer{
-    pointer-events: none;
-}
-.item-active{
-    background-color: rgba(0, 0, 0, 0.5);
-    transition: all .8s;
-}
-.item-no-active{
-    background-color: unset;
-    transition: all 1s;
+.element::before{
+    content: '';
+    position: absolute;
+    width:  250px;
+    height: 250px;
+    background-image: conic-gradient(transparent, transparent, transparent, rgb(194, 254, 255));
 }
 
-.deactive{
+.element::after{
+    content: '';
+    position: absolute;
+    width:  250px;
+    height: 250px;
+    background-image: conic-gradient(transparent, transparent, transparent, rgb(194, 254, 255));
+}
+
+.element::before,
+.element::after {
+    transition: all 0.7s;
     opacity: 0;
-    transition: opacity .5s;
+}
+
+.element:hover::before {
+    animation: round 4s linear infinite;
+    opacity: 1;
+}
+
+.element:hover::after {
+    animation: round 4s linear infinite;
+    animation-delay: -2s;
+    opacity: 1;
+}
+
+.element span {
+    position: absolute;
+    background-color: var(--span-color);
+    inset: 3px;
+    border-radius: 1rem;
+    z-index: 1;
+}
+
+.element img {
+    filter: var(--img);
+    padding: 10px;
+    width: auto;
+    height: 40px;
+    z-index: 3;
+}
+
+.element img:hover {
+    animation: quitar 0.7s linear;
+}
+
+@keyframes round {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }

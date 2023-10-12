@@ -1,0 +1,141 @@
+import { Clock, Scene } from "three";
+import { RenderManager } from "./RendererManager";
+import { CameraManager } from "./CameraManager";
+
+export class WebManager {
+  constructor(id, camManager) {
+    this._id = id;
+    this._camera = camManager.camera;
+    this._cameraManager = camManager;
+
+    //scenes managers
+    this.web3d = new Web3DManager(this._id);
+    this.webHtml = new WebHtmlManager(this._id);
+
+    //scenes
+    this.web3DScene = this.web3d.scene;
+    this.webHtmlScene = this.webHtml.scene;
+
+    //renderer
+    this.renderManager = RenderManager;
+    this.clock = new Clock();
+    this.deltaTime =0;
+
+    this.animatedFuntion = null;
+
+    //agregar camara
+    this.initCamera();
+  }
+  //init camera 
+  initCamera(){
+    this.web3DScene.add(this._cameraManager.container);
+    this._cameraManager.domElement = this.renderManager.domElement;
+    console.log("[CAMARA] OK!");
+  }
+  //configura la escena
+  setEnviroment(sceneType, callBack) {
+    //inicializar el tipo de escena
+    callBack(sceneType);
+  }
+  
+  setAnimations(callBack){
+    console.log("time");
+    this.animatedFuntion = callBack;
+    console.log(this.animatedFuntion)
+
+  }
+
+  //renderizar escena
+  renderLoop() {
+    //renderizar ambas escenas con el render en un loop
+
+    //configurar el loop
+    this.renderManager.web3DRenderer.setAnimationLoop(() => {
+
+      if(this.animatedFuntion){
+        this.deltaTime = this.clock.getElapsedTime();
+        this.animatedFuntion(this.deltaTime);
+      }
+      //renderizar el 3d
+      this.renderManager.web3DRenderer.render(
+        this.web3DScene,
+        this._camera
+        );
+      //renderizar el html en la escena
+      this.renderManager.webHtmlRenderer.render(
+        this.webHtmlScene,
+        this._camera
+      );
+      
+    });
+  }
+
+  setTimeAnimation(){
+    console.log(this.renderManager)
+    this.renderManager.web3DRenderer.setAnimationLoop(() => {
+      console.log("clock OK!")
+      this.deltaTime = this.clock.getDelta();
+      callback;
+    })
+  }
+
+  debugScenes() {
+    this.renderManager.debugScenes();
+  }
+}
+class WebSceneManager {
+  constructor(id, type, camera) {
+    this._id = id;
+    this._orbitControls = null;
+    this.scene = new Scene();
+    this.renderManager = RenderManager;
+  }
+  debug() {
+    console.log("_________________________________\nLayer > [", this._id, "] OK!");
+  }
+  //inicializar valores generales
+  init(type) {
+    //genera un identificador
+    this._id = this._id + "_" + type;
+    //el renderer se configura basado en el tipo
+    this.renderManager.initRenderer(type, this.scene);
+  }
+
+  //enviar escena a renderizar
+  loadToRender() {
+    return this.scene;
+  }
+  add(item) {
+    //agreagar el render al dom
+    this.scene.add(item);
+    console.log("Was Added! >> [", item.type,"]");
+  }
+
+}
+class Web3DManager extends WebSceneManager {
+  constructor(id) {
+    super(id);
+    this._type = "3D";
+
+    //inicializar 3D
+    this.init(this._type);
+  }
+}
+class WebHtmlManager extends WebSceneManager {
+  constructor(id,camera) {
+    super(id);
+    this._camera = camera;
+    this._type = "HTML";
+    this._orbitControls = null;
+
+    //inicializar HTML
+    this.init(this._type);
+    
+  }
+     //hacer uso de orbit o
+     useOrbitControls() {
+      //activar controles
+      console.log("Controls [OrbitControls] listo!");
+      this._orbitControls = new OrbitControls(this._camera, this.renderManager.domElement);
+    }
+}
