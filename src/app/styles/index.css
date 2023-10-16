@@ -10,13 +10,15 @@ body {
     --anim-state: paused;
     --span-color: black;
     --img: invert();
+    --size: 0;
+    --index: -1;
 }
 
 .element h2 {
     transition: all 0.7s;
     padding: 0;
-    font-size: unset;
-    z-index: 2;
+    font-size: var(--size);
+    z-index: var(--index);
     position: var(--position);
     opacity:var(--opacity);
     animation-play-state: var(--anim-state);
@@ -34,6 +36,30 @@ body {
     transform: scale(1);
     transition: all 0.7s;
 }
+.element.desactive{
+    visibility: hidden;
+}
+
+.element-b{
+    background-color: white;
+    display: flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: .3rem;
+    font-size: 28px;
+    transition: all 0.7s;
+    visibility: hidden;
+}
+.element-b.active{
+    visibility: visible;
+}
+.element-b:hover {
+    transition: all 0.7s;
+
+    transform: scale(1.1);
+}
+
+
 
 .element:hover {
     color: rgb(255, 255, 255);
@@ -41,12 +67,15 @@ body {
     border-radius: 1rem;
     padding: 5px 10px;
     overflow: hidden;
-    transition: all 0.7s;
+    transition: all .7s;
     transform: scale(1.1);
     --position: relative; /* Oculta y saca del flujo de diseño */
     --anim-state: running;
     --opacity: 1;
     --span-color: black;
+    --size: 18px;
+    --index: 2;
+    
 }
 
 .element::before{

@@ -4,5 +4,8 @@
     "dat.gui": "^0.7.9",
     "parcel": "^2.9.3",
     "three": "^0.156.1"
+  },
+  "devDependencies": {
+    "@parcel/transformer-glsl": "^2.9.3"
   }
 }
