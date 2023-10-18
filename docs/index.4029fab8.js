@@ -648,9 +648,9 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     const positions = new Float32Array(particleCount * 3);
     const colorsArray = new Float32Array(particleCount * 3);
     const area = 0.5; //ajusta el area ocmpleta de la nube de particulas
-    const centerSize = 1;
+    const centerSize = 2;
     const amplitude = 0.1; // valor mas alto mas larga es el ala
-    const divisiones = 40; // mas divisiones mas colores
+    const divisiones = 20; // mas divisiones mas colores
     let counter = divisiones;
     const noiseAmplitude = 23; //un valor mas alto agrega mas ruido
     const noiseIntensity = 10; //un valor mas alto agrega mas ruido
@@ -680,7 +680,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             //calcular anguloas reativos
             const angleIncrement = TWO_PI / divisionParticleCount;
             const angle = angleIncrement * rIndex;
-            sizeArray[rIndex] = Math.random() * (index * 0.3) + centerSize;
+            sizeArray[rIndex] = Math.random() * (rIndex % 10 - 1) + 1;
             //noise
             //ecuaciones
             const xEcuation = Math.cos(rIndex * ringFrecuency) * (1 + amplitude * Math.sin(rIndex));
@@ -719,7 +719,8 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
         const x = (Math.random() - 0.5) * nRadius * 2;
         const y = (Math.random() - 0.15) * nRadius * 0.5;
         const z = (Math.random() - 0.5) * nRadius * 2;
-        n_sizeArray[index] = Math.random() * (index % 10 - 1) + 2;
+        if (index > n_particleCount * 3 / 5) n_sizeArray[index] = Math.random() * (index % 15 - 1) + 2;
+        else n_sizeArray[index] = Math.random() * (index % 5 - 1) + 2;
         const colorIndex = index % colors.length;
         const actualColor = colors[colorIndex];
         const color = new (0, _three.Color)(actualColor);
