@@ -587,13 +587,22 @@ var _fParticlesGlsl = require("./scenes/shaders/f_Particles.glsl");
 var _fParticlesGlslDefault = parcelHelpers.interopDefault(_fParticlesGlsl);
 var _vParticlesGlsl = require("./scenes/shaders/v_Particles.glsl");
 var _vParticlesGlslDefault = parcelHelpers.interopDefault(_vParticlesGlsl);
+var _fRellenoGlsl = require("./scenes/shaders/f_relleno.glsl");
+var _fRellenoGlslDefault = parcelHelpers.interopDefault(_fRellenoGlsl);
+var _vRellenoGlsl = require("./scenes/shaders/v_relleno.glsl");
+var _vRellenoGlslDefault = parcelHelpers.interopDefault(_vRellenoGlsl);
 var _fMainSphereGlsl = require("./scenes/shaders/f_mainSphere.glsl");
 var _fMainSphereGlslDefault = parcelHelpers.interopDefault(_fMainSphereGlsl);
 var _vMainSphereGlsl = require("./scenes/shaders/v_mainSphere.glsl");
 var _vMainSphereGlslDefault = parcelHelpers.interopDefault(_vMainSphereGlsl);
+var _fPSphereGlsl = require("./scenes/shaders/f_pSphere.glsl");
+var _fPSphereGlslDefault = parcelHelpers.interopDefault(_fPSphereGlsl);
+var _vPSphereGlsl = require("./scenes/shaders/v_pSphere.glsl");
+var _vPSphereGlslDefault = parcelHelpers.interopDefault(_vPSphereGlsl);
 const camera = new (0, _three.PerspectiveCamera)(45, window.innerWidth / window.innerHeight, 0.01, 1000);
 const primeraPantalla = new (0, _three.Vector3)(0, 100, 100);
 const segundaPantalla = new (0, _three.Vector3)(0, 45, 10);
+const debugPantalla = new (0, _three.Vector3)(0, 0, 500);
 let isSecondScreen = false;
 let isInScreen = false;
 const CAM_MANAGER = new (0, _cameraManager.CameraManager)(camera);
@@ -616,6 +625,11 @@ let domItems = [];
 let domItemsSecond = [];
 let canTravelTo = false;
 let target = null;
+//nueva esfera 
+let sphereGeometry = null;
+let n_Material = null;
+let p_Sphere = null;
+let p_SphereMaterial = null;
 //la escena web
 webManager.setEnviroment(webManager.web3d, (web)=>{
     const ambientLight = new (0, _three.AmbientLight)();
@@ -642,6 +656,9 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     const noiseIntensity = 10; //un valor mas alto agrega mas ruido
     const ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
     const TWO_PI = 2 * Math.PI;
+    const n_particleCount = 2000;
+    const p_rellenoGeometry = new (0, _three.BufferGeometry)();
+    const p_rellenoPosition = new Float32Array(n_particleCount * 3);
     //generar las particulas
     for(let index = 0; index < divisiones; index++){
         counter--;
@@ -682,7 +699,41 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
         //particlePositions.push(x*area, y *area, z*area)
         }
     }
+    const nRadius = 150;
+    const n_colorsArray = new Float32Array(n_particleCount * 3);
+    const n_sizeArray = new Float32Array(n_particleCount);
+    // Crear un material para las partículas (puedes personalizar esto según tus necesidades)
+    n_Material = new (0, _three.ShaderMaterial)({
+        vertexShader: (0, _vRellenoGlslDefault.default),
+        fragmentShader: (0, _fRellenoGlslDefault.default),
+        transparent: true,
+        blending: (0, _three.AdditiveBlending),
+        depthWrite: false,
+        uniforms: {
+            time: {
+                value: 0
+            }
+        }
+    });
+    for(let index = 0; index < p_rellenoPosition.length; index++){
+        const x = (Math.random() - 0.5) * nRadius * 2;
+        const y = (Math.random() - 0.15) * nRadius * 0.5;
+        const z = (Math.random() - 0.5) * nRadius * 2;
+        n_sizeArray[index] = Math.random() * (index % 10 - 1) + 2;
+        const colorIndex = index % colors.length;
+        const actualColor = colors[colorIndex];
+        const color = new (0, _three.Color)(actualColor);
+        n_colorsArray[index * 3] = color.r;
+        n_colorsArray[index * 3 + 1] = color.g;
+        n_colorsArray[index * 3 + 2] = color.b;
+        p_rellenoPosition[index * 3] = x;
+        p_rellenoPosition[index * 3 + 1] = y;
+        p_rellenoPosition[index * 3 + 2] = z;
+    }
     // Luego, puedes usar particlePositions para configurar la geometría de las partículas
+    p_rellenoGeometry.setAttribute("position", new (0, _three.BufferAttribute)(p_rellenoPosition, 3));
+    p_rellenoGeometry.setAttribute("color", new (0, _three.BufferAttribute)(n_colorsArray, 3));
+    p_rellenoGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(n_sizeArray, 1));
     particleGeometry.setAttribute("position", new (0, _three.BufferAttribute)(positions, 3));
     particleGeometry.setAttribute("color", new (0, _three.BufferAttribute)(colorsArray, 3));
     particleGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(sizeArray, 1));
@@ -801,13 +852,37 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     mainSphere.position.set(0, 10, 0);
     // Crear un sistema de partículas
     const particleSystem = new (0, _three.Points)(particleGeometry, particleMaterial);
+    const p_Relleno = new (0, _three.Points)(p_rellenoGeometry, n_Material);
+    //NEW SPHERE HERE!
+    sphereGeometry = new (0, _three.SphereGeometry)(20, 25, 50);
+    p_Sphere = new (0, _three.BufferGeometry)().copy(sphereGeometry);
+    p_SphereMaterial = new (0, _three.ShaderMaterial)({
+        vertexShader: (0, _vPSphereGlslDefault.default),
+        fragmentShader: (0, _fPSphereGlslDefault.default),
+        uniforms: {
+            time: {
+                value: 0.0
+            }
+        }
+    });
+    p_SphereVelocity = Array.from({
+        length: 500
+    }, ()=>Math.random());
+    p_Sphere.setAttribute("velocity", new (0, _three.BufferAttribute)(new Float32Array(p_SphereVelocity), 1));
+    console.log(p_Sphere);
+    p_Sphere = new (0, _three.Points)(p_Sphere, p_SphereMaterial);
+    ///
     // Agregar el sistema de partículas a la escena (suponiendo que tienes una escena)
+    //web.add(p_Sphere);
+    web.add(p_Relleno);
     web.add(particleSystem);
     web.add(mainSphere);
     web.add(sphere);
     // Agregar el objeto Mesh (partículas) a la escena
     web.add(particles);
     web.add(secondParticles);
+    axisHelper.position.copy(primeraPantalla);
+    web.add(axisHelper);
     particles.visible = false;
     secondParticles.visible = false;
 });
@@ -916,8 +991,12 @@ const viewAnim = animatePosition(target, segundaVista, 1200);
 webManager.setAnimations((delta)=>{
     dotSphere.uniforms.time.value = delta * 0.5;
     dotSphere.uniforms.time.needsUpdate = true;
+    p_SphereMaterial.uniforms.time.value = delta * 0.5;
+    p_SphereMaterial.uniforms.time.needsUpdate = true;
     particleMaterial.uniforms.time.value = delta;
     particleMaterial.uniforms.time.needsUpdate = true;
+    n_Material.uniforms.time.value = delta;
+    n_Material.uniforms.time.needsUpdate = true;
     sphereParticle.uniforms.time.value = delta * 0.5;
     sphereParticle.uniforms.time.needsUpdate = true;
     //animar esfera
@@ -941,7 +1020,7 @@ webManager.setAnimations((delta)=>{
         //primera pantalla
         console.log("NORMAL");
         if (!isInScreen) {
-            // CAM_MANAGER.update();
+            CAM_MANAGER.update();
             sphere.position.y = angular + 10;
             mainSphere.position.y = angular + 10;
         }
@@ -961,6 +1040,7 @@ webManager.setAnimations((delta)=>{
     CAM_MANAGER.camera.lookAt(target);
 });
 //renderizar en el bucle
+webManager.postProcesing = true;
 webManager.renderLoop();
 webManager.debugScenes();
 //funciones de ayuda
@@ -996,7 +1076,7 @@ cameraFolder.add(cameraControls, "positionZ", -100, 100).step(0.005).name("Z Pos
     CAM_MANAGER.container.position.z = cameraControls.positionZ;
 });
 
-},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","./scenes/shaders/f_pSphere.glsl":"6b176","./scenes/shaders/v_pSphere.glsl":"11q8G","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./scenes/shaders/v_relleno.glsl":"52tUs","./scenes/shaders/f_relleno.glsl":"2Trgk"}],"ktPTu":[function(require,module,exports) {
 /**
  * @license
  * Copyright 2010-2023 Three.js Authors
@@ -33314,6 +33394,8 @@ parcelHelpers.export(exports, "WebManager", ()=>WebManager);
 var _three = require("three");
 var _rendererManager = require("./RendererManager");
 var _cameraManager = require("./CameraManager");
+var _renderpass = require("three/examples/jsm/postprocessing/renderpass");
+var _unrealBloomPass = require("three/examples/jsm/postprocessing/UnrealBloomPass");
 class WebManager {
     constructor(id, camManager){
         this._id = id;
@@ -33330,8 +33412,18 @@ class WebManager {
         this.clock = new (0, _three.Clock)();
         this.deltaTime = 0;
         this.animatedFuntion = null;
+        this.postProcesing = false;
+        this.renderPass = new (0, _renderpass.RenderPass)(this.web3DScene, this._camera);
+        this.initPost();
         //agregar camara
         this.initCamera();
+    }
+    initPost() {
+        // Crear una instancia del pase de "bloom" y configurarlo
+        const bloomPass = new (0, _unrealBloomPass.UnrealBloomPass)(/* threshold */ 1, /* strength */ 2, /* radius */ 0.5);
+        // Agregar el pase de "bloom" al compositor de efectos
+        this.renderManager.web3DRenderComposer.addPass(this.renderPass);
+        this.renderManager.web3DRenderComposer.addPass(bloomPass);
     }
     //init camera 
     initCamera() {
@@ -33359,7 +33451,8 @@ class WebManager {
                 this.animatedFuntion(this.deltaTime);
             }
             //renderizar el 3d
-            this.renderManager.web3DRenderer.render(this.web3DScene, this._camera);
+            if (!this.postProcesing) this.renderManager.web3DRenderer.render(this.web3DScene, this._camera);
+            else this.renderManager.web3DRenderComposer.render(this.web3DScene, this._camera);
             //renderizar el html en la escena
             this.renderManager.webHtmlRenderer.render(this.webHtmlScene, this._camera);
         });
@@ -33428,12 +33521,13 @@ class WebHtmlManager extends WebSceneManager {
     }
 }
 
-},{"three":"ktPTu","./RendererManager":"7TumE","./CameraManager":"lnXBx","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7TumE":[function(require,module,exports) {
+},{"three":"ktPTu","./RendererManager":"7TumE","./CameraManager":"lnXBx","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","three/examples/jsm/postprocessing/renderpass":"ivBs8","three/examples/jsm/postprocessing/UnrealBloomPass":"3iDYE"}],"7TumE":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "RenderManager", ()=>RenderManager);
 var _three = require("three");
 var _css3Drenderer = require("three/examples/jsm/renderers/CSS3DRenderer");
+var _effectComposer = require("three/examples/jsm/postprocessing/EffectComposer");
 class RendererManager {
     constructor(){
         //size
@@ -33445,6 +33539,8 @@ class RendererManager {
         //rederers
         this.web3DRenderer = new (0, _three.WebGLRenderer)();
         this.web3DRenderer.setSize(this.size.x, this.size.y);
+        this.web3DRenderComposer = null;
+        this.web3DRenderPass = null;
         this.webHtmlRenderer = new (0, _css3Drenderer.CSS3DRenderer)();
         this.webHtmlRenderer.setSize(this.size.x, this.size.y);
         this.domElement = null;
@@ -33469,6 +33565,7 @@ class RendererManager {
             renderer.outputColorSpace = (0, _three.SRGBColorSpace);
             renderer.toneMapping = (0, _three.ACESFilmicToneMapping);
             renderer.toneMappingExposure = 1.5;
+            this.web3DRenderComposer = new (0, _effectComposer.EffectComposer)(renderer);
         }
         if (type == "HTML") {
             renderer = this.webHtmlRenderer;
@@ -33489,7 +33586,7 @@ class RendererManager {
 //crear instancia unica del renderer
 const RenderManager = new RendererManager();
 
-},{"three":"ktPTu","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"dWhzi":[function(require,module,exports) {
+},{"three":"ktPTu","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","three/examples/jsm/postprocessing/EffectComposer":"e5jie"}],"dWhzi":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "CSS3DObject", ()=>CSS3DObject);
@@ -33656,7 +33753,350 @@ class CSS3DRenderer {
     }
 }
 
-},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"lnXBx":[function(require,module,exports) {
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"e5jie":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "EffectComposer", ()=>EffectComposer);
+var _three = require("three");
+var _copyShaderJs = require("../shaders/CopyShader.js");
+var _shaderPassJs = require("./ShaderPass.js");
+var _maskPassJs = require("./MaskPass.js");
+class EffectComposer {
+    constructor(renderer, renderTarget){
+        this.renderer = renderer;
+        this._pixelRatio = renderer.getPixelRatio();
+        if (renderTarget === undefined) {
+            const size = renderer.getSize(new (0, _three.Vector2)());
+            this._width = size.width;
+            this._height = size.height;
+            renderTarget = new (0, _three.WebGLRenderTarget)(this._width * this._pixelRatio, this._height * this._pixelRatio, {
+                type: (0, _three.HalfFloatType)
+            });
+            renderTarget.texture.name = "EffectComposer.rt1";
+        } else {
+            this._width = renderTarget.width;
+            this._height = renderTarget.height;
+        }
+        this.renderTarget1 = renderTarget;
+        this.renderTarget2 = renderTarget.clone();
+        this.renderTarget2.texture.name = "EffectComposer.rt2";
+        this.writeBuffer = this.renderTarget1;
+        this.readBuffer = this.renderTarget2;
+        this.renderToScreen = true;
+        this.passes = [];
+        this.copyPass = new (0, _shaderPassJs.ShaderPass)((0, _copyShaderJs.CopyShader));
+        this.copyPass.material.blending = (0, _three.NoBlending);
+        this.clock = new (0, _three.Clock)();
+    }
+    swapBuffers() {
+        const tmp = this.readBuffer;
+        this.readBuffer = this.writeBuffer;
+        this.writeBuffer = tmp;
+    }
+    addPass(pass) {
+        this.passes.push(pass);
+        pass.setSize(this._width * this._pixelRatio, this._height * this._pixelRatio);
+    }
+    insertPass(pass, index) {
+        this.passes.splice(index, 0, pass);
+        pass.setSize(this._width * this._pixelRatio, this._height * this._pixelRatio);
+    }
+    removePass(pass) {
+        const index = this.passes.indexOf(pass);
+        if (index !== -1) this.passes.splice(index, 1);
+    }
+    isLastEnabledPass(passIndex) {
+        for(let i = passIndex + 1; i < this.passes.length; i++){
+            if (this.passes[i].enabled) return false;
+        }
+        return true;
+    }
+    render(deltaTime) {
+        // deltaTime value is in seconds
+        if (deltaTime === undefined) deltaTime = this.clock.getDelta();
+        const currentRenderTarget = this.renderer.getRenderTarget();
+        let maskActive = false;
+        for(let i = 0, il = this.passes.length; i < il; i++){
+            const pass = this.passes[i];
+            if (pass.enabled === false) continue;
+            pass.renderToScreen = this.renderToScreen && this.isLastEnabledPass(i);
+            pass.render(this.renderer, this.writeBuffer, this.readBuffer, deltaTime, maskActive);
+            if (pass.needsSwap) {
+                if (maskActive) {
+                    const context = this.renderer.getContext();
+                    const stencil = this.renderer.state.buffers.stencil;
+                    //context.stencilFunc( context.NOTEQUAL, 1, 0xffffffff );
+                    stencil.setFunc(context.NOTEQUAL, 1, 0xffffffff);
+                    this.copyPass.render(this.renderer, this.writeBuffer, this.readBuffer, deltaTime);
+                    //context.stencilFunc( context.EQUAL, 1, 0xffffffff );
+                    stencil.setFunc(context.EQUAL, 1, 0xffffffff);
+                }
+                this.swapBuffers();
+            }
+            if ((0, _maskPassJs.MaskPass) !== undefined) {
+                if (pass instanceof (0, _maskPassJs.MaskPass)) maskActive = true;
+                else if (pass instanceof (0, _maskPassJs.ClearMaskPass)) maskActive = false;
+            }
+        }
+        this.renderer.setRenderTarget(currentRenderTarget);
+    }
+    reset(renderTarget) {
+        if (renderTarget === undefined) {
+            const size = this.renderer.getSize(new (0, _three.Vector2)());
+            this._pixelRatio = this.renderer.getPixelRatio();
+            this._width = size.width;
+            this._height = size.height;
+            renderTarget = this.renderTarget1.clone();
+            renderTarget.setSize(this._width * this._pixelRatio, this._height * this._pixelRatio);
+        }
+        this.renderTarget1.dispose();
+        this.renderTarget2.dispose();
+        this.renderTarget1 = renderTarget;
+        this.renderTarget2 = renderTarget.clone();
+        this.writeBuffer = this.renderTarget1;
+        this.readBuffer = this.renderTarget2;
+    }
+    setSize(width, height) {
+        this._width = width;
+        this._height = height;
+        const effectiveWidth = this._width * this._pixelRatio;
+        const effectiveHeight = this._height * this._pixelRatio;
+        this.renderTarget1.setSize(effectiveWidth, effectiveHeight);
+        this.renderTarget2.setSize(effectiveWidth, effectiveHeight);
+        for(let i = 0; i < this.passes.length; i++)this.passes[i].setSize(effectiveWidth, effectiveHeight);
+    }
+    setPixelRatio(pixelRatio) {
+        this._pixelRatio = pixelRatio;
+        this.setSize(this._width, this._height);
+    }
+    dispose() {
+        this.renderTarget1.dispose();
+        this.renderTarget2.dispose();
+        this.copyPass.dispose();
+    }
+}
+
+},{"three":"ktPTu","../shaders/CopyShader.js":"d0PyX","./ShaderPass.js":"5IxTN","./MaskPass.js":"jn76N","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"d0PyX":[function(require,module,exports) {
+/**
+ * Full-screen textured quad shader
+ */ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "CopyShader", ()=>CopyShader);
+const CopyShader = {
+    name: "CopyShader",
+    uniforms: {
+        "tDiffuse": {
+            value: null
+        },
+        "opacity": {
+            value: 1.0
+        }
+    },
+    vertexShader: /* glsl */ `
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+    fragmentShader: /* glsl */ `
+
+		uniform float opacity;
+
+		uniform sampler2D tDiffuse;
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vec4 texel = texture2D( tDiffuse, vUv );
+			gl_FragColor = opacity * texel;
+
+
+		}`
+};
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5IxTN":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "ShaderPass", ()=>ShaderPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+class ShaderPass extends (0, _passJs.Pass) {
+    constructor(shader, textureID){
+        super();
+        this.textureID = textureID !== undefined ? textureID : "tDiffuse";
+        if (shader instanceof (0, _three.ShaderMaterial)) {
+            this.uniforms = shader.uniforms;
+            this.material = shader;
+        } else if (shader) {
+            this.uniforms = (0, _three.UniformsUtils).clone(shader.uniforms);
+            this.material = new (0, _three.ShaderMaterial)({
+                name: shader.name !== undefined ? shader.name : "unspecified",
+                defines: Object.assign({}, shader.defines),
+                uniforms: this.uniforms,
+                vertexShader: shader.vertexShader,
+                fragmentShader: shader.fragmentShader
+            });
+        }
+        this.fsQuad = new (0, _passJs.FullScreenQuad)(this.material);
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
+        if (this.uniforms[this.textureID]) this.uniforms[this.textureID].value = readBuffer.texture;
+        this.fsQuad.material = this.material;
+        if (this.renderToScreen) {
+            renderer.setRenderTarget(null);
+            this.fsQuad.render(renderer);
+        } else {
+            renderer.setRenderTarget(writeBuffer);
+            // TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
+            if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+            this.fsQuad.render(renderer);
+        }
+    }
+    dispose() {
+        this.material.dispose();
+        this.fsQuad.dispose();
+    }
+}
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"i2IfB":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "Pass", ()=>Pass);
+parcelHelpers.export(exports, "FullScreenQuad", ()=>FullScreenQuad);
+var _three = require("three");
+class Pass {
+    constructor(){
+        this.isPass = true;
+        // if set to true, the pass is processed by the composer
+        this.enabled = true;
+        // if set to true, the pass indicates to swap read and write buffer after rendering
+        this.needsSwap = true;
+        // if set to true, the pass clears its buffer before rendering
+        this.clear = false;
+        // if set to true, the result of the pass is rendered to screen. This is set automatically by EffectComposer.
+        this.renderToScreen = false;
+    }
+    setSize() {}
+    render() {
+        console.error("THREE.Pass: .render() must be implemented in derived pass.");
+    }
+    dispose() {}
+}
+// Helper for passes that need to fill the viewport with a single quad.
+const _camera = new (0, _three.OrthographicCamera)(-1, 1, 1, -1, 0, 1);
+// https://github.com/mrdoob/three.js/pull/21358
+const _geometry = new (0, _three.BufferGeometry)();
+_geometry.setAttribute("position", new (0, _three.Float32BufferAttribute)([
+    -1,
+    3,
+    0,
+    -1,
+    -1,
+    0,
+    3,
+    -1,
+    0
+], 3));
+_geometry.setAttribute("uv", new (0, _three.Float32BufferAttribute)([
+    0,
+    2,
+    0,
+    0,
+    2,
+    0
+], 2));
+class FullScreenQuad {
+    constructor(material){
+        this._mesh = new (0, _three.Mesh)(_geometry, material);
+    }
+    dispose() {
+        this._mesh.geometry.dispose();
+    }
+    render(renderer) {
+        renderer.render(this._mesh, _camera);
+    }
+    get material() {
+        return this._mesh.material;
+    }
+    set material(value) {
+        this._mesh.material = value;
+    }
+}
+
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"jn76N":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "MaskPass", ()=>MaskPass);
+parcelHelpers.export(exports, "ClearMaskPass", ()=>ClearMaskPass);
+var _passJs = require("./Pass.js");
+class MaskPass extends (0, _passJs.Pass) {
+    constructor(scene, camera){
+        super();
+        this.scene = scene;
+        this.camera = camera;
+        this.clear = true;
+        this.needsSwap = false;
+        this.inverse = false;
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
+        const context = renderer.getContext();
+        const state = renderer.state;
+        // don't update color or depth
+        state.buffers.color.setMask(false);
+        state.buffers.depth.setMask(false);
+        // lock buffers
+        state.buffers.color.setLocked(true);
+        state.buffers.depth.setLocked(true);
+        // set up stencil
+        let writeValue, clearValue;
+        if (this.inverse) {
+            writeValue = 0;
+            clearValue = 1;
+        } else {
+            writeValue = 1;
+            clearValue = 0;
+        }
+        state.buffers.stencil.setTest(true);
+        state.buffers.stencil.setOp(context.REPLACE, context.REPLACE, context.REPLACE);
+        state.buffers.stencil.setFunc(context.ALWAYS, writeValue, 0xffffffff);
+        state.buffers.stencil.setClear(clearValue);
+        state.buffers.stencil.setLocked(true);
+        // draw into the stencil buffer
+        renderer.setRenderTarget(readBuffer);
+        if (this.clear) renderer.clear();
+        renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(writeBuffer);
+        if (this.clear) renderer.clear();
+        renderer.render(this.scene, this.camera);
+        // unlock color and depth buffer and make them writable for subsequent rendering/clearing
+        state.buffers.color.setLocked(false);
+        state.buffers.depth.setLocked(false);
+        state.buffers.color.setMask(true);
+        state.buffers.depth.setMask(true);
+        // only render where stencil is set to 1
+        state.buffers.stencil.setLocked(false);
+        state.buffers.stencil.setFunc(context.EQUAL, 1, 0xffffffff); // draw if == 1
+        state.buffers.stencil.setOp(context.KEEP, context.KEEP, context.KEEP);
+        state.buffers.stencil.setLocked(true);
+    }
+}
+class ClearMaskPass extends (0, _passJs.Pass) {
+    constructor(){
+        super();
+        this.needsSwap = false;
+    }
+    render(renderer /*, writeBuffer, readBuffer, deltaTime, maskActive */ ) {
+        renderer.state.buffers.stencil.setLocked(false);
+        renderer.state.buffers.stencil.setTest(false);
+    }
+}
+
+},{"./Pass.js":"i2IfB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"lnXBx":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "CameraManager", ()=>CameraManager);
@@ -34454,6 +34894,444 @@ class OrbitControls extends (0, _three.EventDispatcher) {
     }
 }
 
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ivBs8":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "RenderPass", ()=>RenderPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+class RenderPass extends (0, _passJs.Pass) {
+    constructor(scene, camera, overrideMaterial = null, clearColor = null, clearAlpha = null){
+        super();
+        this.scene = scene;
+        this.camera = camera;
+        this.overrideMaterial = overrideMaterial;
+        this.clearColor = clearColor;
+        this.clearAlpha = clearAlpha;
+        this.clear = true;
+        this.clearDepth = false;
+        this.needsSwap = false;
+        this._oldClearColor = new (0, _three.Color)();
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
+        const oldAutoClear = renderer.autoClear;
+        renderer.autoClear = false;
+        let oldClearAlpha, oldOverrideMaterial;
+        if (this.overrideMaterial !== null) {
+            oldOverrideMaterial = this.scene.overrideMaterial;
+            this.scene.overrideMaterial = this.overrideMaterial;
+        }
+        if (this.clearColor !== null) {
+            renderer.getClearColor(this._oldClearColor);
+            renderer.setClearColor(this.clearColor);
+        }
+        if (this.clearAlpha !== null) {
+            oldClearAlpha = renderer.getClearAlpha();
+            renderer.setClearAlpha(this.clearAlpha);
+        }
+        if (this.clearDepth == true) renderer.clearDepth();
+        renderer.setRenderTarget(this.renderToScreen ? null : readBuffer);
+        if (this.clear === true) // TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
+        renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+        renderer.render(this.scene, this.camera);
+        // restore
+        if (this.clearColor !== null) renderer.setClearColor(this._oldClearColor);
+        if (this.clearAlpha !== null) renderer.setClearAlpha(oldClearAlpha);
+        if (this.overrideMaterial !== null) this.scene.overrideMaterial = oldOverrideMaterial;
+        renderer.autoClear = oldAutoClear;
+    }
+}
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"3iDYE":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "UnrealBloomPass", ()=>UnrealBloomPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+var _copyShaderJs = require("../shaders/CopyShader.js");
+var _luminosityHighPassShaderJs = require("../shaders/LuminosityHighPassShader.js");
+/**
+ * UnrealBloomPass is inspired by the bloom pass of Unreal Engine. It creates a
+ * mip map chain of bloom textures and blurs them with different radii. Because
+ * of the weighted combination of mips, and because larger blurs are done on
+ * higher mips, this effect provides good quality and performance.
+ *
+ * Reference:
+ * - https://docs.unrealengine.com/latest/INT/Engine/Rendering/PostProcessEffects/Bloom/
+ */ class UnrealBloomPass extends (0, _passJs.Pass) {
+    constructor(resolution, strength, radius, threshold){
+        super();
+        this.strength = strength !== undefined ? strength : 1;
+        this.radius = radius;
+        this.threshold = threshold;
+        this.resolution = resolution !== undefined ? new (0, _three.Vector2)(resolution.x, resolution.y) : new (0, _three.Vector2)(256, 256);
+        // create color only once here, reuse it later inside the render function
+        this.clearColor = new (0, _three.Color)(0, 0, 0);
+        // render targets
+        this.renderTargetsHorizontal = [];
+        this.renderTargetsVertical = [];
+        this.nMips = 5;
+        let resx = Math.round(this.resolution.x / 2);
+        let resy = Math.round(this.resolution.y / 2);
+        this.renderTargetBright = new (0, _three.WebGLRenderTarget)(resx, resy, {
+            type: (0, _three.HalfFloatType)
+        });
+        this.renderTargetBright.texture.name = "UnrealBloomPass.bright";
+        this.renderTargetBright.texture.generateMipmaps = false;
+        for(let i = 0; i < this.nMips; i++){
+            const renderTargetHorizonal = new (0, _three.WebGLRenderTarget)(resx, resy, {
+                type: (0, _three.HalfFloatType)
+            });
+            renderTargetHorizonal.texture.name = "UnrealBloomPass.h" + i;
+            renderTargetHorizonal.texture.generateMipmaps = false;
+            this.renderTargetsHorizontal.push(renderTargetHorizonal);
+            const renderTargetVertical = new (0, _three.WebGLRenderTarget)(resx, resy, {
+                type: (0, _three.HalfFloatType)
+            });
+            renderTargetVertical.texture.name = "UnrealBloomPass.v" + i;
+            renderTargetVertical.texture.generateMipmaps = false;
+            this.renderTargetsVertical.push(renderTargetVertical);
+            resx = Math.round(resx / 2);
+            resy = Math.round(resy / 2);
+        }
+        // luminosity high pass material
+        const highPassShader = (0, _luminosityHighPassShaderJs.LuminosityHighPassShader);
+        this.highPassUniforms = (0, _three.UniformsUtils).clone(highPassShader.uniforms);
+        this.highPassUniforms["luminosityThreshold"].value = threshold;
+        this.highPassUniforms["smoothWidth"].value = 0.01;
+        this.materialHighPassFilter = new (0, _three.ShaderMaterial)({
+            uniforms: this.highPassUniforms,
+            vertexShader: highPassShader.vertexShader,
+            fragmentShader: highPassShader.fragmentShader
+        });
+        // gaussian blur materials
+        this.separableBlurMaterials = [];
+        const kernelSizeArray = [
+            3,
+            5,
+            7,
+            9,
+            11
+        ];
+        resx = Math.round(this.resolution.x / 2);
+        resy = Math.round(this.resolution.y / 2);
+        for(let i = 0; i < this.nMips; i++){
+            this.separableBlurMaterials.push(this.getSeperableBlurMaterial(kernelSizeArray[i]));
+            this.separableBlurMaterials[i].uniforms["invSize"].value = new (0, _three.Vector2)(1 / resx, 1 / resy);
+            resx = Math.round(resx / 2);
+            resy = Math.round(resy / 2);
+        }
+        // composite material
+        this.compositeMaterial = this.getCompositeMaterial(this.nMips);
+        this.compositeMaterial.uniforms["blurTexture1"].value = this.renderTargetsVertical[0].texture;
+        this.compositeMaterial.uniforms["blurTexture2"].value = this.renderTargetsVertical[1].texture;
+        this.compositeMaterial.uniforms["blurTexture3"].value = this.renderTargetsVertical[2].texture;
+        this.compositeMaterial.uniforms["blurTexture4"].value = this.renderTargetsVertical[3].texture;
+        this.compositeMaterial.uniforms["blurTexture5"].value = this.renderTargetsVertical[4].texture;
+        this.compositeMaterial.uniforms["bloomStrength"].value = strength;
+        this.compositeMaterial.uniforms["bloomRadius"].value = 0.1;
+        const bloomFactors = [
+            1.0,
+            0.8,
+            0.6,
+            0.4,
+            0.2
+        ];
+        this.compositeMaterial.uniforms["bloomFactors"].value = bloomFactors;
+        this.bloomTintColors = [
+            new (0, _three.Vector3)(1, 1, 1),
+            new (0, _three.Vector3)(1, 1, 1),
+            new (0, _three.Vector3)(1, 1, 1),
+            new (0, _three.Vector3)(1, 1, 1),
+            new (0, _three.Vector3)(1, 1, 1)
+        ];
+        this.compositeMaterial.uniforms["bloomTintColors"].value = this.bloomTintColors;
+        // blend material
+        const copyShader = (0, _copyShaderJs.CopyShader);
+        this.copyUniforms = (0, _three.UniformsUtils).clone(copyShader.uniforms);
+        this.blendMaterial = new (0, _three.ShaderMaterial)({
+            uniforms: this.copyUniforms,
+            vertexShader: copyShader.vertexShader,
+            fragmentShader: copyShader.fragmentShader,
+            blending: (0, _three.AdditiveBlending),
+            depthTest: false,
+            depthWrite: false,
+            transparent: true
+        });
+        this.enabled = true;
+        this.needsSwap = false;
+        this._oldClearColor = new (0, _three.Color)();
+        this.oldClearAlpha = 1;
+        this.basic = new (0, _three.MeshBasicMaterial)();
+        this.fsQuad = new (0, _passJs.FullScreenQuad)(null);
+    }
+    dispose() {
+        for(let i = 0; i < this.renderTargetsHorizontal.length; i++)this.renderTargetsHorizontal[i].dispose();
+        for(let i = 0; i < this.renderTargetsVertical.length; i++)this.renderTargetsVertical[i].dispose();
+        this.renderTargetBright.dispose();
+        //
+        for(let i = 0; i < this.separableBlurMaterials.length; i++)this.separableBlurMaterials[i].dispose();
+        this.compositeMaterial.dispose();
+        this.blendMaterial.dispose();
+        this.basic.dispose();
+        //
+        this.fsQuad.dispose();
+    }
+    setSize(width, height) {
+        let resx = Math.round(width / 2);
+        let resy = Math.round(height / 2);
+        this.renderTargetBright.setSize(resx, resy);
+        for(let i = 0; i < this.nMips; i++){
+            this.renderTargetsHorizontal[i].setSize(resx, resy);
+            this.renderTargetsVertical[i].setSize(resx, resy);
+            this.separableBlurMaterials[i].uniforms["invSize"].value = new (0, _three.Vector2)(1 / resx, 1 / resy);
+            resx = Math.round(resx / 2);
+            resy = Math.round(resy / 2);
+        }
+    }
+    render(renderer, writeBuffer, readBuffer, deltaTime, maskActive) {
+        renderer.getClearColor(this._oldClearColor);
+        this.oldClearAlpha = renderer.getClearAlpha();
+        const oldAutoClear = renderer.autoClear;
+        renderer.autoClear = false;
+        renderer.setClearColor(this.clearColor, 0);
+        if (maskActive) renderer.state.buffers.stencil.setTest(false);
+        // Render input to screen
+        if (this.renderToScreen) {
+            this.fsQuad.material = this.basic;
+            this.basic.map = readBuffer.texture;
+            renderer.setRenderTarget(null);
+            renderer.clear();
+            this.fsQuad.render(renderer);
+        }
+        // 1. Extract Bright Areas
+        this.highPassUniforms["tDiffuse"].value = readBuffer.texture;
+        this.highPassUniforms["luminosityThreshold"].value = this.threshold;
+        this.fsQuad.material = this.materialHighPassFilter;
+        renderer.setRenderTarget(this.renderTargetBright);
+        renderer.clear();
+        this.fsQuad.render(renderer);
+        // 2. Blur All the mips progressively
+        let inputRenderTarget = this.renderTargetBright;
+        for(let i = 0; i < this.nMips; i++){
+            this.fsQuad.material = this.separableBlurMaterials[i];
+            this.separableBlurMaterials[i].uniforms["colorTexture"].value = inputRenderTarget.texture;
+            this.separableBlurMaterials[i].uniforms["direction"].value = UnrealBloomPass.BlurDirectionX;
+            renderer.setRenderTarget(this.renderTargetsHorizontal[i]);
+            renderer.clear();
+            this.fsQuad.render(renderer);
+            this.separableBlurMaterials[i].uniforms["colorTexture"].value = this.renderTargetsHorizontal[i].texture;
+            this.separableBlurMaterials[i].uniforms["direction"].value = UnrealBloomPass.BlurDirectionY;
+            renderer.setRenderTarget(this.renderTargetsVertical[i]);
+            renderer.clear();
+            this.fsQuad.render(renderer);
+            inputRenderTarget = this.renderTargetsVertical[i];
+        }
+        // Composite All the mips
+        this.fsQuad.material = this.compositeMaterial;
+        this.compositeMaterial.uniforms["bloomStrength"].value = this.strength;
+        this.compositeMaterial.uniforms["bloomRadius"].value = this.radius;
+        this.compositeMaterial.uniforms["bloomTintColors"].value = this.bloomTintColors;
+        renderer.setRenderTarget(this.renderTargetsHorizontal[0]);
+        renderer.clear();
+        this.fsQuad.render(renderer);
+        // Blend it additively over the input texture
+        this.fsQuad.material = this.blendMaterial;
+        this.copyUniforms["tDiffuse"].value = this.renderTargetsHorizontal[0].texture;
+        if (maskActive) renderer.state.buffers.stencil.setTest(true);
+        if (this.renderToScreen) {
+            renderer.setRenderTarget(null);
+            this.fsQuad.render(renderer);
+        } else {
+            renderer.setRenderTarget(readBuffer);
+            this.fsQuad.render(renderer);
+        }
+        // Restore renderer settings
+        renderer.setClearColor(this._oldClearColor, this.oldClearAlpha);
+        renderer.autoClear = oldAutoClear;
+    }
+    getSeperableBlurMaterial(kernelRadius) {
+        const coefficients = [];
+        for(let i = 0; i < kernelRadius; i++)coefficients.push(0.39894 * Math.exp(-0.5 * i * i / (kernelRadius * kernelRadius)) / kernelRadius);
+        return new (0, _three.ShaderMaterial)({
+            defines: {
+                "KERNEL_RADIUS": kernelRadius
+            },
+            uniforms: {
+                "colorTexture": {
+                    value: null
+                },
+                "invSize": {
+                    value: new (0, _three.Vector2)(0.5, 0.5)
+                },
+                "direction": {
+                    value: new (0, _three.Vector2)(0.5, 0.5)
+                },
+                "gaussianCoefficients": {
+                    value: coefficients
+                } // precomputed Gaussian coefficients
+            },
+            vertexShader: `varying vec2 vUv;
+				void main() {
+					vUv = uv;
+					gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+				}`,
+            fragmentShader: `#include <common>
+				varying vec2 vUv;
+				uniform sampler2D colorTexture;
+				uniform vec2 invSize;
+				uniform vec2 direction;
+				uniform float gaussianCoefficients[KERNEL_RADIUS];
+
+				void main() {
+					float weightSum = gaussianCoefficients[0];
+					vec3 diffuseSum = texture2D( colorTexture, vUv ).rgb * weightSum;
+					for( int i = 1; i < KERNEL_RADIUS; i ++ ) {
+						float x = float(i);
+						float w = gaussianCoefficients[i];
+						vec2 uvOffset = direction * invSize * x;
+						vec3 sample1 = texture2D( colorTexture, vUv + uvOffset ).rgb;
+						vec3 sample2 = texture2D( colorTexture, vUv - uvOffset ).rgb;
+						diffuseSum += (sample1 + sample2) * w;
+						weightSum += 2.0 * w;
+					}
+					gl_FragColor = vec4(diffuseSum/weightSum, 1.0);
+				}`
+        });
+    }
+    getCompositeMaterial(nMips) {
+        return new (0, _three.ShaderMaterial)({
+            defines: {
+                "NUM_MIPS": nMips
+            },
+            uniforms: {
+                "blurTexture1": {
+                    value: null
+                },
+                "blurTexture2": {
+                    value: null
+                },
+                "blurTexture3": {
+                    value: null
+                },
+                "blurTexture4": {
+                    value: null
+                },
+                "blurTexture5": {
+                    value: null
+                },
+                "bloomStrength": {
+                    value: 1.0
+                },
+                "bloomFactors": {
+                    value: null
+                },
+                "bloomTintColors": {
+                    value: null
+                },
+                "bloomRadius": {
+                    value: 0.0
+                }
+            },
+            vertexShader: `varying vec2 vUv;
+				void main() {
+					vUv = uv;
+					gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+				}`,
+            fragmentShader: `varying vec2 vUv;
+				uniform sampler2D blurTexture1;
+				uniform sampler2D blurTexture2;
+				uniform sampler2D blurTexture3;
+				uniform sampler2D blurTexture4;
+				uniform sampler2D blurTexture5;
+				uniform float bloomStrength;
+				uniform float bloomRadius;
+				uniform float bloomFactors[NUM_MIPS];
+				uniform vec3 bloomTintColors[NUM_MIPS];
+
+				float lerpBloomFactor(const in float factor) {
+					float mirrorFactor = 1.2 - factor;
+					return mix(factor, mirrorFactor, bloomRadius);
+				}
+
+				void main() {
+					gl_FragColor = bloomStrength * ( lerpBloomFactor(bloomFactors[0]) * vec4(bloomTintColors[0], 1.0) * texture2D(blurTexture1, vUv) +
+						lerpBloomFactor(bloomFactors[1]) * vec4(bloomTintColors[1], 1.0) * texture2D(blurTexture2, vUv) +
+						lerpBloomFactor(bloomFactors[2]) * vec4(bloomTintColors[2], 1.0) * texture2D(blurTexture3, vUv) +
+						lerpBloomFactor(bloomFactors[3]) * vec4(bloomTintColors[3], 1.0) * texture2D(blurTexture4, vUv) +
+						lerpBloomFactor(bloomFactors[4]) * vec4(bloomTintColors[4], 1.0) * texture2D(blurTexture5, vUv) );
+				}`
+        });
+    }
+}
+UnrealBloomPass.BlurDirectionX = new (0, _three.Vector2)(1.0, 0.0);
+UnrealBloomPass.BlurDirectionY = new (0, _three.Vector2)(0.0, 1.0);
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/CopyShader.js":"d0PyX","../shaders/LuminosityHighPassShader.js":"j8C2Y","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"j8C2Y":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "LuminosityHighPassShader", ()=>LuminosityHighPassShader);
+var _three = require("three");
+/**
+ * Luminosity
+ * http://en.wikipedia.org/wiki/Luminosity
+ */ const LuminosityHighPassShader = {
+    shaderID: "luminosityHighPass",
+    uniforms: {
+        "tDiffuse": {
+            value: null
+        },
+        "luminosityThreshold": {
+            value: 1.0
+        },
+        "smoothWidth": {
+            value: 1.0
+        },
+        "defaultColor": {
+            value: new (0, _three.Color)(0x000000)
+        },
+        "defaultOpacity": {
+            value: 0.0
+        }
+    },
+    vertexShader: /* glsl */ `
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+    fragmentShader: /* glsl */ `
+
+		uniform sampler2D tDiffuse;
+		uniform vec3 defaultColor;
+		uniform float defaultOpacity;
+		uniform float luminosityThreshold;
+		uniform float smoothWidth;
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vec4 texel = texture2D( tDiffuse, vUv );
+
+			vec3 luma = vec3( 0.299, 0.587, 0.114 );
+
+			float v = dot( texel.xyz, luma );
+
+			vec4 outputColor = vec4( defaultColor.rgb, defaultOpacity );
+
+			float alpha = smoothstep( luminosityThreshold, luminosityThreshold + smoothWidth, v );
+
+			gl_FragColor = mix( outputColor, texel, alpha );
+
+		}`
+};
+
 },{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7DfAI":[function(require,module,exports) {
 /**
  * The Ease class provides a collection of easing functions for use with tween.js.
@@ -35181,6 +36059,18 @@ module.exports = "#define GLSLIFY 1\nvarying vec3 vertexNormal;\n\nvoid main() {
 
 },{}],"8laJk":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\nvarying vec3 vertexNormal;\n\n  void main() {\n    vertexNormal = normalize(normalMatrix * normal);\n    \n    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n  }";
+
+},{}],"6b176":[function(require,module,exports) {
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec3 vNormal;\n\n      void main() {\n\n  // Calculamos el color final de la part\xedcula con el brillo\n  vec3 finalColor = vec3(0, 0, 1);\n        // Asignamos el color de la part\xedcula al fragmento\n        gl_FragColor = vec4(finalColor, 0.5);\n      }\n";
+
+},{}],"11q8G":[function(require,module,exports) {
+module.exports = "#define GLSLIFY 1\n// Vertex Shader\n\nuniform float time; // Tiempo para controlar la rotaci\xf3n\n\nvoid main() {\n  // Calcula los \xe1ngulos de rotaci\xf3n en funci\xf3n del tiempo\n  float angleX = time; // \xc1ngulo de rotaci\xf3n en el eje X\n  float angleY = time; // \xc1ngulo de rotaci\xf3n en el eje Y\n\n  // Calcula las matrices de rotaci\xf3n para los ejes X e Y\n  mat4 rotationX = mat4(\n    1.0, 0.0, 0.0, 0.0,\n    0.0, cos(angleX), -sin(angleX), 0.0,\n    0.0, sin(angleX), cos(angleX), 0.0,\n    0.0, 0.0, 0.0, 1.0\n  );\n\n  mat4 rotationY = mat4(\n    cos(angleY), 0.0, sin(angleY), 0.0,\n    0.0, 1.0, 0.0, 0.0,\n    -sin(angleY), 0.0, cos(angleY), 0.0,\n    0.0, 0.0, 0.0, 1.0\n  );\n\n  // Aplica las rotaciones a las coordenadas del v\xe9rtice en ambos ejes\n  vec4 rotatedPosition = rotationY * rotationX * vec4(position, 1.0);\n\n  gl_Position = projectionMatrix * modelViewMatrix * rotatedPosition;\n}\n";
+
+},{}],"52tUs":[function(require,module,exports) {
+module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\n\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vSize = particleSize;\n  float intensity = 0.5;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.y =  newPosition.y + sin((time * animTime) * vSize) * intensity;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
+
+},{}],"2Trgk":[function(require,module,exports) {
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\n\n      void main() {\n\n        \n        \n        // Calculamos la coordenada relativa al centro del fragmento\n        vec2 coord = gl_PointCoord - vec2(0.5);\n        \n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n        float dist = length(coord);\n        \n        //ajustes de particulas\n        vec3 lightColor = vColor; // Color de la luz\n        float alpha = smoothstep(0.5, 0.4, dist);\n        float alphaIntensity = 0.01;\n        float lightIntensity = 1.0;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n        if (dist > 0.5) discard;\n\n        // Calculamos el brillo de la part\xedcula\n  float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n  // Calculamos el color final de la part\xedcula con el brillo\n  vec3 finalColor = vColor + lightColor * brightness;\n      \n        // Asignamos el color de la part\xedcula al fragmento\n        gl_FragColor = vec4(finalColor, alpha *  brightness);\n      }\n";
 
 },{}]},["eRtbY","kOjux"], "kOjux", "parcelRequire94c2")
 

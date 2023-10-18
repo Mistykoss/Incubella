@@ -31,8 +31,15 @@ import TWEEN from "@tweenjs/tween.js";
 import f_Particles from "./scenes/shaders/f_Particles.glsl";
 import v_Particles from "./scenes/shaders/v_Particles.glsl";
 
+import f_relleno from "./scenes/shaders/f_relleno.glsl";
+import v_relleno from "./scenes/shaders/v_relleno.glsl";
+
 import f_mainSphere from "./scenes/shaders/f_mainSphere.glsl";
 import v_mainSphere from "./scenes/shaders/v_mainSphere.glsl";
+
+import f_pSphere from "./scenes/shaders/f_pSphere.glsl";
+import v_pSphere from "./scenes/shaders/v_pSphere.glsl";
+
 
 const camera = new PerspectiveCamera(
   45,
@@ -43,6 +50,7 @@ const camera = new PerspectiveCamera(
 
 const primeraPantalla = new Vector3(0, 100, 100);
 const segundaPantalla = new Vector3(0, 45, 10);
+const debugPantalla = new Vector3(0, 0, 500);
 
 let isSecondScreen = false;
 let isInScreen = false;
@@ -73,6 +81,16 @@ let domItems = [];
 let domItemsSecond = [];
 let canTravelTo = false;
 let target = null;
+
+
+
+//nueva esfera 
+let sphereGeometry = null;
+
+let n_Material = null;
+let p_Sphere = null;
+let p_SphereMaterial = null;
+
 
 //la escena web
 webManager.setEnviroment(webManager.web3d, (web) => {
@@ -105,6 +123,11 @@ webManager.setEnviroment(webManager.web3d, (web) => {
   const noiseIntensity = 10; //un valor mas alto agrega mas ruido
   const ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
   const TWO_PI = 2 * Math.PI;
+
+  
+  const n_particleCount = 2000;
+  const p_rellenoGeometry = new BufferGeometry();
+  const p_rellenoPosition = new Float32Array(n_particleCount * 3);
 
   //generar las particulas
   for (let index = 0; index < divisiones; index++) {
@@ -169,7 +192,57 @@ webManager.setEnviroment(webManager.web3d, (web) => {
     }
   }
 
+  const nRadius = 150;
+
+  const n_colorsArray = new Float32Array(n_particleCount * 3);
+  const n_sizeArray = new Float32Array(n_particleCount);
+
+    // Crear un material para las partículas (puedes personalizar esto según tus necesidades)
+    n_Material = new ShaderMaterial({
+      vertexShader: v_relleno, // Tu vertex shader existente
+      fragmentShader: f_relleno, // Tu fragment shader existente
+      transparent: true,
+      blending: AdditiveBlending,
+      depthWrite: false,
+      uniforms: {
+        time: { value: 0 },
+      },
+    });
+
+
+
+  for (let index = 0; index < p_rellenoPosition.length; index++) {
+
+    const x = (Math.random()-0.5) * nRadius *2;
+    const y = ( Math.random() -0.15 ) * nRadius *0.5;
+    const z = (Math.random()-0.5) * nRadius *2;
+
+    n_sizeArray[index] = Math.random() *(index % 10 -1) + 2;
+
+    const colorIndex = index % colors.length;
+    const actualColor = colors[colorIndex];
+    const color = new Color(actualColor);
+
+    n_colorsArray[index * 3] = color.r;
+    n_colorsArray[index * 3 + 1] = color.g;
+    n_colorsArray[index * 3 + 2] = color.b;
+
+    p_rellenoPosition[index * 3] = x;
+    p_rellenoPosition[index * 3 + 1] = y;
+    p_rellenoPosition[index * 3 + 2] = z;
+  }
+
+
   // Luego, puedes usar particlePositions para configurar la geometría de las partículas
+  p_rellenoGeometry.setAttribute("position", new BufferAttribute(p_rellenoPosition, 3));
+  p_rellenoGeometry.setAttribute("color", new BufferAttribute(n_colorsArray, 3));
+  p_rellenoGeometry.setAttribute(
+    "particleSize",
+    new BufferAttribute(n_sizeArray, 1)
+  );
+
+
+
   particleGeometry.setAttribute("position", new BufferAttribute(positions, 3));
   particleGeometry.setAttribute("color", new BufferAttribute(colorsArray, 3));
   particleGeometry.setAttribute(
@@ -310,14 +383,54 @@ webManager.setEnviroment(webManager.web3d, (web) => {
   // Crear un sistema de partículas
   const particleSystem = new Points(particleGeometry, particleMaterial);
 
+
+  const p_Relleno = new Points(p_rellenoGeometry, n_Material);
+
+
+  //NEW SPHERE HERE!
+  sphereGeometry = new SphereGeometry(20, 25, 50);
+  
+
+  
+  
+
+
+  p_Sphere = new BufferGeometry().copy(sphereGeometry);
+
+  p_SphereMaterial = new ShaderMaterial({
+    vertexShader: v_pSphere,
+    fragmentShader: f_pSphere,
+    uniforms: {
+      time: {value: 0.0}
+    }
+  });
+
+  p_SphereVelocity = Array.from({ length: 500 }, () => Math.random());
+
+  p_Sphere.setAttribute("velocity", new BufferAttribute(new Float32Array(p_SphereVelocity), 1));
+
+  
+  console.log(p_Sphere);
+
+  p_Sphere = new Points(p_Sphere, p_SphereMaterial);
+  
+
+  ///
+
+
   // Agregar el sistema de partículas a la escena (suponiendo que tienes una escena)
+  //web.add(p_Sphere);
+  
+  web.add(p_Relleno);
   web.add(particleSystem);
   web.add(mainSphere);
   web.add(sphere);
 
-    // Agregar el objeto Mesh (partículas) a la escena
+  // Agregar el objeto Mesh (partículas) a la escena
     web.add(particles);
     web.add(secondParticles);
+    axisHelper.position.copy(primeraPantalla)
+    web.add(axisHelper);
 
     particles.visible = false;
     secondParticles.visible = false;
@@ -467,9 +580,15 @@ const viewAnim = animatePosition(
 webManager.setAnimations((delta) => {
   dotSphere.uniforms.time.value = delta * 0.5;
   dotSphere.uniforms.time.needsUpdate = true;
+  
+  p_SphereMaterial.uniforms.time.value = delta * 0.5;
+  p_SphereMaterial.uniforms.time.needsUpdate = true;
 
   particleMaterial.uniforms.time.value = delta;
   particleMaterial.uniforms.time.needsUpdate = true;
+
+  n_Material.uniforms.time.value = delta;
+  n_Material.uniforms.time.needsUpdate = true;
 
 
   sphereParticle.uniforms.time.value = delta * 0.5;
@@ -499,7 +618,7 @@ webManager.setAnimations((delta) => {
     console.log("NORMAL");
     if(!isInScreen){
 
-     // CAM_MANAGER.update();
+      CAM_MANAGER.update();
 
       sphere.position.y = angular + 10;
       mainSphere.position.y = angular + 10;
@@ -549,6 +668,7 @@ webManager.setAnimations((delta) => {
 });
 
 //renderizar en el bucle
+webManager.postProcesing = true;
 webManager.renderLoop();
 webManager.debugScenes();
 

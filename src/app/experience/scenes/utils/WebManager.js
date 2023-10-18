@@ -1,6 +1,8 @@
 import { Clock, Scene } from "three";
 import { RenderManager } from "./RendererManager";
 import { CameraManager } from "./CameraManager";
+import { RenderPass } from "three/examples/jsm/postprocessing/renderpass";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass";
 
 export class WebManager {
   constructor(id, camManager) {
@@ -23,8 +25,25 @@ export class WebManager {
 
     this.animatedFuntion = null;
 
+    this.postProcesing =false;
+    this.renderPass = new RenderPass(this.web3DScene, this._camera);
+
+    this.initPost();
+
     //agregar camara
     this.initCamera();
+  }
+  initPost() {
+    // Crear una instancia del pase de "bloom" y configurarlo
+    const bloomPass = new UnrealBloomPass(
+      /* threshold */ 1, // Ajusta este valor según tus necesidades
+      /* strength */ 2, // Ajusta este valor según tus necesidades
+      /* radius */ 0.5, // Ajusta este valor según tus necesidades
+    );
+  
+    // Agregar el pase de "bloom" al compositor de efectos
+    this.renderManager.web3DRenderComposer.addPass(this.renderPass);
+    this.renderManager.web3DRenderComposer.addPass(bloomPass);
   }
   //init camera 
   initCamera(){
@@ -57,10 +76,18 @@ export class WebManager {
         this.animatedFuntion(this.deltaTime);
       }
       //renderizar el 3d
-      this.renderManager.web3DRenderer.render(
-        this.web3DScene,
-        this._camera
-        );
+      if(!this.postProcesing){
+        this.renderManager.web3DRenderer.render(
+          this.web3DScene,
+          this._camera
+          );
+      }
+      else{
+        this.renderManager.web3DRenderComposer.render(
+          this.web3DScene,
+          this._camera
+          );
+      }
       //renderizar el html en la escena
       this.renderManager.webHtmlRenderer.render(
         this.webHtmlScene,

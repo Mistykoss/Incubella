@@ -1,5 +1,6 @@
 import { ACESFilmicToneMapping, SRGBColorSpace, WebGLRenderer } from "three";
 import { CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRenderer";
+import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer'
 
 class RendererManager {
   constructor() {
@@ -12,6 +13,9 @@ class RendererManager {
     //rederers
     this.web3DRenderer = new WebGLRenderer();
     this.web3DRenderer.setSize(this.size.x, this.size.y);
+
+    this.web3DRenderComposer = null;
+    this.web3DRenderPass = null;
 
     this.webHtmlRenderer = new CSS3DRenderer();
     this.webHtmlRenderer.setSize(this.size.x, this.size.y);
@@ -47,6 +51,8 @@ class RendererManager {
       renderer.outputColorSpace = SRGBColorSpace;
       renderer.toneMapping = ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.5;
+
+      this.web3DRenderComposer = new EffectComposer(renderer);
     }
     if (type == "HTML") {
       renderer = this.webHtmlRenderer;
