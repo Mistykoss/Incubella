@@ -7,20 +7,24 @@ import {
   BufferAttribute,
   BufferGeometry,
   Color,
+  DynamicDrawUsage,
   IcosahedronGeometry,
+  LineBasicMaterial,
+  LineSegments,
   Mesh,
   MeshBasicMaterial,
   MeshPhongMaterial,
   MeshStandardMaterial,
   PerspectiveCamera,
   Points,
+  PointsMaterial,
   RingGeometry,
   ShaderMaterial,
   SphereGeometry,
   Vector3,
 } from "three";
 
-import * as dat  from "dat.gui";
+import * as dat from "dat.gui";
 
 import { WebManager } from "./scenes/utils/WebManager";
 import { CameraManager } from "./scenes/utils/CameraManager";
@@ -39,7 +43,6 @@ import v_mainSphere from "./scenes/shaders/v_mainSphere.glsl";
 
 import f_pSphere from "./scenes/shaders/f_pSphere.glsl";
 import v_pSphere from "./scenes/shaders/v_pSphere.glsl";
-
 
 const camera = new PerspectiveCamera(
   45,
@@ -82,9 +85,7 @@ let domItemsSecond = [];
 let canTravelTo = false;
 let target = null;
 
-
-
-//nueva esfera 
+//nueva esfera
 let sphereGeometry = null;
 
 let n_Material = null;
@@ -92,8 +93,117 @@ let p_Sphere = null;
 let p_SphereMaterial = null;
 
 
+
+
+// Variables
+const maxParticleCount = 1000;
+const particleCount = 500;
+const r = 60  ;
+const rHalf = r / 2;
+let vertexpos = 0;
+let colorpos = 0;
+let numConnected = 0;
+
+  // Create particles
+  const particlesGeometry = new BufferGeometry();
+  const particlePositions = new Float32Array(maxParticleCount * 3);
+  const particlesData = [];
+  let linesGeometry = null;
+  let linesMaterial = null;
+
+  let s_positions = null;
+  let s_colors = null;
+
+
+
+
+let sp_ParticlesCount = 900;
+let sp_ParticlesGeometry = new BufferGeometry();
+let sp_ParticlesPosition = new Float32Array(sp_ParticlesCount);
+let sp_Particles = null;
+let sp_ParticlesMaterial = new PointsMaterial( {
+  color: 0xFFFFFF,
+  size: 3,
+  blending: AdditiveBlending,
+  transparent: true,
+  sizeAttenuation: false
+} );
+let sp_ParticlesData = [];
+let sp_radio = 12;
+let sp_radioHalf = sp_radio/2;
+
+let sp_segments = sp_ParticlesCount* sp_ParticlesCount;
+let sp_linesGeometry = new BufferGeometry();
+let sp_linesMaterial = new LineBasicMaterial( {
+  vertexColors: true,
+  blending: AdditiveBlending,
+  transparent: true
+} );
+let sp_linesPositions = new Float32Array(sp_segments *3);
+let sp_linesColors = new Float32Array(sp_segments *3);
+let sp_linesParticles = null;
+
+
+const minDistance = 4;
+const maxConnections = 2;
+const particleSpeed = 50;
+
+
+
+
 //la escena web
 webManager.setEnviroment(webManager.web3d, (web) => {
+//INICIO NUEVA ESFERA
+
+
+for (let i = 0; i < sp_ParticlesCount; i++) {
+  const x = Math.random() * sp_radio - sp_radio / 2;
+  const y = Math.random() * sp_radio - sp_radio / 2;
+  const z = Math.random() * sp_radio - sp_radio / 2;
+
+  sp_ParticlesPosition[i * 3] = x;
+  sp_ParticlesPosition[i * 3 + 1] = y;
+  sp_ParticlesPosition[i * 3 + 2] = z;
+
+  const v = new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2);
+  const velocity = new Vector3(v.x, v.y, v.z);
+  velocity.normalize().divideScalar(particleSpeed);
+
+  sp_ParticlesData.push({ velocity: velocity, numConnections: 0 });
+}
+
+  // Luego, puedes usar particlePositions para configurar la geometría de las partículas
+  sp_ParticlesGeometry.setAttribute(
+    "position",
+    new BufferAttribute(sp_ParticlesPosition, 3)
+  );
+
+
+    // Luego, puedes usar particlePositions para configurar la geometría de las partículas
+    sp_linesGeometry.setAttribute(
+      "position",
+      new BufferAttribute(sp_linesPositions, 3).setUsage( DynamicDrawUsage ) );
+    sp_linesGeometry.setAttribute(
+      "color",
+      new BufferAttribute(sp_linesColors, 3).setUsage( DynamicDrawUsage ) );
+
+      sp_linesGeometry.computeBoundingSphere();
+
+      sp_linesGeometry.setDrawRange( 0, 0 );
+
+
+
+//agregar 
+sp_Particles = new Points(sp_ParticlesGeometry, sp_ParticlesMaterial);
+sp_linesParticles = new LineSegments(sp_linesGeometry, sp_linesMaterial)
+
+web.add(sp_Particles);
+web.add(sp_linesParticles);
+
+
+
+
+  //FINAL DE LA NUEVA ESFERA
   const ambientLight = new AmbientLight();
   ambientLight.intensity = 2;
   const axisHelper = new AxesHelper(20);
@@ -124,7 +234,6 @@ webManager.setEnviroment(webManager.web3d, (web) => {
   const ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
   const TWO_PI = 2 * Math.PI;
 
-  
   const n_particleCount = 2000;
   const p_rellenoGeometry = new BufferGeometry();
   const p_rellenoPosition = new Float32Array(n_particleCount * 3);
@@ -155,7 +264,7 @@ webManager.setEnviroment(webManager.web3d, (web) => {
       const angleIncrement = TWO_PI / divisionParticleCount;
       const angle = angleIncrement * rIndex;
 
-      sizeArray[rIndex] = Math.random() *(rIndex % 10 -1) + 1;
+      sizeArray[rIndex] = Math.random() * ((rIndex % 10) - 1) + 1;
 
       //noise
 
@@ -197,33 +306,27 @@ webManager.setEnviroment(webManager.web3d, (web) => {
   const n_colorsArray = new Float32Array(n_particleCount * 3);
   const n_sizeArray = new Float32Array(n_particleCount);
 
-    // Crear un material para las partículas (puedes personalizar esto según tus necesidades)
-    n_Material = new ShaderMaterial({
-      vertexShader: v_relleno, // Tu vertex shader existente
-      fragmentShader: f_relleno, // Tu fragment shader existente
-      transparent: true,
-      blending: AdditiveBlending,
-      depthWrite: false,
-      uniforms: {
-        time: { value: 0 },
-      },
-    });
-
-
+  // Crear un material para las partículas (puedes personalizar esto según tus necesidades)
+  n_Material = new ShaderMaterial({
+    vertexShader: v_relleno, // Tu vertex shader existente
+    fragmentShader: f_relleno, // Tu fragment shader existente
+    transparent: true,
+    blending: AdditiveBlending,
+    depthWrite: false,
+    uniforms: {
+      time: { value: 0 },
+    },
+  });
 
   for (let index = 0; index < p_rellenoPosition.length; index++) {
+    const x = (Math.random() - 0.5) * nRadius * 2;
+    const y = (Math.random() - 0.15) * nRadius * 0.5;
+    const z = (Math.random() - 0.5) * nRadius * 2;
 
-    const x = (Math.random()-0.5) * nRadius *2;
-    const y = ( Math.random() -0.15 ) * nRadius *0.5;
-    const z = (Math.random()-0.5) * nRadius *2;
-
-    if(index > (n_particleCount * 3) / 5 ){
-      n_sizeArray[index] = Math.random() *(index % 15 -1) + 2;
-
-    } 
-    else{
-
-      n_sizeArray[index] = Math.random() *(index % 5 -1) + 2;
+    if (index > (n_particleCount * 3) / 5) {
+      n_sizeArray[index] = Math.random() * ((index % 15) - 1) + 2;
+    } else {
+      n_sizeArray[index] = Math.random() * ((index % 5) - 1) + 2;
     }
 
     const colorIndex = index % colors.length;
@@ -239,16 +342,19 @@ webManager.setEnviroment(webManager.web3d, (web) => {
     p_rellenoPosition[index * 3 + 2] = z;
   }
 
-
   // Luego, puedes usar particlePositions para configurar la geometría de las partículas
-  p_rellenoGeometry.setAttribute("position", new BufferAttribute(p_rellenoPosition, 3));
-  p_rellenoGeometry.setAttribute("color", new BufferAttribute(n_colorsArray, 3));
+  p_rellenoGeometry.setAttribute(
+    "position",
+    new BufferAttribute(p_rellenoPosition, 3)
+  );
+  p_rellenoGeometry.setAttribute(
+    "color",
+    new BufferAttribute(n_colorsArray, 3)
+  );
   p_rellenoGeometry.setAttribute(
     "particleSize",
     new BufferAttribute(n_sizeArray, 1)
   );
-
-
 
   particleGeometry.setAttribute("position", new BufferAttribute(positions, 3));
   particleGeometry.setAttribute("color", new BufferAttribute(colorsArray, 3));
@@ -257,6 +363,7 @@ webManager.setEnviroment(webManager.web3d, (web) => {
     new BufferAttribute(sizeArray, 1)
   );
 
+  console.log(particleGeometry)
   // Crear un material para las partículas (puedes personalizar esto según tus necesidades)
   particleMaterial = new ShaderMaterial({
     vertexShader: v_Particles, // Tu vertex shader existente
@@ -368,7 +475,7 @@ webManager.setEnviroment(webManager.web3d, (web) => {
     },
     vertexShader: sphereParticle.vertexShader,
     fragmentShader: fragmentShaderSphere,
-    transparent: true
+    transparent: true,
   });
   // Supongamos que tienes una geometría de referencia llamada "otraGeometria"
 
@@ -379,28 +486,18 @@ webManager.setEnviroment(webManager.web3d, (web) => {
   particleSphere.computeVertexNormals(); // Importante para los sombreados
   particles = new Points(particleSphere, dotSphere);
 
-
-
   particles.position.set(0, 10, 0);
   secondParticles.position.set(0, 10, 0);
 
-  
   sphere.position.set(0, 10, 0);
   mainSphere.position.set(0, 10, 0);
   // Crear un sistema de partículas
   const particleSystem = new Points(particleGeometry, particleMaterial);
 
-
   const p_Relleno = new Points(p_rellenoGeometry, n_Material);
 
-
   //NEW SPHERE HERE!
-  sphereGeometry = new SphereGeometry(20, 25, 50);
-  
-
-  
-  
-
+  sphereGeometry = new SphereGeometry(20, 15, 30);
 
   p_Sphere = new BufferGeometry().copy(sphereGeometry);
 
@@ -408,45 +505,102 @@ webManager.setEnviroment(webManager.web3d, (web) => {
     vertexShader: v_pSphere,
     fragmentShader: f_pSphere,
     uniforms: {
-      time: {value: 0.0}
-    }
+      time: { value: 0.0 },
+    },
   });
 
-  p_SphereVelocity = Array.from({ length: 500 }, () => Math.random());
+  p_SphereVelocity = [];
 
-  p_Sphere.setAttribute("velocity", new BufferAttribute(new Float32Array(p_SphereVelocity), 1));
+  for (let index = 0; index < 496; index++) {
+    p_SphereVelocity[index] = Math.random() * 2.5 + 1;
+  }
 
-  
+  p_Sphere.setAttribute(
+    "velocity",
+    new BufferAttribute(new Float32Array(496), 1)
+  );
+
+  console.log(p_SphereVelocity);
+
   console.log(p_Sphere);
 
   p_Sphere = new Points(p_Sphere, p_SphereMaterial);
-  
+
+
+  //ESFER NUEVA AQUI
+
+
+
+
+
+for (let i = 0; i < maxParticleCount; i++) {
+  const x = Math.random() * r - r / 2;
+  const y = Math.random() * r - r / 2;
+  const z = Math.random() * r - r / 2;
+
+  particlePositions[i * 3] = x;
+  particlePositions[i * 3 + 1] = y;
+  particlePositions[i * 3 + 2] = z;
+
+  const v = new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2);
+  particlesData.push({ velocity: v.normalize().divideScalar(50), numConnections: 0 });
+}
+
+const particlesMaterial = new PointsMaterial({
+  color: 0xffffff,
+  size: 15,
+  blending: AdditiveBlending,
+  transparent: true,
+  sizeAttenuation: false,
+});
+
+particlesGeometry.setAttribute('position', new BufferAttribute(particlePositions, 3));
+const s_particles = new Points(particlesGeometry, particlesMaterial);
+//web.add(s_particles);
+// Create lines
+linesGeometry = new BufferGeometry();
+const segments = maxParticleCount * maxParticleCount;
+s_positions = new Float32Array(segments * 3);
+s_colors = new Float32Array(segments * 3);
+
+linesMaterial = new LineBasicMaterial({ vertexColors: true, blending: AdditiveBlending, transparent: true });
+
+linesGeometry.setAttribute('position', new BufferAttribute(s_positions, 3));
+linesGeometry.setAttribute('color', new BufferAttribute(s_colors, 3));
+
+const lines = new LineSegments(linesGeometry, linesMaterial);
+
+//web.add(lines);
+
+
+
+
+
+
+
 
   ///
 
-
   // Agregar el sistema de partículas a la escena (suponiendo que tienes una escena)
   //web.add(p_Sphere);
-  
+
   web.add(p_Relleno);
   web.add(particleSystem);
-  web.add(mainSphere);
-  web.add(sphere);
+  //web.add(mainSphere);
+  //web.add(sphere);
 
   // Agregar el objeto Mesh (partículas) a la escena
-    web.add(particles);
-    web.add(secondParticles);
-    axisHelper.position.copy(primeraPantalla)
-    web.add(axisHelper);
+  //web.add(particles);
+  //web.add(secondParticles);
+  //axisHelper.position.copy(primeraPantalla)
+  //web.add(axisHelper);
 
-    particles.visible = false;
-    secondParticles.visible = false;
-
+  particles.visible = false;
+  secondParticles.visible = false;
 });
 
 //la escena html
 webManager.setEnviroment(webManager.webHtml, (html) => {
-
   //agregar primera pantalla
   const dots = {
     chat: {
@@ -491,7 +645,7 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
       header.scale.set(scale, scale, scale);
       header.position.set(1, 0, 0);
 
-      html.add(header);
+      //html.add(header);
       domItems.push(header);
     }
   }
@@ -499,24 +653,22 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
   //segunda pantalla
 
   for (let index = 0; index < 5; index++) {
-    
-  const element = document.createElement("div");
-  const elementContainer = document.createElement("div");
-  element.innerHTML = "Lorem";
-  element.classList.add("element-b");
-  elementContainer.appendChild(element);
+    const element = document.createElement("div");
+    const elementContainer = document.createElement("div");
+    element.innerHTML = "Lorem";
+    element.classList.add("element-b");
+    elementContainer.appendChild(element);
 
-  const header = new CSS3DObject(elementContainer);
-  const scale = 0.04;
+    const header = new CSS3DObject(elementContainer);
+    const scale = 0.04;
 
-  header.scale.set(scale, scale, scale);
-  html.add(header);
-  domItemsSecond.push(header);
+    header.scale.set(scale, scale, scale);
+    //html.add(header);
+    domItemsSecond.push(header);
   }
   //posicionar los segunda pantalla
   const radioS = 22;
   const centerS = new Vector3(0, 0, -8); // Vector3 que representa el centro
-
 
   for (let index = 0; index < domItemsSecond.length; index++) {
     const fixed = 1;
@@ -546,7 +698,7 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
   */
   ///
 
-//posicionar
+  //posicionar
   const radio = 50;
   const center = new Vector3(0, 0, -20); // Vector3 que representa el centro
 
@@ -560,12 +712,10 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
 
     domItems[index].position.copy(position);
   }
-
 });
 
 const segundaVista = new Vector3(0, 0, -19);
 target = new Vector3(0, 0, -8);
-
 
 //DETECTAR EL TOQUE DE LA PANTALLA
 document.addEventListener("click", () => {
@@ -578,16 +728,105 @@ const screenAnim = animatePosition(
   segundaPantalla,
   4500
 );
-const viewAnim = animatePosition(
-  target,
-  segundaVista,
-  1200
-);
+const viewAnim = animatePosition(target, segundaVista, 1200);
+
+const sp_V = new Vector3();
 
 webManager.setAnimations((delta) => {
+
+
+    let vertexpos = 0
+    let colorpos = 0
+    let numConnected = 0
+
+  for (let i = 0; i < sp_ParticlesCount; i++) {
+    const particleData = sp_ParticlesData[i];
+  
+    sp_V.set(
+      sp_ParticlesPosition[i * 3],
+      sp_ParticlesPosition[i * 3 + 1],
+      sp_ParticlesPosition[i * 3 + 2]
+    )
+      .add(particleData.velocity)
+      .setLength(sp_radio);
+    
+    sp_ParticlesPosition[i * 3] = sp_V.x;
+    sp_ParticlesPosition[i * 3 + 1] = sp_V.y;
+    sp_ParticlesPosition[i * 3 + 2] = sp_V.z;
+    
+
+    if (sp_ParticlesPosition[i * 3 + 1] < -sp_radioHalf || sp_ParticlesPosition[i * 3 + 1] > sp_radioHalf) {
+      sp_ParticlesData[i].velocity.y = -sp_ParticlesData[i].velocity.y;
+    }
+    
+    if (sp_ParticlesPosition[i * 3] < -sp_radioHalf || sp_ParticlesPosition[i * 3] > sp_radioHalf) {
+      sp_ParticlesData[i].velocity.x = -sp_ParticlesData[i].velocity.x;
+    }
+    
+    if (sp_ParticlesPosition[i * 3 + 2] < -sp_radioHalf || sp_ParticlesPosition[i * 3 + 2] > sp_radioHalf) {
+      sp_ParticlesData[i].velocity.z = -sp_ParticlesData[i].velocity.z;
+    }
+    
+
+    //actualizar las lineas
+    for (let j = i + 1; j < sp_ParticlesCount; j++) {
+      const particleDataB = sp_ParticlesData[j];
+
+      const dx = sp_ParticlesPosition[i * 3] -     sp_ParticlesPosition[j * 3]
+      const dy = sp_ParticlesPosition[i * 3 + 1] - sp_ParticlesPosition[j * 3 + 1]
+      const dz = sp_ParticlesPosition[i * 3 + 2] - sp_ParticlesPosition[j * 3 + 2]
+      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+      if (dist < minDistance) {
+        particleData.numConnections++;
+        particleDataB.numConnections++;
+
+        const alpha = 1.05 - dist / minDistance;
+
+      //XYZ
+       sp_linesPositions[vertexpos++] = sp_ParticlesPosition[i * 3];
+       sp_linesPositions[vertexpos++] = sp_ParticlesPosition[i * 3 + 1];
+       sp_linesPositions[vertexpos++] = sp_ParticlesPosition[i * 3 + 2];
+
+       //XYZ
+       sp_linesPositions[vertexpos++] = sp_ParticlesPosition[j * 3];
+       sp_linesPositions[vertexpos++] = sp_ParticlesPosition[j * 3 + 1];
+       sp_linesPositions[vertexpos++] = sp_ParticlesPosition[j * 3 + 2];
+
+       //RGB
+        sp_linesColors[colorpos++] = alpha;
+        sp_linesColors[colorpos++] = alpha;
+        sp_linesColors[colorpos++] = alpha+1;
+
+        //RGB
+        sp_linesColors[colorpos++] = alpha;
+        sp_linesColors[colorpos++] = alpha;
+        sp_linesColors[colorpos++] = alpha;
+
+        numConnected++
+      }
+    }
+  }
+
+  sp_ParticlesGeometry.attributes.position.needsUpdate = true;
+
+
+  sp_linesGeometry.setDrawRange(0, numConnected * 2)
+  sp_linesGeometry.attributes.position.needsUpdate = true;
+  sp_linesGeometry.attributes.color.needsUpdate = true;
+  
+  
+
+
+
+
+
+
+
+
   dotSphere.uniforms.time.value = delta * 0.5;
   dotSphere.uniforms.time.needsUpdate = true;
-  
+
   p_SphereMaterial.uniforms.time.value = delta * 0.5;
   p_SphereMaterial.uniforms.time.needsUpdate = true;
 
@@ -597,9 +836,10 @@ webManager.setAnimations((delta) => {
   n_Material.uniforms.time.value = delta;
   n_Material.uniforms.time.needsUpdate = true;
 
-
   sphereParticle.uniforms.time.value = delta * 0.5;
   sphereParticle.uniforms.time.needsUpdate = true;
+
+
 
   //animar esfera
   const angular = Math.sin(delta);
@@ -608,27 +848,32 @@ webManager.setAnimations((delta) => {
     isInScreen = true;
     viewAnim.update();
     screenAnim.update();
-    screenAnim.onComplete(()=>{
+    screenAnim.onComplete(() => {
       isSecondScreen = false;
-      particles.visible = true;
+      //s_particles.visible = true;
       secondParticles.visible = true;
       domItemsSecond.forEach((element) => {
-        element.element.getElementsByClassName("element-b")[0].classList.add("active")
+        element.element
+          .getElementsByClassName("element-b")[0]
+          .classList.add("active");
       });
 
       domItems.forEach((element) => {
-        element.element.getElementsByClassName("element")[0].classList.add("desactive")
+        element.element
+          .getElementsByClassName("element")[0]
+          .classList.add("desactive");
       });
-    })
+    });
   } else {
     //primera pantalla
     console.log("NORMAL");
-    if(!isInScreen){
-
+    if (!isInScreen) {
       CAM_MANAGER.update();
 
       sphere.position.y = angular + 10;
       mainSphere.position.y = angular + 10;
+      sp_Particles.position.y = angular +10;
+      sp_linesParticles.position.y = angular +10;
     }
     domItems.forEach((element) => {
       let relative = new Vector3().addVectors(
@@ -641,8 +886,6 @@ webManager.setAnimations((delta) => {
         CAM_MANAGER.camera.position
       );
 
-      
-
       element.lookAt(relativePos);
       element.position.y = angular - 1;
     });
@@ -653,22 +896,15 @@ webManager.setAnimations((delta) => {
         element.position
       );
 
-      
-      let relativeFixed = new Vector3().subVectors(
-        relative,
-        target
-      )
+      let relativeFixed = new Vector3().subVectors(relative, target);
 
       let relativePos = new Vector3().addVectors(
         relativeFixed,
         CAM_MANAGER.camera.position
       );
 
-
       element.lookAt(relativePos);
     });
-
-
   }
 
   CAM_MANAGER.camera.lookAt(target);
@@ -679,7 +915,6 @@ webManager.postProcesing = true;
 webManager.renderLoop();
 webManager.debugScenes();
 
-
 //funciones de ayuda
 
 function animatePosition(objeto, nuevaPosicion, tiempoAnimacion) {
@@ -688,7 +923,7 @@ function animatePosition(objeto, nuevaPosicion, tiempoAnimacion) {
     .to(nuevaPosicion, tiempoAnimacion)
     .easing(TWEEN.Easing.Quadratic.InOut);
 
-    tween.start();
+  tween.start();
   // Retorna el objeto de animación para control externo
   return tween;
 }
@@ -705,7 +940,6 @@ function lerp(start, end, t) {
   return start + t * (end - start);
 }
 
-
 // Crear un objeto para almacenar los valores que se modificarán
 const cameraControls = {
   positionY: CAM_MANAGER.container.position.y,
@@ -716,10 +950,18 @@ const cameraControls = {
 const gui = new dat.GUI();
 
 // Agregar controles para modificar la posición y y z de la cámara
-const cameraFolder = gui.addFolder('Camera Position');
-cameraFolder.add(cameraControls, 'positionY', -100, 100).step(0.005).name('Y Position').onChange(() => {
-  CAM_MANAGER.container.position.y = cameraControls.positionY;
-});
-cameraFolder.add(cameraControls, 'positionZ', -100, 100).step(0.005).name('Z Position').onChange(() => {
-  CAM_MANAGER.container.position.z = cameraControls.positionZ;
-});
+const cameraFolder = gui.addFolder("Camera Position");
+cameraFolder
+  .add(cameraControls, "positionY", -100, 100)
+  .step(0.005)
+  .name("Y Position")
+  .onChange(() => {
+    CAM_MANAGER.container.position.y = cameraControls.positionY;
+  });
+cameraFolder
+  .add(cameraControls, "positionZ", -100, 100)
+  .step(0.005)
+  .name("Z Position")
+  .onChange(() => {
+    CAM_MANAGER.container.position.z = cameraControls.positionZ;
+  });

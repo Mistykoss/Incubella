@@ -1,29 +1,16 @@
 // Vertex Shader
 
 uniform float time; // Tiempo para controlar la rotación
+uniform float velocity; // Tiempo para controlar la rotación
 
 void main() {
-  // Calcula los ángulos de rotación en función del tiempo
-  float angleX = time; // Ángulo de rotación en el eje X
-  float angleY = time; // Ángulo de rotación en el eje Y
+  float angle = time * velocity;
+  float radius = 20.0;
 
-  // Calcula las matrices de rotación para los ejes X e Y
-  mat4 rotationX = mat4(
-    1.0, 0.0, 0.0, 0.0,
-    0.0, cos(angleX), -sin(angleX), 0.0,
-    0.0, sin(angleX), cos(angleX), 0.0,
-    0.0, 0.0, 0.0, 1.0
-  );
+  vec3 newPosition = position;
 
-  mat4 rotationY = mat4(
-    cos(angleY), 0.0, sin(angleY), 0.0,
-    0.0, 1.0, 0.0, 0.0,
-    -sin(angleY), 0.0, cos(angleY), 0.0,
-    0.0, 0.0, 0.0, 1.0
-  );
+  newPosition.x += velocity * time;
 
-  // Aplica las rotaciones a las coordenadas del vértice en ambos ejes
-  vec4 rotatedPosition = rotationY * rotationX * vec4(position, 1.0);
-
-  gl_Position = projectionMatrix * modelViewMatrix * rotatedPosition;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+  gl_PointSize = 5.0;
 }
