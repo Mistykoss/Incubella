@@ -4,12 +4,16 @@ attribute vec3 color;
 attribute float particleSize;
 uniform float time;
 
+
+varying vec2 vUv;
 varying float vSize;
 varying vec3 vColor; // Variable que almacena el color de la partícula
 
 
 
 void main() {
+  vUv = uv;
+
   vSize = particleSize;
   float intensity = 0.5;
   float animTime = 0.07;

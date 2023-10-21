@@ -6,7 +6,7 @@ const mouseData = {
   screenWidth: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth, // Ancho de la pantalla
   screenHeight: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight, // Alto de la pantalla
   fixedValue: 0.5,
-  intensity: 40,
+  intensity: 80,
   x: null, // Última posición X del mouse
   y: null, // Última posición Y del mouse
 };
@@ -47,7 +47,7 @@ export class CameraManager {
     this.activeParallax();
   }
   activeParallax(){
-    this.camera.position.lerp(this.normalizedMouse, 0.005);
+    this.camera.position.lerp(this.normalizedMouse, 0.009);
   }
 }
 

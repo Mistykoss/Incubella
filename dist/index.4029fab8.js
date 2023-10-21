@@ -711,7 +711,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     const axisHelper = new (0, _three.AxesHelper)(20);
     // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
     particleGeometry = new (0, _three.BufferGeometry)();
-    const particleCount = 10000; // Cantidad de partículas
+    const particleCount = 20000; // Cantidad de partículas
     const colors = [
         0x0dd5fd,
         0x0dd5fd,
@@ -814,20 +814,25 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     p_rellenoGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(n_sizeArray, 1));
     particleGeometry.setAttribute("position", new (0, _three.BufferAttribute)(positions, 3));
     particleGeometry.setAttribute("color", new (0, _three.BufferAttribute)(colorsArray, 3));
-    particleGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(sizeArray, 1));
+    particleGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(sizeArray, 1).setUsage((0, _three.DynamicDrawUsage)));
     console.log(particleGeometry);
     // Crear un material para las partículas (puedes personalizar esto según tus necesidades)
+    // Cargar la textura
+    const textureUrl = new URL(require("9917033fbdff724b"));
     particleMaterial = new (0, _three.ShaderMaterial)({
+        uniforms: {
+            time: {
+                value: 0
+            },
+            u_texture: {
+                value: new (0, _three.TextureLoader)().load(textureUrl.href)
+            }
+        },
         vertexShader: (0, _vParticlesGlslDefault.default),
         fragmentShader: (0, _fParticlesGlslDefault.default),
         transparent: true,
         blending: (0, _three.AdditiveBlending),
-        depthWrite: false,
-        uniforms: {
-            time: {
-                value: 0
-            }
-        }
+        depthWrite: false
     });
     //OBJETOS
     sphere = new (0, _three.Mesh)(new (0, _three.SphereGeometry)(12, 32, 32), new (0, _three.ShaderMaterial)({
@@ -1098,15 +1103,16 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
 });
 const segundaVista = new (0, _three.Vector3)(0, 0, -19);
 target = new (0, _three.Vector3)(0, 0, -8);
+const screenAnim = animatePosition(CAM_MANAGER.container.position, segundaPantalla, 4500);
+const viewAnim = animatePosition(target, segundaVista, 1200);
 setTimeout(()=>{
     //DETECTAR EL TOQUE DE LA PANTALLA
     document.addEventListener("click", ()=>{
         isSecondScreen = true;
         console.log("viajar", isSecondScreen);
+        screenAnim.start();
     });
 }, 2500);
-const screenAnim = animatePosition(CAM_MANAGER.container.position, segundaPantalla, 4500);
-const viewAnim = animatePosition(target, segundaVista, 1200);
 const sp_V = new (0, _three.Vector3)();
 webManager.setAnimations((delta)=>{
     let vertexpos = 0;
@@ -1216,7 +1222,7 @@ webManager.debugScenes();
 function animatePosition(objeto, nuevaPosicion, tiempoAnimacion) {
     // Creamos una nueva instancia de Tween para animar la posición
     const tween = new (0, _tweenJsDefault.default).Tween(objeto).to(nuevaPosicion, tiempoAnimacion).easing((0, _tweenJsDefault.default).Easing.Quadratic.InOut);
-    tween.start();
+    //tween.start();
     // Retorna el objeto de animación para control externo
     return tween;
 }
@@ -1245,7 +1251,7 @@ cameraFolder.add(cameraControls, "positionZ", -100, 100).step(0.005).name("Z Pos
     CAM_MANAGER.container.position.z = cameraControls.positionZ;
 });
 
-},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_relleno.glsl":"2Trgk","./scenes/shaders/v_relleno.glsl":"52tUs","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","./scenes/shaders/f_pSphere.glsl":"6b176","./scenes/shaders/v_pSphere.glsl":"11q8G","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_relleno.glsl":"2Trgk","./scenes/shaders/v_relleno.glsl":"52tUs","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","./scenes/shaders/f_pSphere.glsl":"6b176","./scenes/shaders/v_pSphere.glsl":"11q8G","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","9917033fbdff724b":"6xN1R"}],"ktPTu":[function(require,module,exports) {
 /**
  * @license
  * Copyright 2010-2023 Three.js Authors
@@ -34275,7 +34281,7 @@ const mouseData = {
     screenWidth: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
     screenHeight: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight,
     fixedValue: 0.5,
-    intensity: 40,
+    intensity: 80,
     x: null,
     y: null
 };
@@ -34309,7 +34315,7 @@ class CameraManager {
         this.activeParallax();
     }
     activeParallax() {
-        this.camera.position.lerp(this.normalizedMouse, 0.005);
+        this.camera.position.lerp(this.normalizedMouse, 0.009);
     }
 }
 window.addEventListener("mousemove", (event)=>{
@@ -36218,13 +36224,13 @@ var exports = {
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bZB41":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\n\n      void main() {\n\n        \n        \n        // Calculamos la coordenada relativa al centro del fragmento\n        vec2 coord = gl_PointCoord - vec2(0.5);\n        \n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n        float dist = length(coord);\n        \n        //ajustes de particulas\n        vec3 lightColor = vColor; // Color de la luz\n        float alpha = smoothstep(0.5, 0.49, dist);\n        float alphaIntensity = 0.01;\n        float lightIntensity = 1.0;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n        if (dist > 0.5) discard;\n\n        // Calculamos el brillo de la part\xedcula\n  float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n  // Calculamos el color final de la part\xedcula con el brillo\n  vec3 finalColor = vColor + lightColor * brightness;\n      \n        // Asignamos el color de la part\xedcula al fragmento\n        gl_FragColor = vec4(finalColor, alpha *  brightness);\n      }\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.25;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(vColor, alpha);\n}\n";
 
 },{}],"fi574":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\n\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vSize = particleSize;\n  float intensity = 0.5;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.y = sin((time * animTime) * vSize) * intensity;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
+module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.y = sin((time * animTime) * vSize) * intensity;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
 
 },{}],"2Trgk":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\n\n      void main() {\n\n        \n        \n        // Calculamos la coordenada relativa al centro del fragmento\n        vec2 coord = gl_PointCoord - vec2(0.5);\n        \n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n        float dist = length(coord);\n        \n        //ajustes de particulas\n        vec3 lightColor = vColor; // Color de la luz\n        float alpha = smoothstep(0.5, 0.4, dist);\n        float alphaIntensity = 0.01;\n        float lightIntensity = 1.0;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n        if (dist > 0.5) discard;\n\n        // Calculamos el brillo de la part\xedcula\n  float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n  // Calculamos el color final de la part\xedcula con el brillo\n  vec3 finalColor = vColor + lightColor * brightness;\n      \n        // Asignamos el color de la part\xedcula al fragmento\n        gl_FragColor = vec4(finalColor, alpha *  brightness);\n      }\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.1;\n      float lightIntensity = 5.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      vec3 finalColor = vColor * brightness;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha);\n}\n";
 
 },{}],"52tUs":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\n\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vSize = particleSize;\n  float intensity = 0.5;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.y =  newPosition.y + sin((time * animTime) * vSize) * intensity;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
@@ -36240,6 +36246,44 @@ module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almace
 
 },{}],"11q8G":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\n// Vertex Shader\n\nuniform float time; // Tiempo para controlar la rotaci\xf3n\nuniform float velocity; // Tiempo para controlar la rotaci\xf3n\n\nvoid main() {\n  float angle = time * velocity;\n  float radius = 20.0;\n\n  vec3 newPosition = position;\n\n  newPosition.x += velocity * time;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = 5.0;\n}\n";
+
+},{}],"6xN1R":[function(require,module,exports) {
+module.exports = require("81735b0b520cd661").getBundleURL("bbaCV") + "particle.47990137.png" + "?" + Date.now();
+
+},{"81735b0b520cd661":"lgJ39"}],"lgJ39":[function(require,module,exports) {
+"use strict";
+var bundleURL = {};
+function getBundleURLCached(id) {
+    var value = bundleURL[id];
+    if (!value) {
+        value = getBundleURL();
+        bundleURL[id] = value;
+    }
+    return value;
+}
+function getBundleURL() {
+    try {
+        throw new Error();
+    } catch (err) {
+        var matches = ("" + err.stack).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^)\n]+/g);
+        if (matches) // The first two stack frames will be this function and getBundleURLCached.
+        // Use the 3rd one, which will be a runtime in the original bundle.
+        return getBaseURL(matches[2]);
+    }
+    return "/";
+}
+function getBaseURL(url) {
+    return ("" + url).replace(/^((?:https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/.+)\/[^/]+$/, "$1") + "/";
+}
+// TODO: Replace uses with `new URL(url).origin` when ie11 is no longer supported.
+function getOrigin(url) {
+    var matches = ("" + url).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^/]+/);
+    if (!matches) throw new Error("Origin not found");
+    return matches[0];
+}
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+exports.getOrigin = getOrigin;
 
 },{}]},["eRtbY","kOjux"], "kOjux", "parcelRequire94c2")
 

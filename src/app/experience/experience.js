@@ -9,6 +9,7 @@ import {
   Color,
   DynamicDrawUsage,
   IcosahedronGeometry,
+  ImageUtils,
   LineBasicMaterial,
   LineSegments,
   Mesh,
@@ -21,6 +22,7 @@ import {
   RingGeometry,
   ShaderMaterial,
   SphereGeometry,
+  TextureLoader,
   Vector3,
 } from "three";
 
@@ -213,7 +215,7 @@ web.add(sp_linesParticles);
   // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
   particleGeometry = new BufferGeometry();
 
-  const particleCount = 10000; // Cantidad de partículas
+  const particleCount = 20000; // Cantidad de partículas
   const colors = [
     0x0dd5fd, //azul
     0x0dd5fd, //azul
@@ -366,19 +368,25 @@ web.add(sp_linesParticles);
   particleGeometry.setAttribute(
     "particleSize",
     new BufferAttribute(sizeArray, 1)
-  );
+  .setUsage( DynamicDrawUsage ));
 
   console.log(particleGeometry)
   // Crear un material para las partículas (puedes personalizar esto según tus necesidades)
+  // Cargar la textura
+const textureUrl = new URL("./effects/particle.png", import.meta.url);
+
+
   particleMaterial = new ShaderMaterial({
+    uniforms: {
+      time: { value: 0 },
+      u_texture: {value: new TextureLoader().load(textureUrl.href) },
+    },
     vertexShader: v_Particles, // Tu vertex shader existente
     fragmentShader: f_Particles, // Tu fragment shader existente
     transparent: true,
     blending: AdditiveBlending,
     depthWrite: false,
-    uniforms: {
-      time: { value: 0 },
-    },
+    
   });
 
   //OBJETOS
@@ -722,13 +730,6 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
 const segundaVista = new Vector3(0, 0, -19);
 target = new Vector3(0, 0, -8);
 
-setTimeout(()=>{
-  //DETECTAR EL TOQUE DE LA PANTALLA
-document.addEventListener("click", () => {
-  isSecondScreen = true;
-  console.log("viajar", isSecondScreen);
-});
-}, 2500);
 
 const screenAnim = animatePosition(
   CAM_MANAGER.container.position,
@@ -736,6 +737,17 @@ const screenAnim = animatePosition(
   4500
 );
 const viewAnim = animatePosition(target, segundaVista, 1200);
+setTimeout(()=>{
+
+  //DETECTAR EL TOQUE DE LA PANTALLA
+document.addEventListener("click", () => {
+  isSecondScreen = true;
+  console.log("viajar", isSecondScreen);
+  screenAnim.start();
+});
+}, 2500);
+
+
 
 const sp_V = new Vector3();
 
@@ -930,7 +942,7 @@ function animatePosition(objeto, nuevaPosicion, tiempoAnimacion) {
     .to(nuevaPosicion, tiempoAnimacion)
     .easing(TWEEN.Easing.Quadratic.InOut);
 
-  tween.start();
+  //tween.start();
   // Retorna el objeto de animación para control externo
   return tween;
 }
