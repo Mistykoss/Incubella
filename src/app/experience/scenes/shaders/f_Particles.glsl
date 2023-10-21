@@ -14,7 +14,7 @@ varying float vSize;
         
         //ajustes de particulas
         vec3 lightColor = vColor; // Color de la luz
-        float alpha = smoothstep(0.5, 0.4, dist);
+        float alpha = smoothstep(0.5, 0.49, dist);
         float alphaIntensity = 0.01;
         float lightIntensity = 1.0;
 

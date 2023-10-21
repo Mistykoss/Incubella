@@ -36,9 +36,9 @@ export class WebManager {
   initPost() {
     // Crear una instancia del pase de "bloom" y configurarlo
     const bloomPass = new UnrealBloomPass(
-      /* threshold */ 0.1, // Ajusta este valor según tus necesidades
-      /* strength */ 1.2, // Ajusta este valor según tus necesidades
-      /* radius */ 0.15, // Ajusta este valor según tus necesidades
+      /* threshold */ 0, // Ajusta este valor según tus necesidades
+      /* strength */ 0.35, // Ajusta este valor según tus necesidades
+      /* radius */ 0.3, // Ajusta este valor según tus necesidades
     );
   
     // Agregar el pase de "bloom" al compositor de efectos

@@ -646,12 +646,12 @@ let linesGeometry = null;
 let linesMaterial = null;
 let s_positions = null;
 let s_colors = null;
-let sp_ParticlesCount = 900;
+let sp_ParticlesCount = 1200;
 let sp_ParticlesGeometry = new (0, _three.BufferGeometry)();
 let sp_ParticlesPosition = new Float32Array(sp_ParticlesCount);
 let sp_Particles = null;
 let sp_ParticlesMaterial = new (0, _three.PointsMaterial)({
-    color: 0xFFFFFF,
+    color: 0x0dd5fd,
     size: 3,
     blending: (0, _three.AdditiveBlending),
     transparent: true,
@@ -663,6 +663,7 @@ let sp_radioHalf = sp_radio / 2;
 let sp_segments = sp_ParticlesCount * sp_ParticlesCount;
 let sp_linesGeometry = new (0, _three.BufferGeometry)();
 let sp_linesMaterial = new (0, _three.LineBasicMaterial)({
+    color: 0x0dd5fd,
     vertexColors: true,
     blending: (0, _three.AdditiveBlending),
     transparent: true
@@ -670,9 +671,10 @@ let sp_linesMaterial = new (0, _three.LineBasicMaterial)({
 let sp_linesPositions = new Float32Array(sp_segments * 3);
 let sp_linesColors = new Float32Array(sp_segments * 3);
 let sp_linesParticles = null;
-const minDistance = 4;
+const minDistance = 3.5;
 const maxConnections = 2;
-const particleSpeed = 50;
+const particleSpeed = 150; // valor mas alto, mas lento
+const colorSphere = new (0, _three.Color)(0x0dd5fd);
 //la escena web
 webManager.setEnviroment(webManager.web3d, (web)=>{
     //INICIO NUEVA ESFERA
@@ -709,23 +711,26 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     const axisHelper = new (0, _three.AxesHelper)(20);
     // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
     particleGeometry = new (0, _three.BufferGeometry)();
-    const particleCount = 5000; // Cantidad de partículas
+    const particleCount = 10000; // Cantidad de partículas
     const colors = [
-        0x90a9ff,
-        0x3fb0ff,
-        0x2596be,
-        0xe9f5f9
+        0x0dd5fd,
+        0x0dd5fd,
+        0x0c94fc,
+        0x0c94fc,
+        0xa133d7,
+        0x2573b0,
+        0x2573b0
     ];
     const sizeArray = new Float32Array(particleCount);
     const positions = new Float32Array(particleCount * 3);
     const colorsArray = new Float32Array(particleCount * 3);
-    const area = 0.5; //ajusta el area ocmpleta de la nube de particulas
+    const area = 1; //ajusta el area ocmpleta de la nube de particulas
     const centerSize = 2;
     const amplitude = 0.1; // valor mas alto mas larga es el ala
-    const divisiones = 20; // mas divisiones mas colores
+    const divisiones = 40; // mas divisiones mas colores
     let counter = divisiones;
-    const noiseAmplitude = 23; //un valor mas alto agrega mas ruido
-    const noiseIntensity = 10; //un valor mas alto agrega mas ruido
+    const noiseAmplitude = 10; //un valor mas alto agrega mas ruido
+    const noiseIntensity = 1; //un valor mas alto agrega mas ruido
     const ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
     const TWO_PI = 2 * Math.PI;
     const n_particleCount = 2000;
@@ -1093,11 +1098,13 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
 });
 const segundaVista = new (0, _three.Vector3)(0, 0, -19);
 target = new (0, _three.Vector3)(0, 0, -8);
-//DETECTAR EL TOQUE DE LA PANTALLA
-document.addEventListener("click", ()=>{
-    isSecondScreen = true;
-    console.log("viajar", isSecondScreen);
-});
+setTimeout(()=>{
+    //DETECTAR EL TOQUE DE LA PANTALLA
+    document.addEventListener("click", ()=>{
+        isSecondScreen = true;
+        console.log("viajar", isSecondScreen);
+    });
+}, 2500);
 const screenAnim = animatePosition(CAM_MANAGER.container.position, segundaPantalla, 4500);
 const viewAnim = animatePosition(target, segundaVista, 1200);
 const sp_V = new (0, _three.Vector3)();
@@ -1124,7 +1131,7 @@ webManager.setAnimations((delta)=>{
             if (dist < minDistance) {
                 particleData.numConnections++;
                 particleDataB.numConnections++;
-                const alpha = 1.05 - dist / minDistance;
+                const alpha = 1 - dist / minDistance;
                 //XYZ
                 sp_linesPositions[vertexpos++] = sp_ParticlesPosition[i * 3];
                 sp_linesPositions[vertexpos++] = sp_ParticlesPosition[i * 3 + 1];
@@ -1134,13 +1141,13 @@ webManager.setAnimations((delta)=>{
                 sp_linesPositions[vertexpos++] = sp_ParticlesPosition[j * 3 + 1];
                 sp_linesPositions[vertexpos++] = sp_ParticlesPosition[j * 3 + 2];
                 //RGB
-                sp_linesColors[colorpos++] = alpha;
-                sp_linesColors[colorpos++] = alpha;
-                sp_linesColors[colorpos++] = alpha + 1;
+                sp_linesColors[colorpos++] = alpha + colorSphere.r;
+                sp_linesColors[colorpos++] = alpha + colorSphere.g;
+                sp_linesColors[colorpos++] = alpha + colorSphere.b;
                 //RGB
-                sp_linesColors[colorpos++] = alpha;
-                sp_linesColors[colorpos++] = alpha;
-                sp_linesColors[colorpos++] = alpha;
+                sp_linesColors[colorpos++] = alpha + colorSphere.r;
+                sp_linesColors[colorpos++] = alpha + colorSphere.g;
+                sp_linesColors[colorpos++] = alpha + colorSphere.b;
                 numConnected++;
             }
         }
@@ -33582,7 +33589,7 @@ class WebManager {
     }
     initPost() {
         // Crear una instancia del pase de "bloom" y configurarlo
-        const bloomPass = new (0, _unrealBloomPass.UnrealBloomPass)(/* threshold */ 0.1, /* strength */ 1.2, /* radius */ 0.15);
+        const bloomPass = new (0, _unrealBloomPass.UnrealBloomPass)(/* threshold */ 0, /* strength */ 0.35, /* radius */ 0.3);
         // Agregar el pase de "bloom" al compositor de efectos
         this.renderManager.web3DRenderComposer.addPass(this.renderPass);
         this.renderManager.web3DRenderComposer.addPass(bloomPass);
@@ -36211,7 +36218,7 @@ var exports = {
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bZB41":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\n\n      void main() {\n\n        \n        \n        // Calculamos la coordenada relativa al centro del fragmento\n        vec2 coord = gl_PointCoord - vec2(0.5);\n        \n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n        float dist = length(coord);\n        \n        //ajustes de particulas\n        vec3 lightColor = vColor; // Color de la luz\n        float alpha = smoothstep(0.5, 0.4, dist);\n        float alphaIntensity = 0.01;\n        float lightIntensity = 1.0;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n        if (dist > 0.5) discard;\n\n        // Calculamos el brillo de la part\xedcula\n  float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n  // Calculamos el color final de la part\xedcula con el brillo\n  vec3 finalColor = vColor + lightColor * brightness;\n      \n        // Asignamos el color de la part\xedcula al fragmento\n        gl_FragColor = vec4(finalColor, alpha *  brightness);\n      }\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\n\n      void main() {\n\n        \n        \n        // Calculamos la coordenada relativa al centro del fragmento\n        vec2 coord = gl_PointCoord - vec2(0.5);\n        \n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n        float dist = length(coord);\n        \n        //ajustes de particulas\n        vec3 lightColor = vColor; // Color de la luz\n        float alpha = smoothstep(0.5, 0.49, dist);\n        float alphaIntensity = 0.01;\n        float lightIntensity = 1.0;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n        if (dist > 0.5) discard;\n\n        // Calculamos el brillo de la part\xedcula\n  float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n  // Calculamos el color final de la part\xedcula con el brillo\n  vec3 finalColor = vColor + lightColor * brightness;\n      \n        // Asignamos el color de la part\xedcula al fragmento\n        gl_FragColor = vec4(finalColor, alpha *  brightness);\n      }\n";
 
 },{}],"fi574":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\n\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vSize = particleSize;\n  float intensity = 0.5;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.y = sin((time * animTime) * vSize) * intensity;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";

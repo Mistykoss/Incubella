@@ -117,12 +117,12 @@ let numConnected = 0;
 
 
 
-let sp_ParticlesCount = 900;
+let sp_ParticlesCount = 1200;
 let sp_ParticlesGeometry = new BufferGeometry();
 let sp_ParticlesPosition = new Float32Array(sp_ParticlesCount);
 let sp_Particles = null;
 let sp_ParticlesMaterial = new PointsMaterial( {
-  color: 0xFFFFFF,
+  color: 0x0dd5fd,
   size: 3,
   blending: AdditiveBlending,
   transparent: true,
@@ -135,6 +135,7 @@ let sp_radioHalf = sp_radio/2;
 let sp_segments = sp_ParticlesCount* sp_ParticlesCount;
 let sp_linesGeometry = new BufferGeometry();
 let sp_linesMaterial = new LineBasicMaterial( {
+  color: 0x0dd5fd,
   vertexColors: true,
   blending: AdditiveBlending,
   transparent: true
@@ -144,10 +145,11 @@ let sp_linesColors = new Float32Array(sp_segments *3);
 let sp_linesParticles = null;
 
 
-const minDistance = 4;
+const minDistance = 3.5;
 const maxConnections = 2;
-const particleSpeed = 50;
+const particleSpeed = 150; // valor mas alto, mas lento
 
+const colorSphere = new Color(0x0dd5fd);
 
 
 
@@ -211,12 +213,15 @@ web.add(sp_linesParticles);
   // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
   particleGeometry = new BufferGeometry();
 
-  const particleCount = 5000; // Cantidad de partículas
+  const particleCount = 10000; // Cantidad de partículas
   const colors = [
-    0x90a9ff,
-    0x3fb0ff, // Celeste claro
-    0x2596be, // azul bandera
-    0xe9f5f9, // Azul neon
+    0x0dd5fd, //azul
+    0x0dd5fd, //azul
+    0x0c94fc, // Celeste claro
+    0x0c94fc, // Celeste claro
+    0xa133d7, // morado
+    0x2573b0, // azul bandera
+    0x2573b0, // azul bandera
 
     // Puedes agregar más colores aquí...
   ];
@@ -224,13 +229,13 @@ web.add(sp_linesParticles);
   const positions = new Float32Array(particleCount * 3);
   const colorsArray = new Float32Array(particleCount * 3);
 
-  const area = 0.5; //ajusta el area ocmpleta de la nube de particulas
+  const area = 1; //ajusta el area ocmpleta de la nube de particulas
   const centerSize = 2;
   const amplitude = 0.1; // valor mas alto mas larga es el ala
-  const divisiones = 20; // mas divisiones mas colores
+  const divisiones = 40; // mas divisiones mas colores
   let counter = divisiones;
-  const noiseAmplitude = 23; //un valor mas alto agrega mas ruido
-  const noiseIntensity = 10; //un valor mas alto agrega mas ruido
+  const noiseAmplitude = 10; //un valor mas alto agrega mas ruido
+  const noiseIntensity = 1; //un valor mas alto agrega mas ruido
   const ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
   const TWO_PI = 2 * Math.PI;
 
@@ -717,11 +722,13 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
 const segundaVista = new Vector3(0, 0, -19);
 target = new Vector3(0, 0, -8);
 
-//DETECTAR EL TOQUE DE LA PANTALLA
+setTimeout(()=>{
+  //DETECTAR EL TOQUE DE LA PANTALLA
 document.addEventListener("click", () => {
   isSecondScreen = true;
   console.log("viajar", isSecondScreen);
 });
+}, 2500);
 
 const screenAnim = animatePosition(
   CAM_MANAGER.container.position,
@@ -781,7 +788,7 @@ webManager.setAnimations((delta) => {
         particleData.numConnections++;
         particleDataB.numConnections++;
 
-        const alpha = 1.05 - dist / minDistance;
+        const alpha = 1 - dist / minDistance;
 
       //XYZ
        sp_linesPositions[vertexpos++] = sp_ParticlesPosition[i * 3];
@@ -794,14 +801,14 @@ webManager.setAnimations((delta) => {
        sp_linesPositions[vertexpos++] = sp_ParticlesPosition[j * 3 + 2];
 
        //RGB
-        sp_linesColors[colorpos++] = alpha;
-        sp_linesColors[colorpos++] = alpha;
-        sp_linesColors[colorpos++] = alpha+1;
+        sp_linesColors[colorpos++] = alpha + colorSphere.r;
+        sp_linesColors[colorpos++] = alpha + colorSphere.g;
+        sp_linesColors[colorpos++] = alpha + colorSphere.b;
 
         //RGB
-        sp_linesColors[colorpos++] = alpha;
-        sp_linesColors[colorpos++] = alpha;
-        sp_linesColors[colorpos++] = alpha;
+        sp_linesColors[colorpos++] = alpha + colorSphere.r;
+        sp_linesColors[colorpos++] = alpha + colorSphere.g;
+        sp_linesColors[colorpos++] = alpha + colorSphere.b;
 
         numConnected++
       }
