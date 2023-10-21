@@ -16,6 +16,7 @@ void main() {
 
   vSize = particleSize;
   float intensity = 0.5;
+  float turbulence = 0.35;
   float animTime = 0.07;
   vColor = color;
   // Transforma la posición de la partícula
@@ -25,6 +26,9 @@ void main() {
 
 
   newPosition.y = sin((time * animTime) * vSize) * intensity;
+
+  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;
+  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;
 
 
 
