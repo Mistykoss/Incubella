@@ -1111,7 +1111,7 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
     }
 });
 const segundaVista = new (0, _three.Vector3)(0, 0, -19);
-target = new (0, _three.Vector3)(0, 0, 0);
+target = new (0, _three.Vector3)(0, 15, 0);
 const screenAnim = animatePosition(CAM_MANAGER.container.position, segundaPantalla, 4500);
 const viewAnim = animatePosition(target, segundaVista, 1200);
 setTimeout(()=>{

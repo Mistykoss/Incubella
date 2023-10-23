@@ -740,7 +740,7 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
 });
 
 const segundaVista = new Vector3(0, 0, -19);
-target = new Vector3(0, 0, 0);
+target = new Vector3(0, 15, 0);
 
 
 const screenAnim = animatePosition(
