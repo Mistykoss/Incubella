@@ -602,12 +602,11 @@ var _vPSphereGlslDefault = parcelHelpers.interopDefault(_vPSphereGlsl);
 const camera = new (0, _three.PerspectiveCamera)(45, window.innerWidth / window.innerHeight, 0.01, 1000);
 const primeraPantalla = new (0, _three.Vector3)(0, 100, 100);
 const segundaPantalla = new (0, _three.Vector3)(0, 45, 10);
-const debugPantalla = new (0, _three.Vector3)(0, 0, 500);
+const debugPantalla = new (0, _three.Vector3)(0, 500, 500);
 let isSecondScreen = false;
 let isInScreen = false;
 const CAM_MANAGER = new (0, _cameraManager.CameraManager)(camera);
 CAM_MANAGER.container.position.copy(primeraPantalla);
-console.log(CAM_MANAGER.container.position);
 //CAM_MANAGER.container.position.set(0, 100, 100);
 CAM_MANAGER.camera.lookAt(new (0, _three.Vector3)(0, 0, 0));
 const webManager = new (0, _webManager.WebManager)("Main", CAM_MANAGER);
@@ -757,7 +756,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             //calcular anguloas reativos
             const angleIncrement = TWO_PI / divisionParticleCount;
             const angle = angleIncrement * rIndex;
-            sizeArray[rIndex] = Math.random() * (rIndex % 10 - 1) + 1;
+            sizeArray[rIndex] = Math.random() * (rIndex % 10 - 1) + (Math.random() + 3.5);
             //noise
             //ecuaciones
             const xEcuation = Math.cos(rIndex * ringFrecuency) * (1 + amplitude * Math.sin(rIndex));
@@ -826,6 +825,9 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             },
             u_texture: {
                 value: new (0, _three.TextureLoader)().load(textureUrl.href)
+            },
+            u_mouse: {
+                value: new (0, _three.Vector2)()
             }
         },
         vertexShader: (0, _vParticlesGlslDefault.default),
@@ -998,6 +1000,12 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     //web.add(p_Sphere);
     web.add(p_Relleno);
     web.add(particleSystem);
+    const plane = new (0, _three.Mesh)(new (0, _three.PlaneGeometry)(300, 300, 4), new (0, _three.MeshBasicMaterial)({
+        wireframe: true
+    }));
+    CAM_MANAGER.plane = plane;
+    plane.rotation.x = -Math.PI / 2;
+    web.add(plane);
     //web.add(mainSphere);
     //web.add(sphere);
     // Agregar el objeto Mesh (partículas) a la escena
@@ -1007,6 +1015,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     //web.add(axisHelper);
     particles.visible = false;
     secondParticles.visible = false;
+    plane.visible = false;
 });
 //la escena html
 webManager.setEnviroment(webManager.webHtml, (html)=>{
@@ -1168,6 +1177,9 @@ webManager.setAnimations((delta)=>{
     p_SphereMaterial.uniforms.time.needsUpdate = true;
     particleMaterial.uniforms.time.value = delta;
     particleMaterial.uniforms.time.needsUpdate = true;
+    particleMaterial.uniforms.u_mouse.value.x = CAM_MANAGER.mouseData.mouse.x;
+    particleMaterial.uniforms.u_mouse.value.y = CAM_MANAGER.mouseData.mouse.y;
+    particleMaterial.uniforms.u_mouse.needsUpdate = true;
     n_Material.uniforms.time.value = delta;
     n_Material.uniforms.time.needsUpdate = true;
     sphereParticle.uniforms.time.value = delta * 0.5;
@@ -34281,9 +34293,13 @@ const mouseData = {
     screenWidth: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
     screenHeight: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight,
     fixedValue: 0.5,
-    intensity: 80,
-    x: null,
-    y: null
+    intensity: 50,
+    x: 0,
+    y: 0,
+    mouse: new (0, _three.Vector2)(),
+    u_mouse: new (0, _three.Vector2)(),
+    raycaster: new (0, _three.Raycaster)(),
+    plane: null
 };
 class CameraManager {
     constructor(camera){
@@ -34294,6 +34310,10 @@ class CameraManager {
         this.domElement = null;
         this.orbitControls = null;
         this.normalizedMouse = new (0, _three.Vector3)();
+        this.mouseData = mouseData;
+        this.raycaster = new (0, _three.Raycaster)();
+        this.plane = null;
+        this.isPlane = false;
         // this.rendererManager = new RENDER_MANAGER();
         //inicializar camara
         this.init();
@@ -34313,6 +34333,17 @@ class CameraManager {
     update() {
         this.normalizedMouse.set(mouseData.x, -mouseData.y, 0);
         this.activeParallax();
+        if (this.plane) {
+            this.raycaster.setFromCamera(mouseData.u_mouse, this.camera);
+            const intersected = this.raycaster.intersectObjects([
+                this.plane
+            ]);
+            if (intersected[0]) {
+                const point = intersected[0].point;
+                //console.log(point.x, point.z)
+                mouseData.mouse.set(point.x, point.z);
+            }
+        }
     }
     activeParallax() {
         this.camera.position.lerp(this.normalizedMouse, 0.009);
@@ -34321,8 +34352,11 @@ class CameraManager {
 window.addEventListener("mousemove", (event)=>{
     const mouseX = event.clientX; // Posición X actual del mouse
     const mouseY = event.clientY; // Posición Y actual del mouse
-    mouseData.x = (mouseX / mouseData.screenWidth - mouseData.fixedValue) * mouseData.intensity; // Valor normalizado de la posición X
-    mouseData.y = (mouseY / mouseData.screenHeight - mouseData.fixedValue) * mouseData.intensity; // Valor normalizado de la posición Y
+    const relativeX = mouseX / mouseData.screenWidth - mouseData.fixedValue;
+    const relativeY = mouseY / mouseData.screenHeight - mouseData.fixedValue;
+    mouseData.x = relativeX * mouseData.intensity; // Valor normalizado de la posición X
+    mouseData.y = relativeY * mouseData.intensity; // Valor normalizado de la posición Y
+    mouseData.u_mouse.set(relativeX * 2, -relativeY * 2);
 });
 
 },{"three":"ktPTu","three/examples/jsm/controls/orbitcontrols":"lYBrp","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"lYBrp":[function(require,module,exports) {
@@ -36224,10 +36258,10 @@ var exports = {
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bZB41":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.25;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(vColor, alpha);\n}\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.25;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.45)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(vColor, alpha);\n}\n";
 
 },{}],"fi574":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.y = sin((time * animTime) * vSize) * intensity;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
+module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
 
 },{}],"2Trgk":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.1;\n      float lightIntensity = 5.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      vec3 finalColor = vColor * brightness;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha);\n}\n";

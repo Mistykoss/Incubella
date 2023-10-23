@@ -1,4 +1,4 @@
-import { Group, PerspectiveCamera, Vector2, Vector3 } from "three";
+import { Group, PerspectiveCamera, Raycaster, Vector2, Vector3 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/orbitcontrols";
 
 
@@ -6,9 +6,13 @@ const mouseData = {
   screenWidth: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth, // Ancho de la pantalla
   screenHeight: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight, // Alto de la pantalla
   fixedValue: 0.5,
-  intensity: 80,
-  x: null, // Última posición X del mouse
-  y: null, // Última posición Y del mouse
+  intensity: 50,
+  x: 0, // Última posición X del mouse
+  y: 0, // Última posición Y del mouse
+  mouse: new Vector2(),
+  u_mouse: new Vector2(),
+  raycaster: new Raycaster(),
+  plane: null
 };
 
 
@@ -22,6 +26,10 @@ export class CameraManager {
     this.domElement = null;
     this.orbitControls = null;
     this.normalizedMouse = new Vector3();
+    this.mouseData = mouseData;
+    this.raycaster = new Raycaster();
+    this.plane = null;
+    this.isPlane = false
 
 
     // this.rendererManager = new RENDER_MANAGER();
@@ -45,6 +53,19 @@ export class CameraManager {
   update(){
     this.normalizedMouse.set( mouseData.x, -mouseData.y, 0);
     this.activeParallax();
+
+    if(this.plane){
+      this.raycaster.setFromCamera(mouseData.u_mouse, this.camera);
+      const intersected = this.raycaster.intersectObjects([this.plane]);
+
+      if(intersected[0]){
+        
+        const point = intersected[0].point;
+        //console.log(point.x, point.z)
+        mouseData.mouse.set(point.x, point.z);
+      }
+    }
+    
   }
   activeParallax(){
     this.camera.position.lerp(this.normalizedMouse, 0.009);
@@ -58,9 +79,11 @@ window.addEventListener("mousemove", (event)=>{
 
   const mouseX = event.clientX; // Posición X actual del mouse
   const mouseY = event.clientY; // Posición Y actual del mouse
+  const relativeX = (mouseX / mouseData.screenWidth - mouseData.fixedValue);
+  const relativeY = (mouseY / mouseData.screenHeight - mouseData.fixedValue);
 
-  mouseData.x = (mouseX / mouseData.screenWidth - mouseData.fixedValue) * mouseData.intensity; // Valor normalizado de la posición X
-  mouseData.y = (mouseY / mouseData.screenHeight - mouseData.fixedValue) * mouseData.intensity; // Valor normalizado de la posición Y
+  mouseData.x = relativeX * mouseData.intensity; // Valor normalizado de la posición X
+  mouseData.y = relativeY * mouseData.intensity; // Valor normalizado de la posición Y
 
-
+  mouseData.u_mouse.set(relativeX*2, -relativeY * 2);
 })

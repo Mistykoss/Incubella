@@ -15,7 +15,7 @@ void main() {
 
         // Descartamos los fragmentos que están fuera del radio de 0.5,
         // asignando un valor de opacidad de cero
-      if(dist > 0.5)
+      if(dist > 0.45)
             discard;
 
       // Calculamos el brillo de la partícula

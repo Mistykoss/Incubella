@@ -3,6 +3,7 @@
 attribute vec3 color;
 attribute float particleSize;
 uniform float time;
+uniform vec2 u_mouse;
 
 
 varying vec2 vUv;
@@ -25,12 +26,15 @@ void main() {
   float z = position.z;
 
 
-  newPosition.y = sin((time * animTime) * vSize) * intensity;
 
   newPosition.x =x + sin((time + vSize) ) *  turbulence + z;
   newPosition.z =z + sin((time + vSize) ) *  turbulence -x;
 
+//agregar el movimiento del mouse
+float relative = length(u_mouse.xy - newPosition.xz);
+float mouseDistance = clamp(relative, 1.5, 15.0);
 
+  newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;
 
 
   gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);

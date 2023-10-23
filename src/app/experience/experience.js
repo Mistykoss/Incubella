@@ -17,12 +17,14 @@ import {
   MeshPhongMaterial,
   MeshStandardMaterial,
   PerspectiveCamera,
+  PlaneGeometry,
   Points,
   PointsMaterial,
   RingGeometry,
   ShaderMaterial,
   SphereGeometry,
   TextureLoader,
+  Vector2,
   Vector3,
 } from "three";
 
@@ -55,14 +57,13 @@ const camera = new PerspectiveCamera(
 
 const primeraPantalla = new Vector3(0, 100, 100);
 const segundaPantalla = new Vector3(0, 45, 10);
-const debugPantalla = new Vector3(0, 0, 500);
+const debugPantalla = new Vector3(0, 500, 500);
 
 let isSecondScreen = false;
 let isInScreen = false;
 
 const CAM_MANAGER = new CameraManager(camera);
 CAM_MANAGER.container.position.copy(primeraPantalla);
-console.log(CAM_MANAGER.container.position);
 //CAM_MANAGER.container.position.set(0, 100, 100);
 
 CAM_MANAGER.camera.lookAt(new Vector3(0, 0, 0));
@@ -271,7 +272,7 @@ web.add(sp_linesParticles);
       const angleIncrement = TWO_PI / divisionParticleCount;
       const angle = angleIncrement * rIndex;
 
-      sizeArray[rIndex] = Math.random() * ((rIndex % 10) - 1) + 1;
+      sizeArray[rIndex] = Math.random() * ((rIndex % 10) - 1) + (Math.random() +3.5);
 
       //noise
 
@@ -380,6 +381,7 @@ const textureUrl = new URL("./effects/particle.png", import.meta.url);
     uniforms: {
       time: { value: 0 },
       u_texture: {value: new TextureLoader().load(textureUrl.href) },
+      u_mouse: {value: new Vector2()}
     },
     vertexShader: v_Particles, // Tu vertex shader existente
     fragmentShader: f_Particles, // Tu fragment shader existente
@@ -599,6 +601,15 @@ const lines = new LineSegments(linesGeometry, linesMaterial);
 
   web.add(p_Relleno);
   web.add(particleSystem);
+  const plane = new Mesh(
+    new PlaneGeometry(300, 300, 4),
+    new MeshBasicMaterial({wireframe: true})
+  );
+  
+  CAM_MANAGER.plane = plane;
+  plane.rotation.x = -Math.PI/2;
+
+  web.add(plane)
   //web.add(mainSphere);
   //web.add(sphere);
 
@@ -610,6 +621,7 @@ const lines = new LineSegments(linesGeometry, linesMaterial);
 
   particles.visible = false;
   secondParticles.visible = false;
+  plane.visible = false;
 });
 
 //la escena html
@@ -851,6 +863,10 @@ webManager.setAnimations((delta) => {
 
   particleMaterial.uniforms.time.value = delta;
   particleMaterial.uniforms.time.needsUpdate = true;
+
+  particleMaterial.uniforms.u_mouse.value.x = CAM_MANAGER.mouseData.mouse.x;
+  particleMaterial.uniforms.u_mouse.value.y = CAM_MANAGER.mouseData.mouse.y;
+  particleMaterial.uniforms.u_mouse.needsUpdate = true;
 
   n_Material.uniforms.time.value = delta;
   n_Material.uniforms.time.needsUpdate = true;
