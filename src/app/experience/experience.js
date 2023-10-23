@@ -740,7 +740,7 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
 });
 
 const segundaVista = new Vector3(0, 0, -19);
-target = new Vector3(0, 0, -8);
+target = new Vector3(0, 0, 0);
 
 
 const screenAnim = animatePosition(
@@ -753,9 +753,9 @@ setTimeout(()=>{
 
   //DETECTAR EL TOQUE DE LA PANTALLA
 document.addEventListener("click", () => {
-  isSecondScreen = true;
+  //isSecondScreen = true;
   console.log("viajar", isSecondScreen);
-  screenAnim.start();
+  //screenAnim.start();
 });
 }, 2500);
 
@@ -845,15 +845,6 @@ webManager.setAnimations((delta) => {
   sp_linesGeometry.setDrawRange(0, numConnected * 2)
   sp_linesGeometry.attributes.position.needsUpdate = true;
   sp_linesGeometry.attributes.color.needsUpdate = true;
-  
-  
-
-
-
-
-
-
-
 
   dotSphere.uniforms.time.value = delta * 0.5;
   dotSphere.uniforms.time.needsUpdate = true;
@@ -901,14 +892,13 @@ webManager.setAnimations((delta) => {
     });
   } else {
     //primera pantalla
-    console.log("NORMAL");
     if (!isInScreen) {
       CAM_MANAGER.update();
 
       sphere.position.y = angular + 10;
       mainSphere.position.y = angular + 10;
-      sp_Particles.position.y = angular +10;
-      sp_linesParticles.position.y = angular +10;
+      sp_Particles.position.y = angular +20;
+      sp_linesParticles.position.y = angular +20;
     }
     domItems.forEach((element) => {
       let relative = new Vector3().addVectors(
@@ -941,11 +931,12 @@ webManager.setAnimations((delta) => {
       element.lookAt(relativePos);
     });
   }
-
   CAM_MANAGER.camera.lookAt(target);
+  CAM_MANAGER.orbitControls.update();
 });
 
 //renderizar en el bucle
+CAM_MANAGER.activeOrbit();
 webManager.postProcesing = true;
 webManager.renderLoop();
 webManager.debugScenes();

@@ -1111,15 +1111,15 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
     }
 });
 const segundaVista = new (0, _three.Vector3)(0, 0, -19);
-target = new (0, _three.Vector3)(0, 0, -8);
+target = new (0, _three.Vector3)(0, 0, 0);
 const screenAnim = animatePosition(CAM_MANAGER.container.position, segundaPantalla, 4500);
 const viewAnim = animatePosition(target, segundaVista, 1200);
 setTimeout(()=>{
     //DETECTAR EL TOQUE DE LA PANTALLA
     document.addEventListener("click", ()=>{
-        isSecondScreen = true;
+        //isSecondScreen = true;
         console.log("viajar", isSecondScreen);
-        screenAnim.start();
+    //screenAnim.start();
     });
 }, 2500);
 const sp_V = new (0, _three.Vector3)();
@@ -1203,13 +1203,12 @@ webManager.setAnimations((delta)=>{
         });
     } else {
         //primera pantalla
-        console.log("NORMAL");
         if (!isInScreen) {
             CAM_MANAGER.update();
             sphere.position.y = angular + 10;
             mainSphere.position.y = angular + 10;
-            sp_Particles.position.y = angular + 10;
-            sp_linesParticles.position.y = angular + 10;
+            sp_Particles.position.y = angular + 20;
+            sp_linesParticles.position.y = angular + 20;
         }
         domItems.forEach((element)=>{
             let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, element.position);
@@ -1225,8 +1224,10 @@ webManager.setAnimations((delta)=>{
         });
     }
     CAM_MANAGER.camera.lookAt(target);
+    CAM_MANAGER.orbitControls.update();
 });
 //renderizar en el bucle
+CAM_MANAGER.activeOrbit();
 webManager.postProcesing = true;
 webManager.renderLoop();
 webManager.debugScenes();
@@ -33583,6 +33584,10 @@ var _rendererManager = require("./RendererManager");
 var _cameraManager = require("./CameraManager");
 var _renderpass = require("three/examples/jsm/postprocessing/renderpass");
 var _unrealBloomPass = require("three/examples/jsm/postprocessing/UnrealBloomPass");
+var _bokehPass = require("three/examples/jsm/postprocessing/BokehPass");
+var _outputPass = require("three/examples/jsm/postprocessing/OutputPass");
+var _datGui = require("dat.gui");
+let extBoken = null;
 class WebManager {
     constructor(id, camManager){
         this._id = id;
@@ -33601,6 +33606,7 @@ class WebManager {
         this.animatedFuntion = null;
         this.postProcesing = false;
         this.renderPass = new (0, _renderpass.RenderPass)(this.web3DScene, this._camera);
+        this.bokem = null;
         this.initPost();
         //agregar camara
         this.initCamera();
@@ -33608,9 +33614,18 @@ class WebManager {
     initPost() {
         // Crear una instancia del pase de "bloom" y configurarlo
         const bloomPass = new (0, _unrealBloomPass.UnrealBloomPass)(/* threshold */ 0, /* strength */ 0.35, /* radius */ 0.3);
+        const bokehPass = new (0, _bokehPass.BokehPass)(this.web3DScene, this._camera, {
+            focus: 1000,
+            aperture: 0.5,
+            maxblur: 0.00
+        });
+        extBoken = bokehPass;
+        const outputPass = new (0, _outputPass.OutputPass)();
         // Agregar el pase de "bloom" al compositor de efectos
         this.renderManager.web3DRenderComposer.addPass(this.renderPass);
         this.renderManager.web3DRenderComposer.addPass(bloomPass);
+        this.renderManager.web3DRenderComposer.addPass(outputPass);
+        this.renderManager.web3DRenderComposer.autoClear = false;
     }
     //init camera 
     initCamera() {
@@ -33707,8 +33722,33 @@ class WebHtmlManager extends WebSceneManager {
         this._orbitControls = new OrbitControls(this._camera, this.renderManager.domElement);
     }
 }
+// Crear una instancia de dat.GUI
+const gui = new _datGui.GUI();
+const boken = {
+    focus: 0,
+    aperture: 0,
+    maxblur: 0
+};
+gui.domElement.style.zIndex = 100;
+// Agregar controles para modificar la posición y y z de la cámara
+const bokenFolder = gui.addFolder("blur");
+function change() {
+    extBoken.uniforms["focus"].value = boken.focus;
+    console.log(extBoken.uniforms["focus"].value);
+    extBoken.uniforms["aperture"].value = boken.aperture * 0.00001;
+    extBoken.uniforms["maxblur"].value = boken.maxblur;
+}
+bokenFolder.add(boken, "focus", 0, 1000).step(0.005).name("focus").onChange(()=>{
+    change();
+});
+bokenFolder.add(boken, "aperture", 0, 10).step(0.001).name("aperture").onChange(()=>{
+    change();
+});
+bokenFolder.add(boken, "maxblur", 0, 0.001).step(0.001).name("maxblur").onChange(()=>{
+    change();
+});
 
-},{"three":"ktPTu","./RendererManager":"7TumE","./CameraManager":"lnXBx","three/examples/jsm/postprocessing/renderpass":"ivBs8","three/examples/jsm/postprocessing/UnrealBloomPass":"3iDYE","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7TumE":[function(require,module,exports) {
+},{"three":"ktPTu","./RendererManager":"7TumE","./CameraManager":"lnXBx","three/examples/jsm/postprocessing/renderpass":"ivBs8","three/examples/jsm/postprocessing/UnrealBloomPass":"3iDYE","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","three/examples/jsm/postprocessing/BokehPass":"aMkgI","three/examples/jsm/postprocessing/OutputPass":"bggV1","dat.gui":"k3xQk"}],"7TumE":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "RenderManager", ()=>RenderManager);
@@ -34328,7 +34368,12 @@ class CameraManager {
         this.container.position.set(0, 0, 35);
     }
     activeOrbit() {
-        this.orbitControls = new (0, _orbitcontrols.OrbitControls)(this.camera, this.domElement);
+        this.orbitControls = new (0, _orbitcontrols.OrbitControls)(this.container, this.domElement);
+        this.orbitControls.enableDamping = true;
+        this.orbitControls.rotateSpeed = 0.20;
+        this.orbitControls.dampingFactor = 0.025;
+        this.orbitControls.maxPolarAngle = Math.PI * 0.35;
+        this.orbitControls.minPolarAngle = Math.PI * 0.21;
     }
     update() {
         this.normalizedMouse.set(mouseData.x, -mouseData.y, 0);
@@ -35541,6 +35586,378 @@ var _three = require("three");
 		}`
 };
 
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"aMkgI":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "BokehPass", ()=>BokehPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+var _bokehShaderJs = require("../shaders/BokehShader.js");
+/**
+ * Depth-of-field post-process with bokeh shader
+ */ class BokehPass extends (0, _passJs.Pass) {
+    constructor(scene, camera, params){
+        super();
+        this.scene = scene;
+        this.camera = camera;
+        const focus = params.focus !== undefined ? params.focus : 1.0;
+        const aspect = params.aspect !== undefined ? params.aspect : camera.aspect;
+        const aperture = params.aperture !== undefined ? params.aperture : 0.025;
+        const maxblur = params.maxblur !== undefined ? params.maxblur : 1.0;
+        // render targets
+        this.renderTargetDepth = new (0, _three.WebGLRenderTarget)(1, 1, {
+            minFilter: (0, _three.NearestFilter),
+            magFilter: (0, _three.NearestFilter),
+            type: (0, _three.HalfFloatType)
+        });
+        this.renderTargetDepth.texture.name = "BokehPass.depth";
+        // depth material
+        this.materialDepth = new (0, _three.MeshDepthMaterial)();
+        this.materialDepth.depthPacking = (0, _three.RGBADepthPacking);
+        this.materialDepth.blending = (0, _three.NoBlending);
+        // bokeh material
+        const bokehShader = (0, _bokehShaderJs.BokehShader);
+        const bokehUniforms = (0, _three.UniformsUtils).clone(bokehShader.uniforms);
+        bokehUniforms["tDepth"].value = this.renderTargetDepth.texture;
+        bokehUniforms["focus"].value = focus;
+        bokehUniforms["aspect"].value = aspect;
+        bokehUniforms["aperture"].value = aperture;
+        bokehUniforms["maxblur"].value = maxblur;
+        bokehUniforms["nearClip"].value = camera.near;
+        bokehUniforms["farClip"].value = camera.far;
+        this.materialBokeh = new (0, _three.ShaderMaterial)({
+            defines: Object.assign({}, bokehShader.defines),
+            uniforms: bokehUniforms,
+            vertexShader: bokehShader.vertexShader,
+            fragmentShader: bokehShader.fragmentShader
+        });
+        this.uniforms = bokehUniforms;
+        this.fsQuad = new (0, _passJs.FullScreenQuad)(this.materialBokeh);
+        this._oldClearColor = new (0, _three.Color)();
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive*/ ) {
+        // Render depth into texture
+        this.scene.overrideMaterial = this.materialDepth;
+        renderer.getClearColor(this._oldClearColor);
+        const oldClearAlpha = renderer.getClearAlpha();
+        const oldAutoClear = renderer.autoClear;
+        renderer.autoClear = false;
+        renderer.setClearColor(0xffffff);
+        renderer.setClearAlpha(1.0);
+        renderer.setRenderTarget(this.renderTargetDepth);
+        renderer.clear();
+        renderer.render(this.scene, this.camera);
+        // Render bokeh composite
+        this.uniforms["tColor"].value = readBuffer.texture;
+        this.uniforms["nearClip"].value = this.camera.near;
+        this.uniforms["farClip"].value = this.camera.far;
+        if (this.renderToScreen) {
+            renderer.setRenderTarget(null);
+            this.fsQuad.render(renderer);
+        } else {
+            renderer.setRenderTarget(writeBuffer);
+            renderer.clear();
+            this.fsQuad.render(renderer);
+        }
+        this.scene.overrideMaterial = null;
+        renderer.setClearColor(this._oldClearColor);
+        renderer.setClearAlpha(oldClearAlpha);
+        renderer.autoClear = oldAutoClear;
+    }
+    setSize(width, height) {
+        this.renderTargetDepth.setSize(width, height);
+    }
+    dispose() {
+        this.renderTargetDepth.dispose();
+        this.materialDepth.dispose();
+        this.materialBokeh.dispose();
+        this.fsQuad.dispose();
+    }
+}
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/BokehShader.js":"eJNUh","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"eJNUh":[function(require,module,exports) {
+/**
+ * Depth-of-field shader with bokeh
+ * ported from GLSL shader by Martins Upitis
+ * http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
+ */ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "BokehShader", ()=>BokehShader);
+const BokehShader = {
+    defines: {
+        "DEPTH_PACKING": 1,
+        "PERSPECTIVE_CAMERA": 1
+    },
+    uniforms: {
+        "tColor": {
+            value: null
+        },
+        "tDepth": {
+            value: null
+        },
+        "focus": {
+            value: 1.0
+        },
+        "aspect": {
+            value: 1.0
+        },
+        "aperture": {
+            value: 0.025
+        },
+        "maxblur": {
+            value: 0.01
+        },
+        "nearClip": {
+            value: 1.0
+        },
+        "farClip": {
+            value: 1000.0
+        }
+    },
+    vertexShader: /* glsl */ `
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+    fragmentShader: /* glsl */ `
+
+		#include <common>
+
+		varying vec2 vUv;
+
+		uniform sampler2D tColor;
+		uniform sampler2D tDepth;
+
+		uniform float maxblur; // max blur amount
+		uniform float aperture; // aperture - bigger values for shallower depth of field
+
+		uniform float nearClip;
+		uniform float farClip;
+
+		uniform float focus;
+		uniform float aspect;
+
+		#include <packing>
+
+		float getDepth( const in vec2 screenPosition ) {
+			#if DEPTH_PACKING == 1
+			return unpackRGBAToDepth( texture2D( tDepth, screenPosition ) );
+			#else
+			return texture2D( tDepth, screenPosition ).x;
+			#endif
+		}
+
+		float getViewZ( const in float depth ) {
+			#if PERSPECTIVE_CAMERA == 1
+			return perspectiveDepthToViewZ( depth, nearClip, farClip );
+			#else
+			return orthographicDepthToViewZ( depth, nearClip, farClip );
+			#endif
+		}
+
+
+		void main() {
+
+			vec2 aspectcorrect = vec2( 1.0, aspect );
+
+			float viewZ = getViewZ( getDepth( vUv ) );
+
+			float factor = ( focus + viewZ ); // viewZ is <= 0, so this is a difference equation
+
+			vec2 dofblur = vec2 ( clamp( factor * aperture, -maxblur, maxblur ) );
+
+			vec2 dofblur9 = dofblur * 0.9;
+			vec2 dofblur7 = dofblur * 0.7;
+			vec2 dofblur4 = dofblur * 0.4;
+
+			vec4 col = vec4( 0.0 );
+
+			col += texture2D( tColor, vUv.xy );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,   0.4  ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.15,  0.37 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29,  0.29 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.37,  0.15 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.40,  0.0  ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.37, -0.15 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29, -0.29 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.15, -0.37 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,  -0.4  ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.15,  0.37 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29,  0.29 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.37,  0.15 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.4,   0.0  ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.37, -0.15 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29, -0.29 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.15, -0.37 ) * aspectcorrect ) * dofblur );
+
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.15,  0.37 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.37,  0.15 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.37, -0.15 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.15, -0.37 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.15,  0.37 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.37,  0.15 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.37, -0.15 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.15, -0.37 ) * aspectcorrect ) * dofblur9 );
+
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29,  0.29 ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.40,  0.0  ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29, -0.29 ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,  -0.4  ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29,  0.29 ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.4,   0.0  ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29, -0.29 ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,   0.4  ) * aspectcorrect ) * dofblur7 );
+
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29,  0.29 ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.4,   0.0  ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29, -0.29 ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,  -0.4  ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29,  0.29 ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.4,   0.0  ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29, -0.29 ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,   0.4  ) * aspectcorrect ) * dofblur4 );
+
+			gl_FragColor = col / 41.0;
+			gl_FragColor.a = 1.0;
+
+		}`
+};
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bggV1":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "OutputPass", ()=>OutputPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+var _outputShaderJs = require("../shaders/OutputShader.js");
+class OutputPass extends (0, _passJs.Pass) {
+    constructor(){
+        super();
+        //
+        const shader = (0, _outputShaderJs.OutputShader);
+        this.uniforms = (0, _three.UniformsUtils).clone(shader.uniforms);
+        this.material = new (0, _three.RawShaderMaterial)({
+            uniforms: this.uniforms,
+            vertexShader: shader.vertexShader,
+            fragmentShader: shader.fragmentShader
+        });
+        this.fsQuad = new (0, _passJs.FullScreenQuad)(this.material);
+        // internal cache
+        this._outputColorSpace = null;
+        this._toneMapping = null;
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
+        this.uniforms["tDiffuse"].value = readBuffer.texture;
+        this.uniforms["toneMappingExposure"].value = renderer.toneMappingExposure;
+        // rebuild defines if required
+        if (this._outputColorSpace !== renderer.outputColorSpace || this._toneMapping !== renderer.toneMapping) {
+            this._outputColorSpace = renderer.outputColorSpace;
+            this._toneMapping = renderer.toneMapping;
+            this.material.defines = {};
+            if (this._outputColorSpace == (0, _three.SRGBColorSpace)) this.material.defines.SRGB_COLOR_SPACE = "";
+            if (this._toneMapping === (0, _three.LinearToneMapping)) this.material.defines.LINEAR_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.ReinhardToneMapping)) this.material.defines.REINHARD_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.CineonToneMapping)) this.material.defines.CINEON_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.ACESFilmicToneMapping)) this.material.defines.ACES_FILMIC_TONE_MAPPING = "";
+            this.material.needsUpdate = true;
+        }
+        //
+        if (this.renderToScreen === true) {
+            renderer.setRenderTarget(null);
+            this.fsQuad.render(renderer);
+        } else {
+            renderer.setRenderTarget(writeBuffer);
+            if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+            this.fsQuad.render(renderer);
+        }
+    }
+    dispose() {
+        this.material.dispose();
+        this.fsQuad.dispose();
+    }
+}
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/OutputShader.js":"76ZI2","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"76ZI2":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "OutputShader", ()=>OutputShader);
+var _three = require("three");
+const OutputShader = {
+    uniforms: {
+        "tDiffuse": {
+            value: null
+        },
+        "toneMappingExposure": {
+            value: 1
+        }
+    },
+    vertexShader: /* glsl */ `
+		precision highp float;
+
+		uniform mat4 modelViewMatrix;
+		uniform mat4 projectionMatrix;
+
+		attribute vec3 position;
+		attribute vec2 uv;
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+    fragmentShader: /* glsl */ `
+	
+		precision highp float;
+
+		uniform sampler2D tDiffuse;
+
+		` + (0, _three.ShaderChunk)["tonemapping_pars_fragment"] + (0, _three.ShaderChunk)["colorspace_pars_fragment"] + `
+
+		varying vec2 vUv;
+
+		void main() {
+
+			gl_FragColor = texture2D( tDiffuse, vUv );
+
+			// tone mapping
+
+			#ifdef LINEAR_TONE_MAPPING
+
+				gl_FragColor.rgb = LinearToneMapping( gl_FragColor.rgb );
+
+			#elif defined( REINHARD_TONE_MAPPING )
+
+				gl_FragColor.rgb = ReinhardToneMapping( gl_FragColor.rgb );
+
+			#elif defined( CINEON_TONE_MAPPING )
+
+				gl_FragColor.rgb = OptimizedCineonToneMapping( gl_FragColor.rgb );
+
+			#elif defined( ACES_FILMIC_TONE_MAPPING )
+
+				gl_FragColor.rgb = ACESFilmicToneMapping( gl_FragColor.rgb );
+
+			#endif
+
+			// color space
+
+			#ifdef SRGB_COLOR_SPACE
+
+				gl_FragColor = LinearTosRGB( gl_FragColor );
+
+			#endif
+
+		}`
+};
+
 },{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7DfAI":[function(require,module,exports) {
 /**
  * The Ease class provides a collection of easing functions for use with tween.js.
@@ -36261,7 +36678,7 @@ var exports = {
 module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.25;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.45)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(vColor, alpha);\n}\n";
 
 },{}],"fi574":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
+module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
 
 },{}],"2Trgk":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.1;\n      float lightIntensity = 5.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      vec3 finalColor = vColor * brightness;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha);\n}\n";

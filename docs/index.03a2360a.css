@@ -126,4 +126,8 @@ body {
   }
 }
 
+.dg.ac {
+  z-index: 100 !important;
+}
+
 /*# sourceMappingURL=index.03a2360a.css.map */

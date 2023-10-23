@@ -47,7 +47,13 @@ export class CameraManager {
   }
 
   activeOrbit(){
-    this.orbitControls = new OrbitControls(this.camera, this.domElement);
+    this.orbitControls = new OrbitControls(this.container, this.domElement);
+    this.orbitControls.enableDamping = true;
+    this.orbitControls.rotateSpeed = 0.20;
+    this.orbitControls.dampingFactor = 0.025;
+    this.orbitControls.maxPolarAngle = Math.PI * 0.35;
+    this.orbitControls.minPolarAngle = Math.PI * 0.21;
+
   }
 
   update(){
