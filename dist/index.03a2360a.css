@@ -130,4 +130,32 @@ body {
   z-index: 100 !important;
 }
 
+#cortain {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+}
+
+.cortain {
+  z-index: 100;
+  background: linear-gradient(#0000 0%, #0000001a 5%, #000 100%);
+  width: 100%;
+  height: 0;
+  transition: all 2s;
+  position: fixed;
+}
+
+.cortain__top {
+  top: 0;
+  transform: rotate(180deg);
+}
+
+.cortain__bottom {
+  bottom: 0;
+}
+
+.active-cortain {
+  height: 20vh;
+}
+
 /*# sourceMappingURL=index.03a2360a.css.map */

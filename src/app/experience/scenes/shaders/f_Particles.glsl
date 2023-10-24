@@ -3,6 +3,7 @@ varying float vSize;
 varying vec2 vUv;
 
 uniform sampler2D u_texture;
+uniform float opacityFactor;
 
 void main() {
       // Calculamos la coordenada relativa al centro del fragmento
@@ -22,5 +23,5 @@ void main() {
       // Calculamos el color final de la partícula con el brillo
 
       // Asignamos el color de la partícula al fragmento
-      gl_FragColor = vec4(vColor, alpha);
+      gl_FragColor = vec4(vColor, alpha * opacityFactor);
 }

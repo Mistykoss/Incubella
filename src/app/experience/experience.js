@@ -56,7 +56,7 @@ const camera = new PerspectiveCamera(
 );
 
 const primeraPantalla = new Vector3(0, 100, 100);
-const segundaPantalla = new Vector3(0, 45, 10);
+const segundaPantalla = new Vector3(0, 30, 30);
 const debugPantalla = new Vector3(0, 500, 500);
 
 let isSecondScreen = false;
@@ -66,7 +66,6 @@ const CAM_MANAGER = new CameraManager(camera);
 CAM_MANAGER.container.position.copy(primeraPantalla);
 //CAM_MANAGER.container.position.set(0, 100, 100);
 
-CAM_MANAGER.camera.lookAt(new Vector3(0, 0, 0));
 
 const webManager = new WebManager("Main", CAM_MANAGER);
 
@@ -155,6 +154,12 @@ const particleSpeed = 150; // valor mas alto, mas lento
 const colorSphere = new Color(0x0dd5fd);
 
 
+//valor de factor de las particulas
+const particleProps = {
+  opacity: 1.0
+}
+
+
 
 //la escena web
 webManager.setEnviroment(webManager.web3d, (web) => {
@@ -212,6 +217,10 @@ web.add(sp_linesParticles);
   const ambientLight = new AmbientLight();
   ambientLight.intensity = 2;
   const axisHelper = new AxesHelper(20);
+
+  axisHelper.position.copy(new Vector3(0, 32, 0));
+
+  //web.add(axisHelper);
 
   // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
   particleGeometry = new BufferGeometry();
@@ -381,7 +390,8 @@ const textureUrl = new URL("./effects/particle.png", import.meta.url);
     uniforms: {
       time: { value: 0 },
       u_texture: {value: new TextureLoader().load(textureUrl.href) },
-      u_mouse: {value: new Vector2()}
+      u_mouse: {value: new Vector2()},
+      opacityFactor: {value: particleProps.opacity},
     },
     vertexShader: v_Particles, // Tu vertex shader existente
     fragmentShader: f_Particles, // Tu fragment shader existente
@@ -624,6 +634,38 @@ const lines = new LineSegments(linesGeometry, linesMaterial);
   plane.visible = false;
 });
 
+
+
+
+const segundaVista = new Vector3(0, 30, 0);
+target = new Vector3(0, 15, 0);
+
+
+
+const screenAnim = animatePosition(
+  CAM_MANAGER.container.position,
+  segundaPantalla,
+  4500
+);
+const viewAnim = animatePosition(target, segundaVista, 4200);
+
+
+const opacityAnim = animateValue(
+  particleProps,
+  "opacity",
+  0.1,
+  4500
+);
+//opacityFactor = 0.1;
+
+const handlreClick = (event)=>{
+  console.log(event.target)
+  isSecondScreen = true;
+  console.log("viajar", isSecondScreen);
+  screenAnim.start();
+  viewAnim.start();
+  opacityAnim.start();
+};
 //la escena html
 webManager.setEnviroment(webManager.webHtml, (html) => {
   //agregar primera pantalla
@@ -657,11 +699,13 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
       element.classList.add("element");
       img.srcset = dot.link;
       text.innerHTML = dot.title;
-
+      
       element.appendChild(span);
       element.appendChild(text);
       element.appendChild(img);
 
+      elementContainer.addEventListener("pointerdown", handlreClick);
+      
       elementContainer.appendChild(element);
 
       const header = new CSS3DObject(elementContainer);
@@ -670,7 +714,7 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
       header.scale.set(scale, scale, scale);
       header.position.set(1, 0, 0);
 
-      //html.add(header);
+      html.add(header);
       domItems.push(header);
     }
   }
@@ -688,12 +732,12 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
     const scale = 0.04;
 
     header.scale.set(scale, scale, scale);
-    //html.add(header);
+    html.add(header);
     domItemsSecond.push(header);
   }
   //posicionar los segunda pantalla
   const radioS = 22;
-  const centerS = new Vector3(0, 0, -8); // Vector3 que representa el centro
+  const centerS = new Vector3(0, 0, 15); // Vector3 que representa el centro
 
   for (let index = 0; index < domItemsSecond.length; index++) {
     const fixed = 1;
@@ -725,7 +769,7 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
 
   //posicionar
   const radio = 50;
-  const center = new Vector3(0, 0, -20); // Vector3 que representa el centro
+  const center = new Vector3(0, 0, 0); // Vector3 que representa el centro
 
   for (let index = 0; index < domItems.length; index++) {
     const angle = (Math.PI * 2 * index) / domItems.length; // Calcular el ángulo para esta iteración
@@ -738,27 +782,6 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
     domItems[index].position.copy(position);
   }
 });
-
-const segundaVista = new Vector3(0, 0, -19);
-target = new Vector3(0, 15, 0);
-
-
-const screenAnim = animatePosition(
-  CAM_MANAGER.container.position,
-  segundaPantalla,
-  4500
-);
-const viewAnim = animatePosition(target, segundaVista, 1200);
-setTimeout(()=>{
-
-  //DETECTAR EL TOQUE DE LA PANTALLA
-document.addEventListener("click", () => {
-  //isSecondScreen = true;
-  console.log("viajar", isSecondScreen);
-  //screenAnim.start();
-});
-}, 2500);
-
 
 
 const sp_V = new Vector3();
@@ -839,45 +862,60 @@ webManager.setAnimations((delta) => {
     }
   }
 
+  
+  
   sp_ParticlesGeometry.attributes.position.needsUpdate = true;
-
-
   sp_linesGeometry.setDrawRange(0, numConnected * 2)
   sp_linesGeometry.attributes.position.needsUpdate = true;
   sp_linesGeometry.attributes.color.needsUpdate = true;
 
-  dotSphere.uniforms.time.value = delta * 0.5;
-  dotSphere.uniforms.time.needsUpdate = true;
+  //rotar 
+  sp_Particles.rotation.y = delta *0.05;
+  sp_linesParticles.rotation.y = delta *0.05;
 
-  p_SphereMaterial.uniforms.time.value = delta * 0.5;
-  p_SphereMaterial.uniforms.time.needsUpdate = true;
+  //dotSphere.uniforms.time.value = delta * 0.5;
+  //dotSphere.uniforms.time.needsUpdate = true;
+//
+  //p_SphereMaterial.uniforms.time.value = delta * 0.5;
+  //p_SphereMaterial.uniforms.time.needsUpdate = true;
 
   particleMaterial.uniforms.time.value = delta;
   particleMaterial.uniforms.time.needsUpdate = true;
+
+  particleMaterial.uniforms.opacityFactor.value = particleProps.opacity;
+  particleMaterial.uniforms.opacityFactor.needsUpdate = true;
 
   particleMaterial.uniforms.u_mouse.value.x = CAM_MANAGER.mouseData.mouse.x;
   particleMaterial.uniforms.u_mouse.value.y = CAM_MANAGER.mouseData.mouse.y;
   particleMaterial.uniforms.u_mouse.needsUpdate = true;
 
-  n_Material.uniforms.time.value = delta;
-  n_Material.uniforms.time.needsUpdate = true;
-
-  sphereParticle.uniforms.time.value = delta * 0.5;
-  sphereParticle.uniforms.time.needsUpdate = true;
+  //n_Material.uniforms.time.value = delta;
+  //n_Material.uniforms.time.needsUpdate = true;
+//
+  //sphereParticle.uniforms.time.value = delta * 0.5;
+  //sphereParticle.uniforms.time.needsUpdate = true;
 
 
 
   //animar esfera
   const angular = Math.sin(delta);
 
+  CAM_MANAGER.camera.lookAt(target);
+  CAM_MANAGER.orbitControls.update();
+
   if (isSecondScreen) {
     isInScreen = true;
     viewAnim.update();
     screenAnim.update();
+    opacityAnim.update();
     screenAnim.onComplete(() => {
+
+      //desactivar los controles de orbita
+      CAM_MANAGER.orbitControls.minPolarAngle = Math.PI * 0.25;
+      CAM_MANAGER.orbitControls.maxPolarAngle = Math.PI * 0.25;
+
       isSecondScreen = false;
       //s_particles.visible = true;
-      secondParticles.visible = true;
       domItemsSecond.forEach((element) => {
         element.element
           .getElementsByClassName("element-b")[0]
@@ -893,10 +931,8 @@ webManager.setAnimations((delta) => {
   } else {
     //primera pantalla
     if (!isInScreen) {
-      CAM_MANAGER.update();
+      //CAM_MANAGER.update();
 
-      sphere.position.y = angular + 10;
-      mainSphere.position.y = angular + 10;
       sp_Particles.position.y = angular +20;
       sp_linesParticles.position.y = angular +20;
     }
@@ -931,8 +967,7 @@ webManager.setAnimations((delta) => {
       element.lookAt(relativePos);
     });
   }
-  CAM_MANAGER.camera.lookAt(target);
-  CAM_MANAGER.orbitControls.update();
+
 });
 
 //renderizar en el bucle
@@ -953,6 +988,17 @@ function animatePosition(objeto, nuevaPosicion, tiempoAnimacion) {
   // Retorna el objeto de animación para control externo
   return tween;
 }
+
+
+function animateValue(normal,target,  newValue, tiempoAnimacion) {
+
+  const tween = new TWEEN.Tween(normal)
+    .to({ [target]: newValue }, tiempoAnimacion) // Establecer 'opacity' como propiedad de destino
+    .easing(TWEEN.Easing.Quadratic.InOut);
+  return tween;
+}
+
+
 
 function graph(x, z) {
   const t = 5;

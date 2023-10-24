@@ -143,5 +143,31 @@ body {
 
 /*Drag Drop effects*/
 .dg.ac{
-    z-index: 100 !important;
+    z-index: 100 !important ;
+}
+
+#cortain{
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+}
+.cortain{
+    background-color: black;
+    position: fixed;
+    z-index: 100;
+    height: 0vh;
+    width: 100%;
+
+    transition: all 2s;
+    background: linear-gradient(to bottom, transparent 0%,rgba(0, 0, 0, 0.1) 5%, rgb(0, 0, 0) 100%);
+}
+.cortain__top{
+    top: 0;
+    transform: rotate(180deg);
+}
+.cortain__bottom{
+    bottom: 0;
+}
+.active-cortain{
+    height: 20vh;
 }

@@ -601,14 +601,13 @@ var _vPSphereGlsl = require("./scenes/shaders/v_pSphere.glsl");
 var _vPSphereGlslDefault = parcelHelpers.interopDefault(_vPSphereGlsl);
 const camera = new (0, _three.PerspectiveCamera)(45, window.innerWidth / window.innerHeight, 0.01, 1000);
 const primeraPantalla = new (0, _three.Vector3)(0, 100, 100);
-const segundaPantalla = new (0, _three.Vector3)(0, 45, 10);
+const segundaPantalla = new (0, _three.Vector3)(0, 30, 30);
 const debugPantalla = new (0, _three.Vector3)(0, 500, 500);
 let isSecondScreen = false;
 let isInScreen = false;
 const CAM_MANAGER = new (0, _cameraManager.CameraManager)(camera);
 CAM_MANAGER.container.position.copy(primeraPantalla);
 //CAM_MANAGER.container.position.set(0, 100, 100);
-CAM_MANAGER.camera.lookAt(new (0, _three.Vector3)(0, 0, 0));
 const webManager = new (0, _webManager.WebManager)("Main", CAM_MANAGER);
 //global variables
 let particleGeometry;
@@ -674,6 +673,10 @@ const minDistance = 3.5;
 const maxConnections = 2;
 const particleSpeed = 150; // valor mas alto, mas lento
 const colorSphere = new (0, _three.Color)(0x0dd5fd);
+//valor de factor de las particulas
+const particleProps = {
+    opacity: 1.0
+};
 //la escena web
 webManager.setEnviroment(webManager.web3d, (web)=>{
     //INICIO NUEVA ESFERA
@@ -708,6 +711,8 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     const ambientLight = new (0, _three.AmbientLight)();
     ambientLight.intensity = 2;
     const axisHelper = new (0, _three.AxesHelper)(20);
+    axisHelper.position.copy(new (0, _three.Vector3)(0, 32, 0));
+    //web.add(axisHelper);
     // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
     particleGeometry = new (0, _three.BufferGeometry)();
     const particleCount = 20000; // Cantidad de partículas
@@ -828,6 +833,9 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             },
             u_mouse: {
                 value: new (0, _three.Vector2)()
+            },
+            opacityFactor: {
+                value: particleProps.opacity
             }
         },
         vertexShader: (0, _vParticlesGlslDefault.default),
@@ -1017,6 +1025,20 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     secondParticles.visible = false;
     plane.visible = false;
 });
+const segundaVista = new (0, _three.Vector3)(0, 30, 0);
+target = new (0, _three.Vector3)(0, 15, 0);
+const screenAnim = animatePosition(CAM_MANAGER.container.position, segundaPantalla, 4500);
+const viewAnim = animatePosition(target, segundaVista, 4200);
+const opacityAnim = animateValue(particleProps, "opacity", 0.1, 4500);
+//opacityFactor = 0.1;
+const handlreClick = (event)=>{
+    console.log(event.target);
+    isSecondScreen = true;
+    console.log("viajar", isSecondScreen);
+    screenAnim.start();
+    viewAnim.start();
+    opacityAnim.start();
+};
 //la escena html
 webManager.setEnviroment(webManager.webHtml, (html)=>{
     //agregar primera pantalla
@@ -1051,12 +1073,13 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
         element.appendChild(span);
         element.appendChild(text);
         element.appendChild(img);
+        elementContainer.addEventListener("pointerdown", handlreClick);
         elementContainer.appendChild(element);
         const header = new (0, _css3Drenderer.CSS3DObject)(elementContainer);
         const scale = 0.15;
         header.scale.set(scale, scale, scale);
         header.position.set(1, 0, 0);
-        //html.add(header);
+        html.add(header);
         domItems.push(header);
     }
     //segunda pantalla
@@ -1069,12 +1092,12 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
         const header = new (0, _css3Drenderer.CSS3DObject)(elementContainer);
         const scale = 0.04;
         header.scale.set(scale, scale, scale);
-        //html.add(header);
+        html.add(header);
         domItemsSecond.push(header);
     }
     //posicionar los segunda pantalla
     const radioS = 22;
-    const centerS = new (0, _three.Vector3)(0, 0, -8); // Vector3 que representa el centro
+    const centerS = new (0, _three.Vector3)(0, 0, 15); // Vector3 que representa el centro
     for(let index = 0; index < domItemsSecond.length; index++){
         const fixed = 1;
         const fixedAngle = -39.4;
@@ -1100,7 +1123,7 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
   */ ///
     //posicionar
     const radio = 50;
-    const center = new (0, _three.Vector3)(0, 0, -20); // Vector3 que representa el centro
+    const center = new (0, _three.Vector3)(0, 0, 0); // Vector3 que representa el centro
     for(let index = 0; index < domItems.length; index++){
         const angle = Math.PI * 2 * index / domItems.length; // Calcular el ángulo para esta iteración
         const x = radio * Math.sin(angle);
@@ -1110,18 +1133,6 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
         domItems[index].position.copy(position);
     }
 });
-const segundaVista = new (0, _three.Vector3)(0, 0, -19);
-target = new (0, _three.Vector3)(0, 15, 0);
-const screenAnim = animatePosition(CAM_MANAGER.container.position, segundaPantalla, 4500);
-const viewAnim = animatePosition(target, segundaVista, 1200);
-setTimeout(()=>{
-    //DETECTAR EL TOQUE DE LA PANTALLA
-    document.addEventListener("click", ()=>{
-        //isSecondScreen = true;
-        console.log("viajar", isSecondScreen);
-    //screenAnim.start();
-    });
-}, 2500);
 const sp_V = new (0, _three.Vector3)();
 webManager.setAnimations((delta)=>{
     let vertexpos = 0;
@@ -1171,29 +1182,41 @@ webManager.setAnimations((delta)=>{
     sp_linesGeometry.setDrawRange(0, numConnected * 2);
     sp_linesGeometry.attributes.position.needsUpdate = true;
     sp_linesGeometry.attributes.color.needsUpdate = true;
-    dotSphere.uniforms.time.value = delta * 0.5;
-    dotSphere.uniforms.time.needsUpdate = true;
-    p_SphereMaterial.uniforms.time.value = delta * 0.5;
-    p_SphereMaterial.uniforms.time.needsUpdate = true;
+    //rotar 
+    sp_Particles.rotation.y = delta * 0.05;
+    sp_linesParticles.rotation.y = delta * 0.05;
+    //dotSphere.uniforms.time.value = delta * 0.5;
+    //dotSphere.uniforms.time.needsUpdate = true;
+    //
+    //p_SphereMaterial.uniforms.time.value = delta * 0.5;
+    //p_SphereMaterial.uniforms.time.needsUpdate = true;
     particleMaterial.uniforms.time.value = delta;
     particleMaterial.uniforms.time.needsUpdate = true;
+    particleMaterial.uniforms.opacityFactor.value = particleProps.opacity;
+    particleMaterial.uniforms.opacityFactor.needsUpdate = true;
     particleMaterial.uniforms.u_mouse.value.x = CAM_MANAGER.mouseData.mouse.x;
     particleMaterial.uniforms.u_mouse.value.y = CAM_MANAGER.mouseData.mouse.y;
     particleMaterial.uniforms.u_mouse.needsUpdate = true;
-    n_Material.uniforms.time.value = delta;
-    n_Material.uniforms.time.needsUpdate = true;
-    sphereParticle.uniforms.time.value = delta * 0.5;
-    sphereParticle.uniforms.time.needsUpdate = true;
+    //n_Material.uniforms.time.value = delta;
+    //n_Material.uniforms.time.needsUpdate = true;
+    //
+    //sphereParticle.uniforms.time.value = delta * 0.5;
+    //sphereParticle.uniforms.time.needsUpdate = true;
     //animar esfera
     const angular = Math.sin(delta);
+    CAM_MANAGER.camera.lookAt(target);
+    CAM_MANAGER.orbitControls.update();
     if (isSecondScreen) {
         isInScreen = true;
         viewAnim.update();
         screenAnim.update();
+        opacityAnim.update();
         screenAnim.onComplete(()=>{
+            //desactivar los controles de orbita
+            CAM_MANAGER.orbitControls.minPolarAngle = Math.PI * 0.25;
+            CAM_MANAGER.orbitControls.maxPolarAngle = Math.PI * 0.25;
             isSecondScreen = false;
             //s_particles.visible = true;
-            secondParticles.visible = true;
             domItemsSecond.forEach((element)=>{
                 element.element.getElementsByClassName("element-b")[0].classList.add("active");
             });
@@ -1204,9 +1227,7 @@ webManager.setAnimations((delta)=>{
     } else {
         //primera pantalla
         if (!isInScreen) {
-            CAM_MANAGER.update();
-            sphere.position.y = angular + 10;
-            mainSphere.position.y = angular + 10;
+            //CAM_MANAGER.update();
             sp_Particles.position.y = angular + 20;
             sp_linesParticles.position.y = angular + 20;
         }
@@ -1223,8 +1244,6 @@ webManager.setAnimations((delta)=>{
             element.lookAt(relativePos);
         });
     }
-    CAM_MANAGER.camera.lookAt(target);
-    CAM_MANAGER.orbitControls.update();
 });
 //renderizar en el bucle
 CAM_MANAGER.activeOrbit();
@@ -1237,6 +1256,13 @@ function animatePosition(objeto, nuevaPosicion, tiempoAnimacion) {
     const tween = new (0, _tweenJsDefault.default).Tween(objeto).to(nuevaPosicion, tiempoAnimacion).easing((0, _tweenJsDefault.default).Easing.Quadratic.InOut);
     //tween.start();
     // Retorna el objeto de animación para control externo
+    return tween;
+}
+function animateValue(normal, target, newValue, tiempoAnimacion) {
+    const tween = new (0, _tweenJsDefault.default).Tween(normal).to({
+        [target]: newValue
+    }, tiempoAnimacion) // Establecer 'opacity' como propiedad de destino
+    .easing((0, _tweenJsDefault.default).Easing.Quadratic.InOut);
     return tween;
 }
 function graph(x, z) {
@@ -34370,10 +34396,22 @@ class CameraManager {
     activeOrbit() {
         this.orbitControls = new (0, _orbitcontrols.OrbitControls)(this.container, this.domElement);
         this.orbitControls.enableDamping = true;
-        this.orbitControls.rotateSpeed = 0.20;
+        this.orbitControls.rotateSpeed = 0.2;
         this.orbitControls.dampingFactor = 0.025;
         this.orbitControls.maxPolarAngle = Math.PI * 0.35;
         this.orbitControls.minPolarAngle = Math.PI * 0.21;
+        //activar evento
+        this.orbitControls.addEventListener("start", ()=>{
+            const cortinas = document.getElementById("cortain").children;
+            for (const cortina of cortinas)cortina.classList.add("active-cortain");
+            console.log(cortinas);
+        });
+        //desactivar evento
+        this.orbitControls.addEventListener("end", ()=>{
+            const cortinas = document.getElementById("cortain").children;
+            for (const cortina of cortinas)cortina.classList.remove("active-cortain");
+            console.log(cortinas);
+        });
     }
     update() {
         this.normalizedMouse.set(mouseData.x, -mouseData.y, 0);
@@ -36675,7 +36713,7 @@ var exports = {
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bZB41":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.25;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.45)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(vColor, alpha);\n}\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\nuniform float opacityFactor;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.25;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.45)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(vColor, alpha * opacityFactor);\n}\n";
 
 },{}],"fi574":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
