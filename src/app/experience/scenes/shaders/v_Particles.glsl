@@ -36,7 +36,7 @@ float mouseDistance = clamp(relative, 1.5, 15.0);
 
   //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;
   float r =  x*x + z*z;
-  newPosition.y =  cos(r) *5.0;
+  //newPosition.y =  cos(r) *5.0;
 
 
   gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);

@@ -26,6 +26,7 @@ import {
   TextureLoader,
   Vector2,
   Vector3,
+  Group
 } from "three";
 
 import * as dat from "dat.gui";
@@ -33,7 +34,7 @@ import * as dat from "dat.gui";
 import { WebManager } from "./scenes/utils/WebManager";
 import { CameraManager } from "./scenes/utils/CameraManager";
 import { CSS3DObject } from "three/examples/jsm/renderers/CSS3DRenderer";
-import TWEEN from "@tweenjs/tween.js";
+import TWEEN, { Tween, add } from "@tweenjs/tween.js";
 
 //shaders
 import f_Particles from "./scenes/shaders/f_Particles.glsl";
@@ -225,7 +226,7 @@ web.add(sp_linesParticles);
   // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
   particleGeometry = new BufferGeometry();
 
-  const particleCount = 20000; // Cantidad de partículas
+  const particleCount = 30000; // Cantidad de partículas
   const colors = [
     0x0dd5fd, //azul
     0x0dd5fd, //azul
@@ -281,7 +282,8 @@ web.add(sp_linesParticles);
       const angleIncrement = TWO_PI / divisionParticleCount;
       const angle = angleIncrement * rIndex;
 
-      sizeArray[rIndex] = Math.random() * ((rIndex % 10) - 1) + (Math.random() +3.5);
+      const log = rIndex % 10;
+      sizeArray[rIndex] = Math.random() * log  + (Math.random() +3.5);
 
       //noise
 
@@ -303,10 +305,7 @@ web.add(sp_linesParticles);
         (Math.random() -
           0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
 
-      let y = 0;
-      if (Math.random() <= 0.2) {
-        y = (Math.random() - 0.5) * 15;
-      }
+      let y = Math.sin(rIndex) + Math.random();
       //const x = (Math.cos(angle * ringParticleAmount) ) + (Math.sin(angle * ringParticleAmount));
       //const y = 0;
       //const z = insideRadius * Math.sin(angle * ringParticleAmount) + 0.5 * Math.sin(angle);
@@ -364,10 +363,14 @@ web.add(sp_linesParticles);
     "position",
     new BufferAttribute(p_rellenoPosition, 3)
   );
+  //ESCONDER
+  
   p_rellenoGeometry.setAttribute(
     "color",
     new BufferAttribute(n_colorsArray, 3)
   );
+
+  
   p_rellenoGeometry.setAttribute(
     "particleSize",
     new BufferAttribute(n_sizeArray, 1)
@@ -612,7 +615,7 @@ const lines = new LineSegments(linesGeometry, linesMaterial);
   web.add(p_Relleno);
   web.add(particleSystem);
   const plane = new Mesh(
-    new PlaneGeometry(300, 300, 4),
+    new PlaneGeometry(300, 300, 10),
     new MeshBasicMaterial({wireframe: true})
   );
   
@@ -667,6 +670,8 @@ const handlreClick = (event)=>{
   opacityAnim.start();
 };
 //la escena html
+
+let grupoDotsContainer = null;
 webManager.setEnviroment(webManager.webHtml, (html) => {
   //agregar primera pantalla
   const dots = {
@@ -674,19 +679,10 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
       title: "Token-gated chat",
       link: "https://img.icons8.com/material-rounded/24/filled-chat.png",
     },
-    ntf: {
-      title: "NFT ticketing",
-      link: "https://img.icons8.com/ios-filled/50/image-file.png",
-    },
-    chain: {
-      title: "On-chain Memberships",
-      link: "https://img.icons8.com/external-obvious-glyph-kerismaker/48/external-block-chain-digital-service-glyph-obvious-glyph-kerismaker.png",
-    },
-    card: {
-      title: "Access cards",
-      link: "https://img.icons8.com/material-rounded/24/tab.png",
-    },
+    
   };
+  const grupoDots = new Group();
+  grupoDotsContainer = new Group();
   for (const key in dots) {
     if (dots.hasOwnProperty(key)) {
       const dot = dots[key];
@@ -714,10 +710,19 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
       header.scale.set(scale, scale, scale);
       header.position.set(1, 0, 0);
 
-      html.add(header);
+      console.log(grupoDots)
+      grupoDots.add(header);
       domItems.push(header);
     }
   }
+
+  //configurar centro
+
+
+  grupoDots.position.set(0,0, -15);
+  grupoDotsContainer.position.set(0,15, 0);
+  grupoDotsContainer.add(grupoDots);
+  html.add(grupoDotsContainer);
 
   //segunda pantalla
 
@@ -787,6 +792,9 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
 const sp_V = new Vector3();
 
 webManager.setAnimations((delta) => {
+
+
+  TWEEN.update();
 
 
     let vertexpos = 0
@@ -903,11 +911,13 @@ webManager.setAnimations((delta) => {
   CAM_MANAGER.camera.lookAt(target);
   CAM_MANAGER.orbitControls.update();
 
+  TWEEN.update();
+
   if (isSecondScreen) {
     isInScreen = true;
-    viewAnim.update();
-    screenAnim.update();
-    opacityAnim.update();
+    //viewAnim.update();
+    //screenAnim.update();
+    //opacityAnim.update();
     screenAnim.onComplete(() => {
 
       //desactivar los controles de orbita
@@ -966,7 +976,23 @@ webManager.setAnimations((delta) => {
 
       element.lookAt(relativePos);
     });
+
+    //mover los dots
+
+    let relative = new Vector3().addVectors(
+      CAM_MANAGER.container.position,
+      grupoDotsContainer.position
+    );
+
+    let relativePos = new Vector3().addVectors(
+      relative,
+      CAM_MANAGER.camera.position
+    );
+
+    grupoDotsContainer.lookAt(relativePos);
   }
+
+  TWEEN.update();
 
 });
 

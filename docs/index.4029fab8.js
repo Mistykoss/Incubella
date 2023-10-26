@@ -715,7 +715,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     //web.add(axisHelper);
     // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
     particleGeometry = new (0, _three.BufferGeometry)();
-    const particleCount = 20000; // Cantidad de partículas
+    const particleCount = 30000; // Cantidad de partículas
     const colors = [
         0x0dd5fd,
         0x0dd5fd,
@@ -761,7 +761,8 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             //calcular anguloas reativos
             const angleIncrement = TWO_PI / divisionParticleCount;
             const angle = angleIncrement * rIndex;
-            sizeArray[rIndex] = Math.random() * (rIndex % 10 - 1) + (Math.random() + 3.5);
+            const log = rIndex % 10;
+            sizeArray[rIndex] = Math.random() * log + (Math.random() + 3.5);
             //noise
             //ecuaciones
             const xEcuation = Math.cos(rIndex * ringFrecuency) * (1 + amplitude * Math.sin(rIndex));
@@ -769,8 +770,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             //plano cartesiano
             const x = insideRadius * xEcuation * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
             const z = insideRadius * zEcuation * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
-            let y = 0;
-            if (Math.random() <= 0.2) y = (Math.random() - 0.5) * 15;
+            let y = Math.sin(rIndex) + Math.random();
             //const x = (Math.cos(angle * ringParticleAmount) ) + (Math.sin(angle * ringParticleAmount));
             //const y = 0;
             //const z = insideRadius * Math.sin(angle * ringParticleAmount) + 0.5 * Math.sin(angle);
@@ -814,6 +814,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     }
     // Luego, puedes usar particlePositions para configurar la geometría de las partículas
     p_rellenoGeometry.setAttribute("position", new (0, _three.BufferAttribute)(p_rellenoPosition, 3));
+    //ESCONDER
     p_rellenoGeometry.setAttribute("color", new (0, _three.BufferAttribute)(n_colorsArray, 3));
     p_rellenoGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(n_sizeArray, 1));
     particleGeometry.setAttribute("position", new (0, _three.BufferAttribute)(positions, 3));
@@ -1008,7 +1009,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     //web.add(p_Sphere);
     web.add(p_Relleno);
     web.add(particleSystem);
-    const plane = new (0, _three.Mesh)(new (0, _three.PlaneGeometry)(300, 300, 4), new (0, _three.MeshBasicMaterial)({
+    const plane = new (0, _three.Mesh)(new (0, _three.PlaneGeometry)(300, 300, 10), new (0, _three.MeshBasicMaterial)({
         wireframe: true
     }));
     CAM_MANAGER.plane = plane;
@@ -1040,26 +1041,17 @@ const handlreClick = (event)=>{
     opacityAnim.start();
 };
 //la escena html
+let grupoDotsContainer = null;
 webManager.setEnviroment(webManager.webHtml, (html)=>{
     //agregar primera pantalla
     const dots = {
         chat: {
             title: "Token-gated chat",
             link: "https://img.icons8.com/material-rounded/24/filled-chat.png"
-        },
-        ntf: {
-            title: "NFT ticketing",
-            link: "https://img.icons8.com/ios-filled/50/image-file.png"
-        },
-        chain: {
-            title: "On-chain Memberships",
-            link: "https://img.icons8.com/external-obvious-glyph-kerismaker/48/external-block-chain-digital-service-glyph-obvious-glyph-kerismaker.png"
-        },
-        card: {
-            title: "Access cards",
-            link: "https://img.icons8.com/material-rounded/24/tab.png"
         }
     };
+    const grupoDots = new (0, _three.Group)();
+    grupoDotsContainer = new (0, _three.Group)();
     for(const key in dots)if (dots.hasOwnProperty(key)) {
         const dot = dots[key];
         const elementContainer = document.createElement("div");
@@ -1079,9 +1071,15 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
         const scale = 0.15;
         header.scale.set(scale, scale, scale);
         header.position.set(1, 0, 0);
-        html.add(header);
+        console.log(grupoDots);
+        grupoDots.add(header);
         domItems.push(header);
     }
+    //configurar centro
+    grupoDots.position.set(0, 0, -15);
+    grupoDotsContainer.position.set(0, 15, 0);
+    grupoDotsContainer.add(grupoDots);
+    html.add(grupoDotsContainer);
     //segunda pantalla
     for(let index = 0; index < 5; index++){
         const element = document.createElement("div");
@@ -1135,6 +1133,7 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
 });
 const sp_V = new (0, _three.Vector3)();
 webManager.setAnimations((delta)=>{
+    (0, _tweenJsDefault.default).update();
     let vertexpos = 0;
     let colorpos = 0;
     let numConnected = 0;
@@ -1206,11 +1205,12 @@ webManager.setAnimations((delta)=>{
     const angular = Math.sin(delta);
     CAM_MANAGER.camera.lookAt(target);
     CAM_MANAGER.orbitControls.update();
+    (0, _tweenJsDefault.default).update();
     if (isSecondScreen) {
         isInScreen = true;
-        viewAnim.update();
-        screenAnim.update();
-        opacityAnim.update();
+        //viewAnim.update();
+        //screenAnim.update();
+        //opacityAnim.update();
         screenAnim.onComplete(()=>{
             //desactivar los controles de orbita
             CAM_MANAGER.orbitControls.minPolarAngle = Math.PI * 0.25;
@@ -1243,7 +1243,12 @@ webManager.setAnimations((delta)=>{
             let relativePos = new (0, _three.Vector3)().addVectors(relativeFixed, CAM_MANAGER.camera.position);
             element.lookAt(relativePos);
         });
+        //mover los dots
+        let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, grupoDotsContainer.position);
+        let relativePos = new (0, _three.Vector3)().addVectors(relative, CAM_MANAGER.camera.position);
+        grupoDotsContainer.lookAt(relativePos);
     }
+    (0, _tweenJsDefault.default).update();
 });
 //renderizar en el bucle
 CAM_MANAGER.activeOrbit();
@@ -1290,7 +1295,7 @@ cameraFolder.add(cameraControls, "positionZ", -100, 100).step(0.005).name("Z Pos
     CAM_MANAGER.container.position.z = cameraControls.positionZ;
 });
 
-},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_relleno.glsl":"2Trgk","./scenes/shaders/v_relleno.glsl":"52tUs","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","./scenes/shaders/f_pSphere.glsl":"6b176","./scenes/shaders/v_pSphere.glsl":"11q8G","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","9917033fbdff724b":"6xN1R"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_relleno.glsl":"2Trgk","./scenes/shaders/v_relleno.glsl":"52tUs","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","./scenes/shaders/f_pSphere.glsl":"6b176","./scenes/shaders/v_pSphere.glsl":"11q8G","9917033fbdff724b":"6xN1R","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
 /**
  * @license
  * Copyright 2010-2023 Three.js Authors
@@ -33774,7 +33779,7 @@ bokenFolder.add(boken, "maxblur", 0, 0.001).step(0.001).name("maxblur").onChange
     change();
 });
 
-},{"three":"ktPTu","./RendererManager":"7TumE","./CameraManager":"lnXBx","three/examples/jsm/postprocessing/renderpass":"ivBs8","three/examples/jsm/postprocessing/UnrealBloomPass":"3iDYE","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","three/examples/jsm/postprocessing/BokehPass":"aMkgI","three/examples/jsm/postprocessing/OutputPass":"bggV1","dat.gui":"k3xQk"}],"7TumE":[function(require,module,exports) {
+},{"three":"ktPTu","./RendererManager":"7TumE","./CameraManager":"lnXBx","three/examples/jsm/postprocessing/renderpass":"ivBs8","three/examples/jsm/postprocessing/UnrealBloomPass":"3iDYE","three/examples/jsm/postprocessing/BokehPass":"aMkgI","three/examples/jsm/postprocessing/OutputPass":"bggV1","dat.gui":"k3xQk","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7TumE":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "RenderManager", ()=>RenderManager);
@@ -36713,10 +36718,10 @@ var exports = {
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bZB41":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\nuniform float opacityFactor;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.25;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.45)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(vColor, alpha * opacityFactor);\n}\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\nuniform float opacityFactor;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.25;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.45)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(vColor, alpha * opacityFactor);\n      \n}\n";
 
 },{}],"fi574":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
+module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  //newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
 
 },{}],"2Trgk":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.1;\n      float lightIntensity = 5.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      vec3 finalColor = vColor * brightness;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha);\n}\n";

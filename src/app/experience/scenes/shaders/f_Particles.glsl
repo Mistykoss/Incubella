@@ -24,4 +24,5 @@ void main() {
 
       // Asignamos el color de la partícula al fragmento
       gl_FragColor = vec4(vColor, alpha * opacityFactor);
+      
 }
