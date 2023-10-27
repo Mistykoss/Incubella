@@ -33,6 +33,10 @@ export class CameraManager {
     this.raycaster = new Raycaster();
     this.plane = null;
     this.isPlane = false;
+    this.isDisplayB = false;
+    this.isDisplayA = true;
+    this.displayB = null;
+    this.displayA = null;
 
     // this.rendererManager = new RENDER_MANAGER();
     //inicializar camara
@@ -62,7 +66,29 @@ export class CameraManager {
       for (const cortina of cortinas) {
         cortina.classList.add("active-cortain");
       }
-      console.log(cortinas)
+
+      if(this.isDisplayB){
+        this.displayB.forEach(item => {
+          item.element.getElementsByClassName("element-b")[0]
+          .classList.add("not-active");
+  
+         item.element.getElementsByClassName("element-b")[0]
+          .classList.remove("active");
+        });
+      }
+      if(this.isDisplayA){
+        console.log("display 2 activo!!");
+
+        this.displayA.forEach(item => {
+          item.element.getElementsByClassName("element")[0]
+          .classList.add("not-active");
+  
+         item.element.getElementsByClassName("element")[0]
+          .classList.remove("active");
+        });
+      }
+
+     
     });
 
         //desactivar evento
@@ -71,7 +97,32 @@ export class CameraManager {
           for (const cortina of cortinas) {
             cortina.classList.remove("active-cortain");
           }
-          console.log(cortinas)
+
+          if(this.isDisplayB){
+            this.displayB.forEach(item => {
+              item.element.getElementsByClassName("element-b")[0]
+              .classList.remove("not-active");
+  
+             item.element.getElementsByClassName("element-b")[0]
+              .classList.add("active");
+            });
+          }
+          if(this.isDisplayA){
+            console.log("display 2 activo!!");
+
+            this.displayA.forEach(item => {
+              item.element.getElementsByClassName("element")[0]
+              .classList.remove("not-active");
+      
+             item.element.getElementsByClassName("element")[0]
+              .classList.add("active");
+            });
+          }
+
+
+
+          
+          
         });
   }
 

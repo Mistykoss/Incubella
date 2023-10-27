@@ -41,18 +41,34 @@ body {
 }
 
 .element-b {
+  color: #93efff;
   visibility: hidden;
-  background-color: #fff;
-  border-radius: .3rem;
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 8px 32px #1f26875e;
+  background: #ffffff0f;
+  border: 2px solid #93efff;
+  border-radius: 10px;
   align-items: center;
-  padding: 4px 12px;
-  font-size: 28px;
+  padding: 10px 20px;
+  font-size: 35px;
   transition: all .7s;
   display: flex;
+  -webkit-box-shadow: 0 0 25px 1px #63e8ff4d;
+  -moz-box-shadow: 0 0 25px 1px #63e8ff4d;
+  box-shadow: 0 0 25px 1px #63e8ff4d;
 }
 
-.element-b.active {
-  visibility: visible;
+.active {
+  transition: transform 1.5s, opacity 1.5s;
+  transform: scale(1);
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.not-active {
+  transition: all .8s cubic-bezier(1, 0, .9, .4);
+  transform: scale(0);
+  opacity: 0 !important;
 }
 
 .element-b:hover {

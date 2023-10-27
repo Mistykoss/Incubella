@@ -95,6 +95,7 @@ let n_Material = null;
 let p_Sphere = null;
 let p_SphereMaterial = null;
 
+let axisHelper = null;
 
 
 
@@ -217,7 +218,7 @@ web.add(sp_linesParticles);
   //FINAL DE LA NUEVA ESFERA
   const ambientLight = new AmbientLight();
   ambientLight.intensity = 2;
-  const axisHelper = new AxesHelper(20);
+   axisHelper = new AxesHelper(20);
 
   axisHelper.position.copy(new Vector3(0, 32, 0));
 
@@ -635,6 +636,8 @@ const lines = new LineSegments(linesGeometry, linesMaterial);
   particles.visible = false;
   secondParticles.visible = false;
   plane.visible = false;
+
+  web.add(axisHelper);
 });
 
 
@@ -672,6 +675,11 @@ const handlreClick = (event)=>{
 //la escena html
 
 let grupoDotsContainer = null;
+const grupoDots = new Group();
+
+let displayBContainer =  new Group();
+
+
 webManager.setEnviroment(webManager.webHtml, (html) => {
   //agregar primera pantalla
   const dots = {
@@ -679,9 +687,19 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
       title: "Token-gated chat",
       link: "https://img.icons8.com/material-rounded/24/filled-chat.png",
     },
-    
+    ntf: {
+      title: "NFT ticketing",
+      link: "https://img.icons8.com/ios-filled/50/image-file.png",
+    },
+    chain: {
+      title: "On-chain Memberships",
+      link: "https://img.icons8.com/external-obvious-glyph-kerismaker/48/external-block-chain-digital-service-glyph-obvious-glyph-kerismaker.png",
+    },
+    card: {
+      title: "Access cards",
+      link: "https://img.icons8.com/material-rounded/24/tab.png",
+    },
   };
-  const grupoDots = new Group();
   grupoDotsContainer = new Group();
   for (const key in dots) {
     if (dots.hasOwnProperty(key)) {
@@ -705,7 +723,7 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
       elementContainer.appendChild(element);
 
       const header = new CSS3DObject(elementContainer);
-      const scale = 0.15;
+      const scale = 0.1;
 
       header.scale.set(scale, scale, scale);
       header.position.set(1, 0, 0);
@@ -729,7 +747,7 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
   for (let index = 0; index < 5; index++) {
     const element = document.createElement("div");
     const elementContainer = document.createElement("div");
-    element.innerHTML = "Lorem";
+    element.innerHTML = "Lorem" + index;
     element.classList.add("element-b");
     elementContainer.appendChild(element);
 
@@ -737,21 +755,27 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
     const scale = 0.04;
 
     header.scale.set(scale, scale, scale);
-    html.add(header);
+    displayBContainer.add(header);
     domItemsSecond.push(header);
   }
+
+  CAM_MANAGER.displayA = domItems;
+  CAM_MANAGER.displayB = domItemsSecond;
+
+  html.add(displayBContainer);
   //posicionar los segunda pantalla
-  const radioS = 22;
-  const centerS = new Vector3(0, 0, 15); // Vector3 que representa el centro
+  const radioS = 25;
+  const centerS = new Vector3(0, 35, 0); // Vector3 que representa el centro
 
   for (let index = 0; index < domItemsSecond.length; index++) {
     const fixed = 1;
-    const fixedAngle = -39.4;
-    const angle = (Math.PI * fixed * index) / domItems.length; // Calcular el ángulo para esta iteración
+    const fixedAngle = -5;
+    const angle = (Math.PI * fixed * index) / domItemsSecond.length; // Calcular el ángulo para esta iteración
     const x = radioS * Math.sin(angle - fixedAngle);
-    const z = radioS * Math.cos(angle - fixedAngle);
+    const y = radioS * Math.cos(angle - fixedAngle);
 
-    const position = new Vector3(x, 0, z);
+    const position = new Vector3(x, y, 0);
+    console.log(position)
     position.add(centerS); // Sumar el vector del centro para obtener la posición final
 
     domItemsSecond[index].position.copy(position);
@@ -773,8 +797,8 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
   ///
 
   //posicionar
-  const radio = 50;
-  const center = new Vector3(0, 0, 0); // Vector3 que representa el centro
+  const radio = 40;
+  const center = new Vector3(0, 10, 0); // Vector3 que representa el centro
 
   for (let index = 0; index < domItems.length; index++) {
     const angle = (Math.PI * 2 * index) / domItems.length; // Calcular el ángulo para esta iteración
@@ -915,13 +939,23 @@ webManager.setAnimations((delta) => {
 
   if (isSecondScreen) {
     isInScreen = true;
+    CAM_MANAGER.isDisplayA = false;
+    
+
+
+    
+  
     //viewAnim.update();
     //screenAnim.update();
     //opacityAnim.update();
+
+    
     screenAnim.onComplete(() => {
 
       //desactivar los controles de orbita
+
       CAM_MANAGER.orbitControls.minPolarAngle = Math.PI * 0.25;
+      CAM_MANAGER.isDisplayB = true;
       CAM_MANAGER.orbitControls.maxPolarAngle = Math.PI * 0.25;
 
       isSecondScreen = false;
@@ -940,8 +974,10 @@ webManager.setAnimations((delta) => {
     });
   } else {
     //primera pantalla
+    
     if (!isInScreen) {
       //CAM_MANAGER.update();
+      
 
       sp_Particles.position.y = angular +20;
       sp_linesParticles.position.y = angular +20;
@@ -952,8 +988,12 @@ webManager.setAnimations((delta) => {
         element.position
       );
 
-      let relativePos = new Vector3().addVectors(
+      let fixed = new Vector3().addVectors(
         relative,
+        grupoDotsContainer.position
+      );
+      let relativePos = new Vector3().addVectors(
+        fixed,
         CAM_MANAGER.camera.position
       );
 
@@ -973,8 +1013,12 @@ webManager.setAnimations((delta) => {
         relativeFixed,
         CAM_MANAGER.camera.position
       );
+      let relativePosFixed = new Vector3().subVectors(
+        relativePos,
+        displayBContainer.position
+      );
 
-      element.lookAt(relativePos);
+      element.lookAt(relativePosFixed);
     });
 
     //mover los dots
@@ -989,8 +1033,28 @@ webManager.setAnimations((delta) => {
       CAM_MANAGER.camera.position
     );
 
-    grupoDotsContainer.lookAt(relativePos);
+    let relativeFixed = new Vector3(relativePos.x, relativePos.y, relativePos.z);
+    relativeFixed.y = 0;
+
+    grupoDotsContainer.lookAt(relativeFixed);
   }
+
+
+  //mover los dots
+
+  let relative = new Vector3().addVectors(
+    CAM_MANAGER.container.position,
+    displayBContainer.position
+  );
+
+  let relativePos = new Vector3().addVectors(
+    relative,
+    CAM_MANAGER.camera.position
+  );
+
+  displayBContainer.lookAt(relativePos);
+  axisHelper.position.copy(displayBContainer.position);
+  axisHelper.rotation.copy(displayBContainer.rotation);
 
   TWEEN.update();
 

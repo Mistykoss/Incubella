@@ -30,29 +30,59 @@ body {
     overflow: hidden;
     display: flex;
     justify-content: center;
-    
     border-radius: 30%;
     align-items: center;
     transform: scale(1);
     transition: all 0.7s;
+    
 }
 .element.desactive{
     visibility: hidden;
 }
 
 .element-b{
-    background-color: white;
+    color: rgb(147, 239, 255);
     display: flex;
     align-items: center;
-    padding: 4px 12px;
+    padding: 10px 20px;
     border-radius: .3rem;
-    font-size: 28px;
+    font-size: 35px;
     transition: all 0.7s;
     visibility: hidden;
+
+    background: rgba(255, 255, 255, 0.059);
+box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
+backdrop-filter: blur( 4px );
+-webkit-backdrop-filter: blur( 4px );
+border-radius: 10px;
+border: 2px solid rgb(147, 239, 255);
+
+
+-webkit-box-shadow:0px 0px 25px 1px rgba(99,232,255,0.3);
+-moz-box-shadow:   0px 0px 25px 1px rgba(99,232,255,0.3);
+box-shadow:        0px 0px 25px 1px rgba(99,232,255,0.3);
 }
-.element-b.active{
-    visibility: visible;
+
+
+
+
+  
+.active{
+    opacity:  1 !important;
+    visibility: visible !important;
+    transform: scale(1); /* Escala inicial */
+    transition: transform 1.5s, opacity 1.5s ; /* Agregar transición a transform y opacity */
 }
+
+.not-active{
+    opacity:  0 !important;
+    transform: scale(0); /* Escalar el elemento a 0 */
+    transition: all .8s cubic-bezier(1,0,.9,.4);
+}
+
+
+
+
 .element-b:hover {
     transition: all 0.7s;
 

@@ -628,6 +628,7 @@ let sphereGeometry = null;
 let n_Material = null;
 let p_Sphere = null;
 let p_SphereMaterial = null;
+let axisHelper = null;
 // Variables
 const maxParticleCount = 1000;
 const particleCount = 500;
@@ -710,7 +711,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     //FINAL DE LA NUEVA ESFERA
     const ambientLight = new (0, _three.AmbientLight)();
     ambientLight.intensity = 2;
-    const axisHelper = new (0, _three.AxesHelper)(20);
+    axisHelper = new (0, _three.AxesHelper)(20);
     axisHelper.position.copy(new (0, _three.Vector3)(0, 32, 0));
     //web.add(axisHelper);
     // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
@@ -1025,6 +1026,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     particles.visible = false;
     secondParticles.visible = false;
     plane.visible = false;
+    web.add(axisHelper);
 });
 const segundaVista = new (0, _three.Vector3)(0, 30, 0);
 target = new (0, _three.Vector3)(0, 15, 0);
@@ -1042,15 +1044,28 @@ const handlreClick = (event)=>{
 };
 //la escena html
 let grupoDotsContainer = null;
+const grupoDots = new (0, _three.Group)();
+let displayBContainer = new (0, _three.Group)();
 webManager.setEnviroment(webManager.webHtml, (html)=>{
     //agregar primera pantalla
     const dots = {
         chat: {
             title: "Token-gated chat",
             link: "https://img.icons8.com/material-rounded/24/filled-chat.png"
+        },
+        ntf: {
+            title: "NFT ticketing",
+            link: "https://img.icons8.com/ios-filled/50/image-file.png"
+        },
+        chain: {
+            title: "On-chain Memberships",
+            link: "https://img.icons8.com/external-obvious-glyph-kerismaker/48/external-block-chain-digital-service-glyph-obvious-glyph-kerismaker.png"
+        },
+        card: {
+            title: "Access cards",
+            link: "https://img.icons8.com/material-rounded/24/tab.png"
         }
     };
-    const grupoDots = new (0, _three.Group)();
     grupoDotsContainer = new (0, _three.Group)();
     for(const key in dots)if (dots.hasOwnProperty(key)) {
         const dot = dots[key];
@@ -1068,7 +1083,7 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
         elementContainer.addEventListener("pointerdown", handlreClick);
         elementContainer.appendChild(element);
         const header = new (0, _css3Drenderer.CSS3DObject)(elementContainer);
-        const scale = 0.15;
+        const scale = 0.1;
         header.scale.set(scale, scale, scale);
         header.position.set(1, 0, 0);
         console.log(grupoDots);
@@ -1084,25 +1099,29 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
     for(let index = 0; index < 5; index++){
         const element = document.createElement("div");
         const elementContainer = document.createElement("div");
-        element.innerHTML = "Lorem";
+        element.innerHTML = "Lorem" + index;
         element.classList.add("element-b");
         elementContainer.appendChild(element);
         const header = new (0, _css3Drenderer.CSS3DObject)(elementContainer);
         const scale = 0.04;
         header.scale.set(scale, scale, scale);
-        html.add(header);
+        displayBContainer.add(header);
         domItemsSecond.push(header);
     }
+    CAM_MANAGER.displayA = domItems;
+    CAM_MANAGER.displayB = domItemsSecond;
+    html.add(displayBContainer);
     //posicionar los segunda pantalla
-    const radioS = 22;
-    const centerS = new (0, _three.Vector3)(0, 0, 15); // Vector3 que representa el centro
+    const radioS = 25;
+    const centerS = new (0, _three.Vector3)(0, 35, 0); // Vector3 que representa el centro
     for(let index = 0; index < domItemsSecond.length; index++){
         const fixed = 1;
-        const fixedAngle = -39.4;
-        const angle = Math.PI * fixed * index / domItems.length; // Calcular el ángulo para esta iteración
+        const fixedAngle = -5;
+        const angle = Math.PI * fixed * index / domItemsSecond.length; // Calcular el ángulo para esta iteración
         const x = radioS * Math.sin(angle - fixedAngle);
-        const z = radioS * Math.cos(angle - fixedAngle);
-        const position = new (0, _three.Vector3)(x, 0, z);
+        const y = radioS * Math.cos(angle - fixedAngle);
+        const position = new (0, _three.Vector3)(x, y, 0);
+        console.log(position);
         position.add(centerS); // Sumar el vector del centro para obtener la posición final
         domItemsSecond[index].position.copy(position);
     }
@@ -1120,8 +1139,8 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
   header.lookAt(relativePos);
   */ ///
     //posicionar
-    const radio = 50;
-    const center = new (0, _three.Vector3)(0, 0, 0); // Vector3 que representa el centro
+    const radio = 40;
+    const center = new (0, _three.Vector3)(0, 10, 0); // Vector3 que representa el centro
     for(let index = 0; index < domItems.length; index++){
         const angle = Math.PI * 2 * index / domItems.length; // Calcular el ángulo para esta iteración
         const x = radio * Math.sin(angle);
@@ -1208,12 +1227,14 @@ webManager.setAnimations((delta)=>{
     (0, _tweenJsDefault.default).update();
     if (isSecondScreen) {
         isInScreen = true;
+        CAM_MANAGER.isDisplayA = false;
         //viewAnim.update();
         //screenAnim.update();
         //opacityAnim.update();
         screenAnim.onComplete(()=>{
             //desactivar los controles de orbita
             CAM_MANAGER.orbitControls.minPolarAngle = Math.PI * 0.25;
+            CAM_MANAGER.isDisplayB = true;
             CAM_MANAGER.orbitControls.maxPolarAngle = Math.PI * 0.25;
             isSecondScreen = false;
             //s_particles.visible = true;
@@ -1233,7 +1254,8 @@ webManager.setAnimations((delta)=>{
         }
         domItems.forEach((element)=>{
             let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, element.position);
-            let relativePos = new (0, _three.Vector3)().addVectors(relative, CAM_MANAGER.camera.position);
+            let fixed = new (0, _three.Vector3)().addVectors(relative, grupoDotsContainer.position);
+            let relativePos = new (0, _three.Vector3)().addVectors(fixed, CAM_MANAGER.camera.position);
             element.lookAt(relativePos);
             element.position.y = angular - 1;
         });
@@ -1241,13 +1263,22 @@ webManager.setAnimations((delta)=>{
             let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, element.position);
             let relativeFixed = new (0, _three.Vector3)().subVectors(relative, target);
             let relativePos = new (0, _three.Vector3)().addVectors(relativeFixed, CAM_MANAGER.camera.position);
-            element.lookAt(relativePos);
+            let relativePosFixed = new (0, _three.Vector3)().subVectors(relativePos, displayBContainer.position);
+            element.lookAt(relativePosFixed);
         });
         //mover los dots
         let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, grupoDotsContainer.position);
         let relativePos = new (0, _three.Vector3)().addVectors(relative, CAM_MANAGER.camera.position);
-        grupoDotsContainer.lookAt(relativePos);
+        let relativeFixed = new (0, _three.Vector3)(relativePos.x, relativePos.y, relativePos.z);
+        relativeFixed.y = 0;
+        grupoDotsContainer.lookAt(relativeFixed);
     }
+    //mover los dots
+    let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, displayBContainer.position);
+    let relativePos = new (0, _three.Vector3)().addVectors(relative, CAM_MANAGER.camera.position);
+    displayBContainer.lookAt(relativePos);
+    axisHelper.position.copy(displayBContainer.position);
+    axisHelper.rotation.copy(displayBContainer.rotation);
     (0, _tweenJsDefault.default).update();
 });
 //renderizar en el bucle
@@ -34385,6 +34416,10 @@ class CameraManager {
         this.raycaster = new (0, _three.Raycaster)();
         this.plane = null;
         this.isPlane = false;
+        this.isDisplayB = false;
+        this.isDisplayA = true;
+        this.displayB = null;
+        this.displayA = null;
         // this.rendererManager = new RENDER_MANAGER();
         //inicializar camara
         this.init();
@@ -34409,13 +34444,33 @@ class CameraManager {
         this.orbitControls.addEventListener("start", ()=>{
             const cortinas = document.getElementById("cortain").children;
             for (const cortina of cortinas)cortina.classList.add("active-cortain");
-            console.log(cortinas);
+            if (this.isDisplayB) this.displayB.forEach((item)=>{
+                item.element.getElementsByClassName("element-b")[0].classList.add("not-active");
+                item.element.getElementsByClassName("element-b")[0].classList.remove("active");
+            });
+            if (this.isDisplayA) {
+                console.log("display 2 activo!!");
+                this.displayA.forEach((item)=>{
+                    item.element.getElementsByClassName("element")[0].classList.add("not-active");
+                    item.element.getElementsByClassName("element")[0].classList.remove("active");
+                });
+            }
         });
         //desactivar evento
         this.orbitControls.addEventListener("end", ()=>{
             const cortinas = document.getElementById("cortain").children;
             for (const cortina of cortinas)cortina.classList.remove("active-cortain");
-            console.log(cortinas);
+            if (this.isDisplayB) this.displayB.forEach((item)=>{
+                item.element.getElementsByClassName("element-b")[0].classList.remove("not-active");
+                item.element.getElementsByClassName("element-b")[0].classList.add("active");
+            });
+            if (this.isDisplayA) {
+                console.log("display 2 activo!!");
+                this.displayA.forEach((item)=>{
+                    item.element.getElementsByClassName("element")[0].classList.remove("not-active");
+                    item.element.getElementsByClassName("element")[0].classList.add("active");
+                });
+            }
         });
     }
     update() {
