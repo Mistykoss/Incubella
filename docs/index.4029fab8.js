@@ -738,7 +738,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     const noiseIntensity = 1; //un valor mas alto agrega mas ruido
     const ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
     const TWO_PI = 2 * Math.PI;
-    const n_particleCount = 2000;
+    const n_particleCount = 3000;
     const p_rellenoGeometry = new (0, _three.BufferGeometry)();
     const p_rellenoPosition = new Float32Array(n_particleCount * 3);
     //generar las particulas
@@ -771,7 +771,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             //plano cartesiano
             const x = insideRadius * xEcuation * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
             const z = insideRadius * zEcuation * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
-            let y = Math.sin(rIndex) + Math.random();
+            let y = Math.sin(rIndex) * Math.random();
             //const x = (Math.cos(angle * ringParticleAmount) ) + (Math.sin(angle * ringParticleAmount));
             //const y = 0;
             //const z = insideRadius * Math.sin(angle * ringParticleAmount) + 0.5 * Math.sin(angle);
@@ -781,6 +781,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
         //particlePositions.push(x*area, y *area, z*area)
         }
     }
+    console.log(sizeArray, "AQUI!!");
     const nRadius = 150;
     const n_colorsArray = new Float32Array(n_particleCount * 3);
     const n_sizeArray = new Float32Array(n_particleCount);
@@ -799,7 +800,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     });
     for(let index = 0; index < p_rellenoPosition.length; index++){
         const x = (Math.random() - 0.5) * nRadius * 2;
-        const y = (Math.random() - 0.15) * nRadius * 0.5;
+        const y = (Math.random() - 0.35) * nRadius;
         const z = (Math.random() - 0.5) * nRadius * 2;
         if (index > n_particleCount * 3 / 5) n_sizeArray[index] = Math.random() * (index % 15 - 1) + 2;
         else n_sizeArray[index] = Math.random() * (index % 5 - 1) + 2;
@@ -36773,13 +36774,13 @@ var exports = {
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bZB41":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\nuniform float opacityFactor;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.25;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.45)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(vColor, alpha * opacityFactor);\n      \n}\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\nuniform float opacityFactor;\nuniform float time;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n  vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n  float dist = length(coord);\n\n      //ajustes de particulas\n  float alpha = 0.15;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n  if(dist > 0.45)\n    discard;\n\n      // Calculamos el color final de la part\xedcula con el brillo\n\n  if(vSize < 12.0) {\n    alpha = 0.1;\n  }\n  if(vSize < 9.0) {\n    alpha = 0.15;\n  }\n  if(vSize < 6.0) {\n    alpha = 0.25;\n  }\n  if(vSize < 4.0) {\n    alpha = 1.0;\n  }\n\n      // Asignamos el color de la part\xedcula al fragmento\n  gl_FragColor = vec4(vColor, alpha * opacityFactor);\n\n}\n";
 
 },{}],"fi574":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  //newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
 
 },{}],"2Trgk":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.1;\n      float lightIntensity = 5.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      vec3 finalColor = vColor * brightness;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha);\n}\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.15;\n      float lightIntensity = 1.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      //si es menor\n      if(vSize < 8.0){\n        alpha = 2.0;\n      }\n\n      vec3 finalColor = vColor * 0.3;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha);\n}\n";
 
 },{}],"52tUs":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\n\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vSize = particleSize;\n  float intensity = 0.5;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.y =  newPosition.y + sin((time * animTime) * vSize) * intensity;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";

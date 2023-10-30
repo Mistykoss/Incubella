@@ -253,7 +253,7 @@ web.add(sp_linesParticles);
   const ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
   const TWO_PI = 2 * Math.PI;
 
-  const n_particleCount = 2000;
+  const n_particleCount = 3000;
   const p_rellenoGeometry = new BufferGeometry();
   const p_rellenoPosition = new Float32Array(n_particleCount * 3);
 
@@ -306,7 +306,7 @@ web.add(sp_linesParticles);
         (Math.random() -
           0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
 
-      let y = Math.sin(rIndex) + Math.random();
+      let y = Math.sin(rIndex) * Math.random();
       //const x = (Math.cos(angle * ringParticleAmount) ) + (Math.sin(angle * ringParticleAmount));
       //const y = 0;
       //const z = insideRadius * Math.sin(angle * ringParticleAmount) + 0.5 * Math.sin(angle);
@@ -317,6 +317,8 @@ web.add(sp_linesParticles);
       //particlePositions.push(x*area, y *area, z*area)
     }
   }
+
+  console.log(sizeArray, "AQUI!!")
 
   const nRadius = 150;
 
@@ -337,7 +339,7 @@ web.add(sp_linesParticles);
 
   for (let index = 0; index < p_rellenoPosition.length; index++) {
     const x = (Math.random() - 0.5) * nRadius * 2;
-    const y = (Math.random() - 0.15) * nRadius * 0.5;
+    const y = (Math.random() - 0.35) * nRadius;
     const z = (Math.random() - 0.5) * nRadius * 2;
 
     if (index > (n_particleCount * 3) / 5) {

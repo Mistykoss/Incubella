@@ -142,13 +142,13 @@
       this[globalName] = mainExports;
     }
   }
-})({"eRtbY":[function(require,module,exports) {
+})({"31uiQ":[function(require,module,exports) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = null;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "d6ea1d42532a7575";
-module.bundle.HMR_BUNDLE_ID = "8238f70a4029fab8";
+module.bundle.HMR_BUNDLE_ID = "a79ae5f9650ed53a";
 "use strict";
 /* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE, chrome, browser, __parcel__import__, __parcel__importScripts__, ServiceWorkerGlobalScope */ /*::
 import type {
@@ -573,7 +573,7 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
     });
 }
 
-},{}],"kOjux":[function(require,module,exports) {
+},{}],"1NFHD":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 var _three = require("three");
 var _datGui = require("dat.gui");
@@ -628,7 +628,6 @@ let sphereGeometry = null;
 let n_Material = null;
 let p_Sphere = null;
 let p_SphereMaterial = null;
-let axisHelper = null;
 // Variables
 const maxParticleCount = 1000;
 const particleCount = 500;
@@ -706,17 +705,17 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     //agregar 
     sp_Particles = new (0, _three.Points)(sp_ParticlesGeometry, sp_ParticlesMaterial);
     sp_linesParticles = new (0, _three.LineSegments)(sp_linesGeometry, sp_linesMaterial);
-    web.add(sp_Particles);
-    web.add(sp_linesParticles);
+    //web.add(sp_Particles);
+    //web.add(sp_linesParticles);
     //FINAL DE LA NUEVA ESFERA
     const ambientLight = new (0, _three.AmbientLight)();
     ambientLight.intensity = 2;
-    axisHelper = new (0, _three.AxesHelper)(20);
+    const axisHelper = new (0, _three.AxesHelper)(20);
     axisHelper.position.copy(new (0, _three.Vector3)(0, 32, 0));
     //web.add(axisHelper);
     // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
     particleGeometry = new (0, _three.BufferGeometry)();
-    const particleCount = 30000; // Cantidad de partículas
+    const particleCount = 3000; // Cantidad de partículas
     const colors = [
         0x0dd5fd,
         0x0dd5fd,
@@ -729,16 +728,16 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     const sizeArray = new Float32Array(particleCount);
     const positions = new Float32Array(particleCount * 3);
     const colorsArray = new Float32Array(particleCount * 3);
-    const area = 1; //ajusta el area ocmpleta de la nube de particulas
-    const centerSize = 2;
+    const area = 10; //ajusta el area ocmpleta de la nube de particulas
+    const centerSize = 3.5;
     const amplitude = 0.1; // valor mas alto mas larga es el ala
-    const divisiones = 40; // mas divisiones mas colores
+    const divisiones = 30; // mas divisiones mas colores
     let counter = divisiones;
     const noiseAmplitude = 10; //un valor mas alto agrega mas ruido
     const noiseIntensity = 1; //un valor mas alto agrega mas ruido
     const ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
     const TWO_PI = 2 * Math.PI;
-    const n_particleCount = 3000;
+    const n_particleCount = 2000;
     const p_rellenoGeometry = new (0, _three.BufferGeometry)();
     const p_rellenoPosition = new Float32Array(n_particleCount * 3);
     //generar las particulas
@@ -759,29 +758,33 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             colorsArray[rIndex * 3] = color.r;
             colorsArray[rIndex * 3 + 1] = color.g;
             colorsArray[rIndex * 3 + 2] = color.b;
+            //CREAR ARO CON OLAS
+            let x, y, z;
             //calcular anguloas reativos
             const angleIncrement = TWO_PI / divisionParticleCount;
             const angle = angleIncrement * rIndex;
-            const log = rIndex % 10;
-            sizeArray[rIndex] = Math.random() * log + (Math.random() + 3.5);
-            //noise
-            //ecuaciones
-            const xEcuation = Math.cos(rIndex * ringFrecuency) * (1 + amplitude * Math.sin(rIndex));
-            const zEcuation = Math.sin(rIndex * ringFrecuency) * (1 + amplitude * Math.sin(rIndex));
-            //plano cartesiano
-            const x = insideRadius * xEcuation * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
-            const z = insideRadius * zEcuation * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
-            let y = Math.sin(rIndex) * Math.random();
-            //const x = (Math.cos(angle * ringParticleAmount) ) + (Math.sin(angle * ringParticleAmount));
-            //const y = 0;
-            //const z = insideRadius * Math.sin(angle * ringParticleAmount) + 0.5 * Math.sin(angle);
-            positions[rIndex * 3] = x * area;
+            //propiedades de las holas
+            const random = Math.random();
+            sizeArray[rIndex] = 15;
+            const noiseIntensity = 0.7;
+            const internalRadius = Math.sin(random * 0.5 + centerSize);
+            const smoothRingIntensity = 0.5;
+            const smoothRingInitial = 3;
+            const smoothRing = index * smoothRingIntensity + smoothRingInitial;
+            const waveHeight = 30;
+            const waveAmount = 7;
+            const waveIntensity = 2;
+            const rArea = 1;
+            const waves = Math.sin(angle * waveAmount) + smoothRing * smoothRing;
+            x = waves * Math.cos(angle) * internalRadius;
+            z = waves * Math.sin(angle) * internalRadius;
+            y = Math.sin(waves);
+            positions[rIndex * 3] = x * rArea;
             positions[rIndex * 3 + 1] = y;
-            positions[rIndex * 3 + 2] = z * area;
+            positions[rIndex * 3 + 2] = z * rArea;
         //particlePositions.push(x*area, y *area, z*area)
         }
     }
-    console.log(sizeArray, "AQUI!!");
     const nRadius = 150;
     const n_colorsArray = new Float32Array(n_particleCount * 3);
     const n_sizeArray = new Float32Array(n_particleCount);
@@ -800,7 +803,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     });
     for(let index = 0; index < p_rellenoPosition.length; index++){
         const x = (Math.random() - 0.5) * nRadius * 2;
-        const y = (Math.random() - 0.35) * nRadius;
+        const y = (Math.random() - 0.15) * nRadius * 0.5;
         const z = (Math.random() - 0.5) * nRadius * 2;
         if (index > n_particleCount * 3 / 5) n_sizeArray[index] = Math.random() * (index % 15 - 1) + 2;
         else n_sizeArray[index] = Math.random() * (index % 5 - 1) + 2;
@@ -816,7 +819,6 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     }
     // Luego, puedes usar particlePositions para configurar la geometría de las partículas
     p_rellenoGeometry.setAttribute("position", new (0, _three.BufferAttribute)(p_rellenoPosition, 3));
-    //ESCONDER
     p_rellenoGeometry.setAttribute("color", new (0, _three.BufferAttribute)(n_colorsArray, 3));
     p_rellenoGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(n_sizeArray, 1));
     particleGeometry.setAttribute("position", new (0, _three.BufferAttribute)(positions, 3));
@@ -825,7 +827,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     console.log(particleGeometry);
     // Crear un material para las partículas (puedes personalizar esto según tus necesidades)
     // Cargar la textura
-    const textureUrl = new URL(require("9917033fbdff724b"));
+    const textureUrl = new URL(require("ce4bbe97c59da214"));
     particleMaterial = new (0, _three.ShaderMaterial)({
         uniforms: {
             time: {
@@ -1011,7 +1013,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     //web.add(p_Sphere);
     web.add(p_Relleno);
     web.add(particleSystem);
-    const plane = new (0, _three.Mesh)(new (0, _three.PlaneGeometry)(300, 300, 10), new (0, _three.MeshBasicMaterial)({
+    const plane = new (0, _three.Mesh)(new (0, _three.PlaneGeometry)(300, 300, 4), new (0, _three.MeshBasicMaterial)({
         wireframe: true
     }));
     CAM_MANAGER.plane = plane;
@@ -1027,7 +1029,6 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     particles.visible = false;
     secondParticles.visible = false;
     plane.visible = false;
-    web.add(axisHelper);
 });
 const segundaVista = new (0, _three.Vector3)(0, 30, 0);
 target = new (0, _three.Vector3)(0, 15, 0);
@@ -1044,9 +1045,6 @@ const handlreClick = (event)=>{
     opacityAnim.start();
 };
 //la escena html
-let grupoDotsContainer = null;
-const grupoDots = new (0, _three.Group)();
-let displayBContainer = new (0, _three.Group)();
 webManager.setEnviroment(webManager.webHtml, (html)=>{
     //agregar primera pantalla
     const dots = {
@@ -1067,7 +1065,6 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
             link: "https://img.icons8.com/material-rounded/24/tab.png"
         }
     };
-    grupoDotsContainer = new (0, _three.Group)();
     for(const key in dots)if (dots.hasOwnProperty(key)) {
         const dot = dots[key];
         const elementContainer = document.createElement("div");
@@ -1084,45 +1081,35 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
         elementContainer.addEventListener("pointerdown", handlreClick);
         elementContainer.appendChild(element);
         const header = new (0, _css3Drenderer.CSS3DObject)(elementContainer);
-        const scale = 0.1;
+        const scale = 0.15;
         header.scale.set(scale, scale, scale);
         header.position.set(1, 0, 0);
-        console.log(grupoDots);
-        grupoDots.add(header);
+        //html.add(header);
         domItems.push(header);
     }
-    //configurar centro
-    grupoDots.position.set(0, 0, -15);
-    grupoDotsContainer.position.set(0, 15, 0);
-    grupoDotsContainer.add(grupoDots);
-    html.add(grupoDotsContainer);
     //segunda pantalla
     for(let index = 0; index < 5; index++){
         const element = document.createElement("div");
         const elementContainer = document.createElement("div");
-        element.innerHTML = "Lorem" + index;
+        element.innerHTML = "Lorem";
         element.classList.add("element-b");
         elementContainer.appendChild(element);
         const header = new (0, _css3Drenderer.CSS3DObject)(elementContainer);
         const scale = 0.04;
         header.scale.set(scale, scale, scale);
-        displayBContainer.add(header);
+        html.add(header);
         domItemsSecond.push(header);
     }
-    CAM_MANAGER.displayA = domItems;
-    CAM_MANAGER.displayB = domItemsSecond;
-    html.add(displayBContainer);
     //posicionar los segunda pantalla
-    const radioS = 25;
-    const centerS = new (0, _three.Vector3)(0, 35, 0); // Vector3 que representa el centro
+    const radioS = 22;
+    const centerS = new (0, _three.Vector3)(0, 0, 15); // Vector3 que representa el centro
     for(let index = 0; index < domItemsSecond.length; index++){
         const fixed = 1;
-        const fixedAngle = -5;
-        const angle = Math.PI * fixed * index / domItemsSecond.length; // Calcular el ángulo para esta iteración
+        const fixedAngle = -39.4;
+        const angle = Math.PI * fixed * index / domItems.length; // Calcular el ángulo para esta iteración
         const x = radioS * Math.sin(angle - fixedAngle);
-        const y = radioS * Math.cos(angle - fixedAngle);
-        const position = new (0, _three.Vector3)(x, y, 0);
-        console.log(position);
+        const z = radioS * Math.cos(angle - fixedAngle);
+        const position = new (0, _three.Vector3)(x, 0, z);
         position.add(centerS); // Sumar el vector del centro para obtener la posición final
         domItemsSecond[index].position.copy(position);
     }
@@ -1140,8 +1127,8 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
   header.lookAt(relativePos);
   */ ///
     //posicionar
-    const radio = 40;
-    const center = new (0, _three.Vector3)(0, 10, 0); // Vector3 que representa el centro
+    const radio = 50;
+    const center = new (0, _three.Vector3)(0, 0, 0); // Vector3 que representa el centro
     for(let index = 0; index < domItems.length; index++){
         const angle = Math.PI * 2 * index / domItems.length; // Calcular el ángulo para esta iteración
         const x = radio * Math.sin(angle);
@@ -1153,7 +1140,6 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
 });
 const sp_V = new (0, _three.Vector3)();
 webManager.setAnimations((delta)=>{
-    (0, _tweenJsDefault.default).update();
     let vertexpos = 0;
     let colorpos = 0;
     let numConnected = 0;
@@ -1225,17 +1211,14 @@ webManager.setAnimations((delta)=>{
     const angular = Math.sin(delta);
     CAM_MANAGER.camera.lookAt(target);
     CAM_MANAGER.orbitControls.update();
-    (0, _tweenJsDefault.default).update();
     if (isSecondScreen) {
         isInScreen = true;
-        CAM_MANAGER.isDisplayA = false;
-        //viewAnim.update();
-        //screenAnim.update();
-        //opacityAnim.update();
+        viewAnim.update();
+        screenAnim.update();
+        opacityAnim.update();
         screenAnim.onComplete(()=>{
             //desactivar los controles de orbita
             CAM_MANAGER.orbitControls.minPolarAngle = Math.PI * 0.25;
-            CAM_MANAGER.isDisplayB = true;
             CAM_MANAGER.orbitControls.maxPolarAngle = Math.PI * 0.25;
             isSecondScreen = false;
             //s_particles.visible = true;
@@ -1255,8 +1238,7 @@ webManager.setAnimations((delta)=>{
         }
         domItems.forEach((element)=>{
             let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, element.position);
-            let fixed = new (0, _three.Vector3)().addVectors(relative, grupoDotsContainer.position);
-            let relativePos = new (0, _three.Vector3)().addVectors(fixed, CAM_MANAGER.camera.position);
+            let relativePos = new (0, _three.Vector3)().addVectors(relative, CAM_MANAGER.camera.position);
             element.lookAt(relativePos);
             element.position.y = angular - 1;
         });
@@ -1264,23 +1246,9 @@ webManager.setAnimations((delta)=>{
             let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, element.position);
             let relativeFixed = new (0, _three.Vector3)().subVectors(relative, target);
             let relativePos = new (0, _three.Vector3)().addVectors(relativeFixed, CAM_MANAGER.camera.position);
-            let relativePosFixed = new (0, _three.Vector3)().subVectors(relativePos, displayBContainer.position);
-            element.lookAt(relativePosFixed);
+            element.lookAt(relativePos);
         });
-        //mover los dots
-        let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, grupoDotsContainer.position);
-        let relativePos = new (0, _three.Vector3)().addVectors(relative, CAM_MANAGER.camera.position);
-        let relativeFixed = new (0, _three.Vector3)(relativePos.x, relativePos.y, relativePos.z);
-        relativeFixed.y = 0;
-        grupoDotsContainer.lookAt(relativeFixed);
     }
-    //mover los dots
-    let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, displayBContainer.position);
-    let relativePos = new (0, _three.Vector3)().addVectors(relative, CAM_MANAGER.camera.position);
-    displayBContainer.lookAt(relativePos);
-    axisHelper.position.copy(displayBContainer.position);
-    axisHelper.rotation.copy(displayBContainer.rotation);
-    (0, _tweenJsDefault.default).update();
 });
 //renderizar en el bucle
 CAM_MANAGER.activeOrbit();
@@ -1302,11 +1270,11 @@ function animateValue(normal, target, newValue, tiempoAnimacion) {
     .easing((0, _tweenJsDefault.default).Easing.Quadratic.InOut);
     return tween;
 }
-function graph(x, z) {
-    const t = 5;
-    const frecuency = 0.002;
-    const altura = 8;
-    return Math.sin(frecuency * (x ** 2 + z ** 2 + t)) * altura;
+function graph(x, z, t, f, a) {
+    const time = t;
+    const frecuency = f;
+    const altura = a;
+    return Math.sin(frecuency * (x ** 2 + z ** 2 + time)) * altura;
 }
 function lerp(start, end, t) {
     return start + t * (end - start);
@@ -1327,7 +1295,7 @@ cameraFolder.add(cameraControls, "positionZ", -100, 100).step(0.005).name("Z Pos
     CAM_MANAGER.container.position.z = cameraControls.positionZ;
 });
 
-},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_relleno.glsl":"2Trgk","./scenes/shaders/v_relleno.glsl":"52tUs","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","./scenes/shaders/f_pSphere.glsl":"6b176","./scenes/shaders/v_pSphere.glsl":"11q8G","9917033fbdff724b":"6xN1R","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_relleno.glsl":"2Trgk","./scenes/shaders/v_relleno.glsl":"52tUs","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","./scenes/shaders/f_pSphere.glsl":"6b176","./scenes/shaders/v_pSphere.glsl":"11q8G","ce4bbe97c59da214":"X7Yi6","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
 /**
  * @license
  * Copyright 2010-2023 Three.js Authors
@@ -36774,10 +36742,10 @@ var exports = {
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bZB41":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\nuniform float opacityFactor;\nuniform float time;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n  vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n  float dist = length(coord);\n\n      //ajustes de particulas\n  float alpha = 0.15;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n  if(dist > 0.45)\n    discard;\n\n      // Calculamos el color final de la part\xedcula con el brillo\n\n  if(vSize < 12.0) {\n    alpha = 0.1;\n  }\n  if(vSize < 9.0) {\n    alpha = 0.15;\n  }\n  if(vSize < 6.0) {\n    alpha = 0.25;\n  }\n  if(vSize < 4.0) {\n    alpha = 1.0;\n  }\n\n      // Asignamos el color de la part\xedcula al fragmento\n  gl_FragColor = vec4(vColor, alpha * opacityFactor);\n\n}\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\nuniform float opacityFactor;\nuniform float time;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.15;\n      \n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.45)\n            discard;\n\n      // Calculamos el color final de la part\xedcula con el brillo\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(vColor, alpha * opacityFactor);\n      \n}\n";
 
 },{}],"fi574":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  //newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
+module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  //newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = 10.0; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
 
 },{}],"2Trgk":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.15;\n      float lightIntensity = 1.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      //si es menor\n      if(vSize < 8.0){\n        alpha = 2.0;\n      }\n\n      vec3 finalColor = vColor * 0.3;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha);\n}\n";
@@ -36797,10 +36765,10 @@ module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almace
 },{}],"11q8G":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\n// Vertex Shader\n\nuniform float time; // Tiempo para controlar la rotaci\xf3n\nuniform float velocity; // Tiempo para controlar la rotaci\xf3n\n\nvoid main() {\n  float angle = time * velocity;\n  float radius = 20.0;\n\n  vec3 newPosition = position;\n\n  newPosition.x += velocity * time;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = 5.0;\n}\n";
 
-},{}],"6xN1R":[function(require,module,exports) {
-module.exports = require("81735b0b520cd661").getBundleURL("bbaCV") + "particle.47990137.png" + "?" + Date.now();
+},{}],"X7Yi6":[function(require,module,exports) {
+module.exports = require("da537a5dfe6bc081").getBundleURL("eo9MP") + "particle.47990137.png" + "?" + Date.now();
 
-},{"81735b0b520cd661":"lgJ39"}],"lgJ39":[function(require,module,exports) {
+},{"da537a5dfe6bc081":"lgJ39"}],"lgJ39":[function(require,module,exports) {
 "use strict";
 var bundleURL = {};
 function getBundleURLCached(id) {
@@ -36835,6 +36803,6 @@ exports.getBundleURL = getBundleURLCached;
 exports.getBaseURL = getBaseURL;
 exports.getOrigin = getOrigin;
 
-},{}]},["eRtbY","kOjux"], "kOjux", "parcelRequire94c2")
+},{}]},["31uiQ","1NFHD"], "1NFHD", "parcelRequire94c2")
 
-//# sourceMappingURL=index.4029fab8.js.map
+//# sourceMappingURL=index.650ed53a.js.map

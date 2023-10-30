@@ -11,8 +11,8 @@ void main() {
       float dist = length(coord);
 
       //ajustes de particulas
-      float alpha = 0.1;
-      float lightIntensity = 5.0;
+      float alpha = 0.15;
+      float lightIntensity = 1.0;
       float brightness = pow(1.0 - dist, 2.0) * lightIntensity;
 
         // Descartamos los fragmentos que están fuera del radio de 0.5,
@@ -20,9 +20,15 @@ void main() {
       if(dist > 0.5)
             discard;
 
+
       // Calculamos el brillo de la partícula
       // Calculamos el color final de la partícula con el brillo
-      vec3 finalColor = vColor * brightness;
+      //si es menor
+      if(vSize < 8.0){
+        alpha = 2.0;
+      }
+
+      vec3 finalColor = vColor * 0.3;
 
       // Asignamos el color de la partícula al fragmento
       gl_FragColor = vec4(finalColor, alpha);
