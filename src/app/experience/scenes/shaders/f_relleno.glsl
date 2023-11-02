@@ -28,8 +28,11 @@ void main() {
         alpha = 2.0;
       }
 
+        float details = pow(dist, 2.5);
+
+
       vec3 finalColor = vColor * 0.3;
 
       // Asignamos el color de la partícula al fragmento
-      gl_FragColor = vec4(finalColor, alpha);
+      gl_FragColor = vec4(finalColor, alpha + details);
 }

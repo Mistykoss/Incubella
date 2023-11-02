@@ -50,7 +50,7 @@ class RendererManager {
       ///configuracones adicionales para 3d
       renderer.outputColorSpace = SRGBColorSpace;
       renderer.toneMapping = ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.5;
+      renderer.toneMappingExposure = 0.6;
 
       this.web3DRenderComposer = new EffectComposer(renderer);
     }

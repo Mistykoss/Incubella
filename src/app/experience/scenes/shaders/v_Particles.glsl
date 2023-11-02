@@ -10,6 +10,9 @@ varying vec2 vUv;
 varying float vSize;
 varying vec3 vColor; // Variable que almacena el color de la partícula
 
+float noise1d(float v){
+  return cos(v + cos(v * 90.1415) * 100.1415) * 0.5 + 0.5;
+}
 
 
 void main() {
@@ -18,7 +21,7 @@ void main() {
   vSize = particleSize;
   float intensity = 0.5;
   float turbulence = 0.35;
-  float animTime = 0.07;
+  float animTime = 0.0001;
   vColor = color;
   // Transforma la posición de la partícula
   vec3 newPosition = position;
@@ -27,8 +30,8 @@ void main() {
 
 
 
-  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;
-  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;
+  newPosition.x =x + noise1d(animTime * time + vSize) ;
+  newPosition.z =z + noise1d(animTime * time + vSize) ;
 
 //agregar el movimiento del mouse
 float relative = length(u_mouse.xy - newPosition.xz);

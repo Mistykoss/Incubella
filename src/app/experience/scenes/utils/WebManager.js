@@ -50,23 +50,25 @@ export class WebManager {
     );
 
     const bokehPass = new BokehPass( this.web3DScene, this._camera, {
-          focus:1000,
+          focus: 0,
 					aperture: 0.5,
-					maxblur: 0.00
+					maxblur: 0.001
     } );
     extBoken = bokehPass;
+
 
     
 
     const outputPass = new OutputPass();
 
+    this.renderManager.web3DRenderer.autoClear = false;
   
     // Agregar el pase de "bloom" al compositor de efectos
     this.renderManager.web3DRenderComposer.addPass(this.renderPass);
     this.renderManager.web3DRenderComposer.addPass(bloomPass);
+    this.renderManager.web3DRenderComposer.addPass(bokehPass);
     this.renderManager.web3DRenderComposer.addPass(outputPass);
 
-    this.renderManager.web3DRenderComposer.autoClear = false;
   }
   //init camera 
   initCamera(){
@@ -106,10 +108,7 @@ export class WebManager {
           );
       }
       else{
-        this.renderManager.web3DRenderComposer.render(
-          this.web3DScene,
-          this._camera
-          );
+        this.renderManager.web3DRenderComposer.render(0.1);
       }
       //renderizar el html en la escena
       this.renderManager.webHtmlRenderer.render(
@@ -197,7 +196,7 @@ const gui = new dat.GUI();
 const boken ={
   focus: 0,
   aperture: 0,
-  maxblur: 0,
+  maxblur: 0.1,
 }
 gui.domElement.style.zIndex = 100;
 
@@ -207,28 +206,28 @@ const bokenFolder = gui.addFolder("blur");
 function change(){
   extBoken.uniforms[ 'focus' ].value = boken.focus;
   console.log(extBoken.uniforms[ 'focus' ].value)
-	extBoken.uniforms[ 'aperture' ].value = boken.aperture * 0.00001;
+	extBoken.uniforms[ 'aperture' ].value = boken.aperture * 0.000001;
 	extBoken.uniforms[ 'maxblur' ].value = boken.maxblur;
 }
 
 
 bokenFolder
-  .add(boken, "focus", 0, 1000)
-  .step(0.005)
+  .add(boken, "focus", -1000, 10000)
+  .step(0.0005)
   .name("focus")
   .onChange(() => {
     change();
   });
 
   bokenFolder
-  .add(boken, "aperture", 0, 10)
-  .step(0.001)
+  .add(boken, "aperture", -100, 100)
+  .step(0.0001)
   .name("aperture")
   .onChange(() => {
     change();
   });
   bokenFolder
-  .add(boken, "maxblur", 0, 0.001)
+  .add(boken, "maxblur", 0, 0.1)
   .step(0.001)
   .name("maxblur")
   .onChange(() => {

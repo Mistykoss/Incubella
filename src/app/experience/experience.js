@@ -244,13 +244,13 @@ web.add(sp_linesParticles);
   const colorsArray = new Float32Array(particleCount * 3);
 
   const area = 1; //ajusta el area ocmpleta de la nube de particulas
-  const centerSize = 2;
+  const centerSize = 3;
   const amplitude = 0.1; // valor mas alto mas larga es el ala
   const divisiones = 40; // mas divisiones mas colores
   let counter = divisiones;
-  const noiseAmplitude = 10; //un valor mas alto agrega mas ruido
-  const noiseIntensity = 1; //un valor mas alto agrega mas ruido
-  const ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
+  let noiseAmplitude = 10; //un valor mas alto agrega mas ruido
+  let noiseIntensity = 1; //un valor mas alto agrega mas ruido
+  let ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
   const TWO_PI = 2 * Math.PI;
 
   const n_particleCount = 3000;
@@ -265,15 +265,16 @@ web.add(sp_linesParticles);
     const divisionParticleCount = relativeCount - relativeSum;
     let rIndex = relativeSum;
 
-    const random = Math.random() * index + centerSize;
+    const random = Math.random() *  index + centerSize;
     const insideRadius = random;
 
     for (; rIndex < relativeCount; rIndex++) {
       // Obtener el color para esta partícula
       // Calcula la posición Y para crear la onda en el borde del círculo
 
-      const colorIndex = index % colors.length;
-      const actualColor = colors[colorIndex];
+      const colorIndex =  index % colors.length;
+      const colorRIndex =  colorIndex % colors.length;
+      const actualColor = colors[colorRIndex];
       const color = new Color(actualColor);
 
       colorsArray[rIndex * 3] = color.r;
@@ -283,10 +284,18 @@ web.add(sp_linesParticles);
       const angleIncrement = TWO_PI / divisionParticleCount;
       const angle = angleIncrement * rIndex;
 
-      const log = rIndex % 10;
-      sizeArray[rIndex] = Math.random() * log  + (Math.random() +3.5);
+      const rNumber = Math.random() * 15;
+      const rMinNumber = Math.random() * 5 +1;
+      const log = Math.abs(Math.tan(rIndex + 1) * Math.tan(index +  rNumber)) * rNumber;
+      //console.log(log);
+      sizeArray[rIndex] = Math.min(Math.max(log,rMinNumber), rNumber);
 
       //noise
+      if(index > divisiones-5){
+        noiseIntensity = noiseIntensity + 8;
+        noiseIntensity = noiseAmplitude + 5;
+        ringFrecuency = ringFrecuency + 0.5;
+      }
 
       //ecuaciones
       const xEcuation =
@@ -306,7 +315,7 @@ web.add(sp_linesParticles);
         (Math.random() -
           0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
 
-      let y = Math.sin(rIndex) * Math.random();
+      let y = Math.min(Math.tan(angle + rNumber + index), 5);
       //const x = (Math.cos(angle * ringParticleAmount) ) + (Math.sin(angle * ringParticleAmount));
       //const y = 0;
       //const z = insideRadius * Math.sin(angle * ringParticleAmount) + 0.5 * Math.sin(angle);
@@ -661,7 +670,7 @@ const viewAnim = animatePosition(target, segundaVista, 4200);
 const opacityAnim = animateValue(
   particleProps,
   "opacity",
-  0.1,
+  0.05,
   4500
 );
 //opacityFactor = 0.1;
@@ -869,7 +878,7 @@ webManager.setAnimations((delta) => {
         particleData.numConnections++;
         particleDataB.numConnections++;
 
-        const alpha = 1 - dist / minDistance;
+        const alpha = 0.8 - dist / minDistance;
 
       //XYZ
        sp_linesPositions[vertexpos++] = sp_ParticlesPosition[i * 3];

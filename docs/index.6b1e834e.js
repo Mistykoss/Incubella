@@ -142,13 +142,13 @@
       this[globalName] = mainExports;
     }
   }
-})({"eRtbY":[function(require,module,exports) {
+})({"6Ut5D":[function(require,module,exports) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = null;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "d6ea1d42532a7575";
-module.bundle.HMR_BUNDLE_ID = "8238f70a4029fab8";
+module.bundle.HMR_BUNDLE_ID = "073433226b1e834e";
 "use strict";
 /* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE, chrome, browser, __parcel__import__, __parcel__importScripts__, ServiceWorkerGlobalScope */ /*::
 import type {
@@ -573,7 +573,7 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
     });
 }
 
-},{}],"kOjux":[function(require,module,exports) {
+},{}],"iRoLN":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 var _three = require("three");
 var _datGui = require("dat.gui");
@@ -601,14 +601,13 @@ var _vPSphereGlsl = require("./scenes/shaders/v_pSphere.glsl");
 var _vPSphereGlslDefault = parcelHelpers.interopDefault(_vPSphereGlsl);
 const camera = new (0, _three.PerspectiveCamera)(45, window.innerWidth / window.innerHeight, 0.01, 1000);
 const primeraPantalla = new (0, _three.Vector3)(0, 100, 100);
-const segundaPantalla = new (0, _three.Vector3)(0, 45, 10);
+const segundaPantalla = new (0, _three.Vector3)(0, 30, 30);
 const debugPantalla = new (0, _three.Vector3)(0, 500, 500);
 let isSecondScreen = false;
 let isInScreen = false;
 const CAM_MANAGER = new (0, _cameraManager.CameraManager)(camera);
 CAM_MANAGER.container.position.copy(primeraPantalla);
 //CAM_MANAGER.container.position.set(0, 100, 100);
-CAM_MANAGER.camera.lookAt(new (0, _three.Vector3)(0, 0, 0));
 const webManager = new (0, _webManager.WebManager)("Main", CAM_MANAGER);
 //global variables
 let particleGeometry;
@@ -629,6 +628,7 @@ let sphereGeometry = null;
 let n_Material = null;
 let p_Sphere = null;
 let p_SphereMaterial = null;
+let axisHelper = null;
 // Variables
 const maxParticleCount = 1000;
 const particleCount = 500;
@@ -674,6 +674,10 @@ const minDistance = 3.5;
 const maxConnections = 2;
 const particleSpeed = 150; // valor mas alto, mas lento
 const colorSphere = new (0, _three.Color)(0x0dd5fd);
+//valor de factor de las particulas
+const particleProps = {
+    opacity: 1.0
+};
 //la escena web
 webManager.setEnviroment(webManager.web3d, (web)=>{
     //INICIO NUEVA ESFERA
@@ -699,18 +703,21 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     sp_linesGeometry.setAttribute("color", new (0, _three.BufferAttribute)(sp_linesColors, 3).setUsage((0, _three.DynamicDrawUsage)));
     sp_linesGeometry.computeBoundingSphere();
     sp_linesGeometry.setDrawRange(0, 0);
-    //agregar 
+    //agregar
     sp_Particles = new (0, _three.Points)(sp_ParticlesGeometry, sp_ParticlesMaterial);
     sp_linesParticles = new (0, _three.LineSegments)(sp_linesGeometry, sp_linesMaterial);
-    web.add(sp_Particles);
-    web.add(sp_linesParticles);
+    //ACTIVAR
+    //web.add(sp_Particles);
+    //web.add(sp_linesParticles);
     //FINAL DE LA NUEVA ESFERA
     const ambientLight = new (0, _three.AmbientLight)();
     ambientLight.intensity = 2;
-    const axisHelper = new (0, _three.AxesHelper)(20);
+    axisHelper = new (0, _three.AxesHelper)(20);
+    axisHelper.position.copy(new (0, _three.Vector3)(0, 32, 0));
+    //web.add(axisHelper);
     // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
     particleGeometry = new (0, _three.BufferGeometry)();
-    const particleCount = 20000; // Cantidad de partículas
+    const particleCount = 10000; // Cantidad de partículas
     const colors = [
         0x0dd5fd,
         0x0dd5fd,
@@ -723,58 +730,69 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     const sizeArray = new Float32Array(particleCount);
     const positions = new Float32Array(particleCount * 3);
     const colorsArray = new Float32Array(particleCount * 3);
-    const area = 1; //ajusta el area ocmpleta de la nube de particulas
-    const centerSize = 2;
-    const amplitude = 0.1; // valor mas alto mas larga es el ala
-    const divisiones = 40; // mas divisiones mas colores
-    let counter = divisiones;
-    const noiseAmplitude = 10; //un valor mas alto agrega mas ruido
-    const noiseIntensity = 1; //un valor mas alto agrega mas ruido
-    const ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
-    const TWO_PI = 2 * Math.PI;
-    const n_particleCount = 2000;
+    //relleno
+    const n_particleCount = 600;
     const p_rellenoGeometry = new (0, _three.BufferGeometry)();
     const p_rellenoPosition = new Float32Array(n_particleCount * 3);
+    //INICIO PARTICULAS PRINCIPALES
+    const divisiones = 5;
+    const minimoParticulas = 1000;
+    const TWO_PI = Math.PI * 2;
+    let relativeCount = 0;
+    let maximoParticulas = 0;
+    let angle = 0;
+    let separation = 5;
+    let area = 0.1;
+    let noiseArea = 0;
+    let noiseAreaIntensity = 1;
+    //ring options
+    let ringFrecuency = 7;
+    let ringSmooth = 40;
+    let ringIntensity = 2.5;
+    let height = -0.1;
+    //arrays 
+    let particlePos = [];
     //generar las particulas
-    for(let index = 0; index < divisiones; index++){
-        counter--;
-        let relativeSum = particleCount / divisiones * index;
-        let relativeCount = particleCount / divisiones + relativeSum;
-        const divisionParticleCount = relativeCount - relativeSum;
-        let rIndex = relativeSum;
-        const random = Math.random() * index + centerSize;
-        const insideRadius = random;
-        for(; rIndex < relativeCount; rIndex++){
-            // Obtener el color para esta partícula
-            // Calcula la posición Y para crear la onda en el borde del círculo
-            const colorIndex = index % colors.length;
-            const actualColor = colors[colorIndex];
-            const color = new (0, _three.Color)(actualColor);
-            colorsArray[rIndex * 3] = color.r;
-            colorsArray[rIndex * 3 + 1] = color.g;
-            colorsArray[rIndex * 3 + 2] = color.b;
-            //calcular anguloas reativos
-            const angleIncrement = TWO_PI / divisionParticleCount;
-            const angle = angleIncrement * rIndex;
-            sizeArray[rIndex] = Math.random() * (rIndex % 10 - 1) + (Math.random() + 3.5);
-            //noise
-            //ecuaciones
-            const xEcuation = Math.cos(rIndex * ringFrecuency) * (1 + amplitude * Math.sin(rIndex));
-            const zEcuation = Math.sin(rIndex * ringFrecuency) * (1 + amplitude * Math.sin(rIndex));
-            //plano cartesiano
-            const x = insideRadius * xEcuation * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
-            const z = insideRadius * zEcuation * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
-            let y = 0;
-            if (Math.random() <= 0.2) y = (Math.random() - 0.5) * 15;
-            //const x = (Math.cos(angle * ringParticleAmount) ) + (Math.sin(angle * ringParticleAmount));
-            //const y = 0;
-            //const z = insideRadius * Math.sin(angle * ringParticleAmount) + 0.5 * Math.sin(angle);
-            positions[rIndex * 3] = x * area;
-            positions[rIndex * 3 + 1] = y;
-            positions[rIndex * 3 + 2] = z * area;
-        //particlePositions.push(x*area, y *area, z*area)
+    for(let index = divisiones; index > 0; index--){
+        relativeCount = index * minimoParticulas - minimoParticulas * divisiones % index;
+        maximoParticulas = relativeCount + maximoParticulas;
+        for(internalIndex = 0; internalIndex < relativeCount; internalIndex++){
+            console.log("value: ", relativeCount);
+            /*
+      const colorIndex = index % colors.length;
+      const actualColor = colors[colorIndex];
+      const color = new Color(actualColor);
+
+      colorsArray[internalIndex * 3] = color.r;
+      colorsArray[internalIndex * 3 + 1] = color.g;
+      colorsArray[internalIndex * 3 + 2] = color.b;
+
+      */ //calcular el angulo en relacion a el numero actual de particulas
+            angle = internalIndex / relativeCount * TWO_PI;
+            //configurar posicion
+            const intensity = Math.random() * ringIntensity;
+            const wave = intensity * index * Math.sin(angle * ringFrecuency) + ringSmooth;
+            noiseArea = index * separation + (Math.random() - 0.5 * noiseAreaIntensity);
+            let xEquad = wave * Math.sin(angle) * (index * separation) * area;
+            let zEquad = wave * Math.cos(angle) * (index * separation) * area;
+            let yEquad = 0;
+            const x = xEquad * (Math.random() + 0.5);
+            const z = zEquad * (Math.random() + 0.5);
+            const y = graph(x, z) * wave;
+            particlePos.push(x, y, z);
         }
+        console.log("CIRCULO [", index, "] con: ", relativeCount);
     }
+    const positionsArray = new Float32Array(particlePos);
+    console.log("SUMA TOTAL: ", maximoParticulas);
+    console.log(particlePos, "ARRAY");
+    console.log(positionsArray);
+    //asignar atributos
+    particleGeometry.setAttribute("position", new (0, _three.BufferAttribute)(positionsArray, 3));
+    // particleGeometry.setAttribute("color", new BufferAttribute(colorsArray, 3));
+    //particleGeometry.setAttribute("particleSize", new BufferAttribute(sizeArray, 1).setUsage(DynamicDrawUsage));
+    //FIN PARTICULAS PRINCIPALES
+    console.log(particleGeometry);
     const nRadius = 150;
     const n_colorsArray = new Float32Array(n_particleCount * 3);
     const n_sizeArray = new Float32Array(n_particleCount);
@@ -791,12 +809,13 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             }
         }
     });
+    //PARTICULAS RELLENO
     for(let index = 0; index < p_rellenoPosition.length; index++){
         const x = (Math.random() - 0.5) * nRadius * 2;
         const y = (Math.random() - 0.15) * nRadius * 0.5;
         const z = (Math.random() - 0.5) * nRadius * 2;
-        if (index > n_particleCount * 3 / 5) n_sizeArray[index] = Math.random() * (index % 15 - 1) + 2;
-        else n_sizeArray[index] = Math.random() * (index % 5 - 1) + 2;
+        //asignar el tamano e las particulas
+        n_sizeArray[index] = index % 15;
         const colorIndex = index % colors.length;
         const actualColor = colors[colorIndex];
         const color = new (0, _three.Color)(actualColor);
@@ -809,15 +828,13 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     }
     // Luego, puedes usar particlePositions para configurar la geometría de las partículas
     p_rellenoGeometry.setAttribute("position", new (0, _three.BufferAttribute)(p_rellenoPosition, 3));
+    //ESCONDER
     p_rellenoGeometry.setAttribute("color", new (0, _three.BufferAttribute)(n_colorsArray, 3));
     p_rellenoGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(n_sizeArray, 1));
-    particleGeometry.setAttribute("position", new (0, _three.BufferAttribute)(positions, 3));
-    particleGeometry.setAttribute("color", new (0, _three.BufferAttribute)(colorsArray, 3));
-    particleGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(sizeArray, 1).setUsage((0, _three.DynamicDrawUsage)));
-    console.log(particleGeometry);
+    //FIN PARTICULAS RELLENO
     // Crear un material para las partículas (puedes personalizar esto según tus necesidades)
     // Cargar la textura
-    const textureUrl = new URL(require("9917033fbdff724b"));
+    const textureUrl = new URL(require("f4861920a4cb1f78"));
     particleMaterial = new (0, _three.ShaderMaterial)({
         uniforms: {
             time: {
@@ -828,6 +845,9 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             },
             u_mouse: {
                 value: new (0, _three.Vector2)()
+            },
+            opacityFactor: {
+                value: particleProps.opacity
             }
         },
         vertexShader: (0, _vParticlesGlslDefault.default),
@@ -954,8 +974,6 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     p_SphereVelocity = [];
     for(let index = 0; index < 496; index++)p_SphereVelocity[index] = Math.random() * 2.5 + 1;
     p_Sphere.setAttribute("velocity", new (0, _three.BufferAttribute)(new Float32Array(496), 1));
-    console.log(p_SphereVelocity);
-    console.log(p_Sphere);
     p_Sphere = new (0, _three.Points)(p_Sphere, p_SphereMaterial);
     //ESFER NUEVA AQUI
     for(let i = 0; i < maxParticleCount; i++){
@@ -998,14 +1016,16 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     ///
     // Agregar el sistema de partículas a la escena (suponiendo que tienes una escena)
     //web.add(p_Sphere);
-    web.add(p_Relleno);
+    //ACTIVAR
+    //web.add(p_Relleno);
     web.add(particleSystem);
-    const plane = new (0, _three.Mesh)(new (0, _three.PlaneGeometry)(300, 300, 4), new (0, _three.MeshBasicMaterial)({
+    const plane = new (0, _three.Mesh)(new (0, _three.PlaneGeometry)(300, 300, 10), new (0, _three.MeshBasicMaterial)({
         wireframe: true
     }));
     CAM_MANAGER.plane = plane;
     plane.rotation.x = -Math.PI / 2;
-    web.add(plane);
+    //ACTIVAR
+    //web.add(plane);
     //web.add(mainSphere);
     //web.add(sphere);
     // Agregar el objeto Mesh (partículas) a la escena
@@ -1016,8 +1036,27 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     particles.visible = false;
     secondParticles.visible = false;
     plane.visible = false;
+//ACTIVAR
+//web.add(axisHelper);
 });
+const segundaVista = new (0, _three.Vector3)(0, 30, 0);
+target = new (0, _three.Vector3)(0, 15, 0);
+const screenAnim = animatePosition(CAM_MANAGER.container.position, segundaPantalla, 4500);
+const viewAnim = animatePosition(target, segundaVista, 4200);
+const opacityAnim = animateValue(particleProps, "opacity", 0.1, 4500);
+//opacityFactor = 0.1;
+const handlreClick = (event)=>{
+    console.log(event.target);
+    isSecondScreen = true;
+    console.log("viajar", isSecondScreen);
+    screenAnim.start();
+    viewAnim.start();
+    opacityAnim.start();
+};
 //la escena html
+let grupoDotsContainer = null;
+const grupoDots = new (0, _three.Group)();
+let displayBContainer = new (0, _three.Group)();
 webManager.setEnviroment(webManager.webHtml, (html)=>{
     //agregar primera pantalla
     const dots = {
@@ -1038,6 +1077,7 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
             link: "https://img.icons8.com/material-rounded/24/tab.png"
         }
     };
+    grupoDotsContainer = new (0, _three.Group)();
     for(const key in dots)if (dots.hasOwnProperty(key)) {
         const dot = dots[key];
         const elementContainer = document.createElement("div");
@@ -1051,37 +1091,46 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
         element.appendChild(span);
         element.appendChild(text);
         element.appendChild(img);
+        elementContainer.addEventListener("pointerdown", handlreClick);
         elementContainer.appendChild(element);
         const header = new (0, _css3Drenderer.CSS3DObject)(elementContainer);
-        const scale = 0.15;
+        const scale = 0.1;
         header.scale.set(scale, scale, scale);
         header.position.set(1, 0, 0);
-        //html.add(header);
+        grupoDots.add(header);
         domItems.push(header);
     }
+    //configurar centro
+    grupoDots.position.set(0, 0, -15);
+    grupoDotsContainer.position.set(0, 15, 0);
+    grupoDotsContainer.add(grupoDots);
+    html.add(grupoDotsContainer);
     //segunda pantalla
     for(let index = 0; index < 5; index++){
         const element = document.createElement("div");
         const elementContainer = document.createElement("div");
-        element.innerHTML = "Lorem";
+        element.innerHTML = "Lorem" + index;
         element.classList.add("element-b");
         elementContainer.appendChild(element);
         const header = new (0, _css3Drenderer.CSS3DObject)(elementContainer);
         const scale = 0.04;
         header.scale.set(scale, scale, scale);
-        //html.add(header);
+        displayBContainer.add(header);
         domItemsSecond.push(header);
     }
+    CAM_MANAGER.displayA = domItems;
+    CAM_MANAGER.displayB = domItemsSecond;
+    html.add(displayBContainer);
     //posicionar los segunda pantalla
-    const radioS = 22;
-    const centerS = new (0, _three.Vector3)(0, 0, -8); // Vector3 que representa el centro
+    const radioS = 25;
+    const centerS = new (0, _three.Vector3)(0, 35, 0); // Vector3 que representa el centro
     for(let index = 0; index < domItemsSecond.length; index++){
         const fixed = 1;
-        const fixedAngle = -39.4;
-        const angle = Math.PI * fixed * index / domItems.length; // Calcular el ángulo para esta iteración
+        const fixedAngle = -5;
+        const angle = Math.PI * fixed * index / domItemsSecond.length; // Calcular el ángulo para esta iteración
         const x = radioS * Math.sin(angle - fixedAngle);
-        const z = radioS * Math.cos(angle - fixedAngle);
-        const position = new (0, _three.Vector3)(x, 0, z);
+        const y = radioS * Math.cos(angle - fixedAngle);
+        const position = new (0, _three.Vector3)(x, y, 0);
         position.add(centerS); // Sumar el vector del centro para obtener la posición final
         domItemsSecond[index].position.copy(position);
     }
@@ -1099,8 +1148,8 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
   header.lookAt(relativePos);
   */ ///
     //posicionar
-    const radio = 50;
-    const center = new (0, _three.Vector3)(0, 0, -20); // Vector3 que representa el centro
+    const radio = 40;
+    const center = new (0, _three.Vector3)(0, 10, 0); // Vector3 que representa el centro
     for(let index = 0; index < domItems.length; index++){
         const angle = Math.PI * 2 * index / domItems.length; // Calcular el ángulo para esta iteración
         const x = radio * Math.sin(angle);
@@ -1110,20 +1159,9 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
         domItems[index].position.copy(position);
     }
 });
-const segundaVista = new (0, _three.Vector3)(0, 0, -19);
-target = new (0, _three.Vector3)(0, 0, -8);
-const screenAnim = animatePosition(CAM_MANAGER.container.position, segundaPantalla, 4500);
-const viewAnim = animatePosition(target, segundaVista, 1200);
-setTimeout(()=>{
-    //DETECTAR EL TOQUE DE LA PANTALLA
-    document.addEventListener("click", ()=>{
-        isSecondScreen = true;
-        console.log("viajar", isSecondScreen);
-        screenAnim.start();
-    });
-}, 2500);
 const sp_V = new (0, _three.Vector3)();
 webManager.setAnimations((delta)=>{
+    (0, _tweenJsDefault.default).update();
     let vertexpos = 0;
     let colorpos = 0;
     let numConnected = 0;
@@ -1171,29 +1209,44 @@ webManager.setAnimations((delta)=>{
     sp_linesGeometry.setDrawRange(0, numConnected * 2);
     sp_linesGeometry.attributes.position.needsUpdate = true;
     sp_linesGeometry.attributes.color.needsUpdate = true;
-    dotSphere.uniforms.time.value = delta * 0.5;
-    dotSphere.uniforms.time.needsUpdate = true;
-    p_SphereMaterial.uniforms.time.value = delta * 0.5;
-    p_SphereMaterial.uniforms.time.needsUpdate = true;
+    //rotar
+    sp_Particles.rotation.y = delta * 0.05;
+    sp_linesParticles.rotation.y = delta * 0.05;
+    //dotSphere.uniforms.time.value = delta * 0.5;
+    //dotSphere.uniforms.time.needsUpdate = true;
+    //
+    //p_SphereMaterial.uniforms.time.value = delta * 0.5;
+    //p_SphereMaterial.uniforms.time.needsUpdate = true;
     particleMaterial.uniforms.time.value = delta;
     particleMaterial.uniforms.time.needsUpdate = true;
+    particleMaterial.uniforms.opacityFactor.value = particleProps.opacity;
+    particleMaterial.uniforms.opacityFactor.needsUpdate = true;
     particleMaterial.uniforms.u_mouse.value.x = CAM_MANAGER.mouseData.mouse.x;
     particleMaterial.uniforms.u_mouse.value.y = CAM_MANAGER.mouseData.mouse.y;
     particleMaterial.uniforms.u_mouse.needsUpdate = true;
-    n_Material.uniforms.time.value = delta;
-    n_Material.uniforms.time.needsUpdate = true;
-    sphereParticle.uniforms.time.value = delta * 0.5;
-    sphereParticle.uniforms.time.needsUpdate = true;
+    //n_Material.uniforms.time.value = delta;
+    //n_Material.uniforms.time.needsUpdate = true;
+    //
+    //sphereParticle.uniforms.time.value = delta * 0.5;
+    //sphereParticle.uniforms.time.needsUpdate = true;
     //animar esfera
     const angular = Math.sin(delta);
+    CAM_MANAGER.camera.lookAt(target);
+    CAM_MANAGER.orbitControls.update();
+    (0, _tweenJsDefault.default).update();
     if (isSecondScreen) {
         isInScreen = true;
-        viewAnim.update();
-        screenAnim.update();
+        CAM_MANAGER.isDisplayA = false;
+        //viewAnim.update();
+        //screenAnim.update();
+        //opacityAnim.update();
         screenAnim.onComplete(()=>{
+            //desactivar los controles de orbita
+            CAM_MANAGER.orbitControls.minPolarAngle = Math.PI * 0.25;
+            CAM_MANAGER.isDisplayB = true;
+            CAM_MANAGER.orbitControls.maxPolarAngle = Math.PI * 0.25;
             isSecondScreen = false;
             //s_particles.visible = true;
-            secondParticles.visible = true;
             domItemsSecond.forEach((element)=>{
                 element.element.getElementsByClassName("element-b")[0].classList.add("active");
             });
@@ -1203,17 +1256,15 @@ webManager.setAnimations((delta)=>{
         });
     } else {
         //primera pantalla
-        console.log("NORMAL");
         if (!isInScreen) {
-            CAM_MANAGER.update();
-            sphere.position.y = angular + 10;
-            mainSphere.position.y = angular + 10;
-            sp_Particles.position.y = angular + 10;
-            sp_linesParticles.position.y = angular + 10;
+            //CAM_MANAGER.update();
+            sp_Particles.position.y = angular + 20;
+            sp_linesParticles.position.y = angular + 20;
         }
         domItems.forEach((element)=>{
             let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, element.position);
-            let relativePos = new (0, _three.Vector3)().addVectors(relative, CAM_MANAGER.camera.position);
+            let fixed = new (0, _three.Vector3)().addVectors(relative, grupoDotsContainer.position);
+            let relativePos = new (0, _three.Vector3)().addVectors(fixed, CAM_MANAGER.camera.position);
             element.lookAt(relativePos);
             element.position.y = angular - 1;
         });
@@ -1221,12 +1272,26 @@ webManager.setAnimations((delta)=>{
             let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, element.position);
             let relativeFixed = new (0, _three.Vector3)().subVectors(relative, target);
             let relativePos = new (0, _three.Vector3)().addVectors(relativeFixed, CAM_MANAGER.camera.position);
-            element.lookAt(relativePos);
+            let relativePosFixed = new (0, _three.Vector3)().subVectors(relativePos, displayBContainer.position);
+            element.lookAt(relativePosFixed);
         });
+        //mover los dots
+        let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, grupoDotsContainer.position);
+        let relativePos = new (0, _three.Vector3)().addVectors(relative, CAM_MANAGER.camera.position);
+        let relativeFixed = new (0, _three.Vector3)(relativePos.x, relativePos.y, relativePos.z);
+        relativeFixed.y = 0;
+        grupoDotsContainer.lookAt(relativeFixed);
     }
-    CAM_MANAGER.camera.lookAt(target);
+    //mover los dots
+    let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, displayBContainer.position);
+    let relativePos = new (0, _three.Vector3)().addVectors(relative, CAM_MANAGER.camera.position);
+    displayBContainer.lookAt(relativePos);
+    axisHelper.position.copy(displayBContainer.position);
+    axisHelper.rotation.copy(displayBContainer.rotation);
+    (0, _tweenJsDefault.default).update();
 });
 //renderizar en el bucle
+CAM_MANAGER.activeOrbit();
 webManager.postProcesing = true;
 webManager.renderLoop();
 webManager.debugScenes();
@@ -1236,6 +1301,13 @@ function animatePosition(objeto, nuevaPosicion, tiempoAnimacion) {
     const tween = new (0, _tweenJsDefault.default).Tween(objeto).to(nuevaPosicion, tiempoAnimacion).easing((0, _tweenJsDefault.default).Easing.Quadratic.InOut);
     //tween.start();
     // Retorna el objeto de animación para control externo
+    return tween;
+}
+function animateValue(normal, target, newValue, tiempoAnimacion) {
+    const tween = new (0, _tweenJsDefault.default).Tween(normal).to({
+        [target]: newValue
+    }, tiempoAnimacion) // Establecer 'opacity' como propiedad de destino
+    .easing((0, _tweenJsDefault.default).Easing.Quadratic.InOut);
     return tween;
 }
 function graph(x, z) {
@@ -1263,7 +1335,7 @@ cameraFolder.add(cameraControls, "positionZ", -100, 100).step(0.005).name("Z Pos
     CAM_MANAGER.container.position.z = cameraControls.positionZ;
 });
 
-},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_relleno.glsl":"2Trgk","./scenes/shaders/v_relleno.glsl":"52tUs","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","./scenes/shaders/f_pSphere.glsl":"6b176","./scenes/shaders/v_pSphere.glsl":"11q8G","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","9917033fbdff724b":"6xN1R"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_relleno.glsl":"2Trgk","./scenes/shaders/v_relleno.glsl":"52tUs","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","./scenes/shaders/f_pSphere.glsl":"6b176","./scenes/shaders/v_pSphere.glsl":"11q8G","f4861920a4cb1f78":"bP2Tp","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
 /**
  * @license
  * Copyright 2010-2023 Three.js Authors
@@ -33583,6 +33655,10 @@ var _rendererManager = require("./RendererManager");
 var _cameraManager = require("./CameraManager");
 var _renderpass = require("three/examples/jsm/postprocessing/renderpass");
 var _unrealBloomPass = require("three/examples/jsm/postprocessing/UnrealBloomPass");
+var _bokehPass = require("three/examples/jsm/postprocessing/BokehPass");
+var _outputPass = require("three/examples/jsm/postprocessing/OutputPass");
+var _datGui = require("dat.gui");
+let extBoken = null;
 class WebManager {
     constructor(id, camManager){
         this._id = id;
@@ -33601,6 +33677,7 @@ class WebManager {
         this.animatedFuntion = null;
         this.postProcesing = false;
         this.renderPass = new (0, _renderpass.RenderPass)(this.web3DScene, this._camera);
+        this.bokem = null;
         this.initPost();
         //agregar camara
         this.initCamera();
@@ -33608,9 +33685,18 @@ class WebManager {
     initPost() {
         // Crear una instancia del pase de "bloom" y configurarlo
         const bloomPass = new (0, _unrealBloomPass.UnrealBloomPass)(/* threshold */ 0, /* strength */ 0.35, /* radius */ 0.3);
+        const bokehPass = new (0, _bokehPass.BokehPass)(this.web3DScene, this._camera, {
+            focus: 1000,
+            aperture: 0.5,
+            maxblur: 0.00
+        });
+        extBoken = bokehPass;
+        const outputPass = new (0, _outputPass.OutputPass)();
         // Agregar el pase de "bloom" al compositor de efectos
         this.renderManager.web3DRenderComposer.addPass(this.renderPass);
         this.renderManager.web3DRenderComposer.addPass(bloomPass);
+        this.renderManager.web3DRenderComposer.addPass(outputPass);
+        this.renderManager.web3DRenderComposer.autoClear = false;
     }
     //init camera 
     initCamera() {
@@ -33707,8 +33793,33 @@ class WebHtmlManager extends WebSceneManager {
         this._orbitControls = new OrbitControls(this._camera, this.renderManager.domElement);
     }
 }
+// Crear una instancia de dat.GUI
+const gui = new _datGui.GUI();
+const boken = {
+    focus: 0,
+    aperture: 0,
+    maxblur: 0
+};
+gui.domElement.style.zIndex = 100;
+// Agregar controles para modificar la posición y y z de la cámara
+const bokenFolder = gui.addFolder("blur");
+function change() {
+    extBoken.uniforms["focus"].value = boken.focus;
+    console.log(extBoken.uniforms["focus"].value);
+    extBoken.uniforms["aperture"].value = boken.aperture * 0.00001;
+    extBoken.uniforms["maxblur"].value = boken.maxblur;
+}
+bokenFolder.add(boken, "focus", 0, 1000).step(0.005).name("focus").onChange(()=>{
+    change();
+});
+bokenFolder.add(boken, "aperture", 0, 10).step(0.001).name("aperture").onChange(()=>{
+    change();
+});
+bokenFolder.add(boken, "maxblur", 0, 0.001).step(0.001).name("maxblur").onChange(()=>{
+    change();
+});
 
-},{"three":"ktPTu","./RendererManager":"7TumE","./CameraManager":"lnXBx","three/examples/jsm/postprocessing/renderpass":"ivBs8","three/examples/jsm/postprocessing/UnrealBloomPass":"3iDYE","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7TumE":[function(require,module,exports) {
+},{"three":"ktPTu","./RendererManager":"7TumE","./CameraManager":"lnXBx","three/examples/jsm/postprocessing/renderpass":"ivBs8","three/examples/jsm/postprocessing/UnrealBloomPass":"3iDYE","three/examples/jsm/postprocessing/BokehPass":"aMkgI","three/examples/jsm/postprocessing/OutputPass":"bggV1","dat.gui":"k3xQk","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7TumE":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "RenderManager", ()=>RenderManager);
@@ -34314,6 +34425,10 @@ class CameraManager {
         this.raycaster = new (0, _three.Raycaster)();
         this.plane = null;
         this.isPlane = false;
+        this.isDisplayB = false;
+        this.isDisplayA = true;
+        this.displayB = null;
+        this.displayA = null;
         // this.rendererManager = new RENDER_MANAGER();
         //inicializar camara
         this.init();
@@ -34328,7 +34443,44 @@ class CameraManager {
         this.container.position.set(0, 0, 35);
     }
     activeOrbit() {
-        this.orbitControls = new (0, _orbitcontrols.OrbitControls)(this.camera, this.domElement);
+        this.orbitControls = new (0, _orbitcontrols.OrbitControls)(this.container, this.domElement);
+        this.orbitControls.enableDamping = true;
+        this.orbitControls.rotateSpeed = 0.2;
+        this.orbitControls.dampingFactor = 0.025;
+        this.orbitControls.maxPolarAngle = Math.PI * 0.35;
+        this.orbitControls.minPolarAngle = Math.PI * 0.21;
+        //activar evento
+        this.orbitControls.addEventListener("start", ()=>{
+            const cortinas = document.getElementById("cortain").children;
+            for (const cortina of cortinas)cortina.classList.add("active-cortain");
+            if (this.isDisplayB) this.displayB.forEach((item)=>{
+                item.element.getElementsByClassName("element-b")[0].classList.add("not-active");
+                item.element.getElementsByClassName("element-b")[0].classList.remove("active");
+            });
+            if (this.isDisplayA) {
+                console.log("display 2 activo!!");
+                this.displayA.forEach((item)=>{
+                    item.element.getElementsByClassName("element")[0].classList.add("not-active");
+                    item.element.getElementsByClassName("element")[0].classList.remove("active");
+                });
+            }
+        });
+        //desactivar evento
+        this.orbitControls.addEventListener("end", ()=>{
+            const cortinas = document.getElementById("cortain").children;
+            for (const cortina of cortinas)cortina.classList.remove("active-cortain");
+            if (this.isDisplayB) this.displayB.forEach((item)=>{
+                item.element.getElementsByClassName("element-b")[0].classList.remove("not-active");
+                item.element.getElementsByClassName("element-b")[0].classList.add("active");
+            });
+            if (this.isDisplayA) {
+                console.log("display 2 activo!!");
+                this.displayA.forEach((item)=>{
+                    item.element.getElementsByClassName("element")[0].classList.remove("not-active");
+                    item.element.getElementsByClassName("element")[0].classList.add("active");
+                });
+            }
+        });
     }
     update() {
         this.normalizedMouse.set(mouseData.x, -mouseData.y, 0);
@@ -35541,6 +35693,378 @@ var _three = require("three");
 		}`
 };
 
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"aMkgI":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "BokehPass", ()=>BokehPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+var _bokehShaderJs = require("../shaders/BokehShader.js");
+/**
+ * Depth-of-field post-process with bokeh shader
+ */ class BokehPass extends (0, _passJs.Pass) {
+    constructor(scene, camera, params){
+        super();
+        this.scene = scene;
+        this.camera = camera;
+        const focus = params.focus !== undefined ? params.focus : 1.0;
+        const aspect = params.aspect !== undefined ? params.aspect : camera.aspect;
+        const aperture = params.aperture !== undefined ? params.aperture : 0.025;
+        const maxblur = params.maxblur !== undefined ? params.maxblur : 1.0;
+        // render targets
+        this.renderTargetDepth = new (0, _three.WebGLRenderTarget)(1, 1, {
+            minFilter: (0, _three.NearestFilter),
+            magFilter: (0, _three.NearestFilter),
+            type: (0, _three.HalfFloatType)
+        });
+        this.renderTargetDepth.texture.name = "BokehPass.depth";
+        // depth material
+        this.materialDepth = new (0, _three.MeshDepthMaterial)();
+        this.materialDepth.depthPacking = (0, _three.RGBADepthPacking);
+        this.materialDepth.blending = (0, _three.NoBlending);
+        // bokeh material
+        const bokehShader = (0, _bokehShaderJs.BokehShader);
+        const bokehUniforms = (0, _three.UniformsUtils).clone(bokehShader.uniforms);
+        bokehUniforms["tDepth"].value = this.renderTargetDepth.texture;
+        bokehUniforms["focus"].value = focus;
+        bokehUniforms["aspect"].value = aspect;
+        bokehUniforms["aperture"].value = aperture;
+        bokehUniforms["maxblur"].value = maxblur;
+        bokehUniforms["nearClip"].value = camera.near;
+        bokehUniforms["farClip"].value = camera.far;
+        this.materialBokeh = new (0, _three.ShaderMaterial)({
+            defines: Object.assign({}, bokehShader.defines),
+            uniforms: bokehUniforms,
+            vertexShader: bokehShader.vertexShader,
+            fragmentShader: bokehShader.fragmentShader
+        });
+        this.uniforms = bokehUniforms;
+        this.fsQuad = new (0, _passJs.FullScreenQuad)(this.materialBokeh);
+        this._oldClearColor = new (0, _three.Color)();
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive*/ ) {
+        // Render depth into texture
+        this.scene.overrideMaterial = this.materialDepth;
+        renderer.getClearColor(this._oldClearColor);
+        const oldClearAlpha = renderer.getClearAlpha();
+        const oldAutoClear = renderer.autoClear;
+        renderer.autoClear = false;
+        renderer.setClearColor(0xffffff);
+        renderer.setClearAlpha(1.0);
+        renderer.setRenderTarget(this.renderTargetDepth);
+        renderer.clear();
+        renderer.render(this.scene, this.camera);
+        // Render bokeh composite
+        this.uniforms["tColor"].value = readBuffer.texture;
+        this.uniforms["nearClip"].value = this.camera.near;
+        this.uniforms["farClip"].value = this.camera.far;
+        if (this.renderToScreen) {
+            renderer.setRenderTarget(null);
+            this.fsQuad.render(renderer);
+        } else {
+            renderer.setRenderTarget(writeBuffer);
+            renderer.clear();
+            this.fsQuad.render(renderer);
+        }
+        this.scene.overrideMaterial = null;
+        renderer.setClearColor(this._oldClearColor);
+        renderer.setClearAlpha(oldClearAlpha);
+        renderer.autoClear = oldAutoClear;
+    }
+    setSize(width, height) {
+        this.renderTargetDepth.setSize(width, height);
+    }
+    dispose() {
+        this.renderTargetDepth.dispose();
+        this.materialDepth.dispose();
+        this.materialBokeh.dispose();
+        this.fsQuad.dispose();
+    }
+}
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/BokehShader.js":"eJNUh","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"eJNUh":[function(require,module,exports) {
+/**
+ * Depth-of-field shader with bokeh
+ * ported from GLSL shader by Martins Upitis
+ * http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
+ */ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "BokehShader", ()=>BokehShader);
+const BokehShader = {
+    defines: {
+        "DEPTH_PACKING": 1,
+        "PERSPECTIVE_CAMERA": 1
+    },
+    uniforms: {
+        "tColor": {
+            value: null
+        },
+        "tDepth": {
+            value: null
+        },
+        "focus": {
+            value: 1.0
+        },
+        "aspect": {
+            value: 1.0
+        },
+        "aperture": {
+            value: 0.025
+        },
+        "maxblur": {
+            value: 0.01
+        },
+        "nearClip": {
+            value: 1.0
+        },
+        "farClip": {
+            value: 1000.0
+        }
+    },
+    vertexShader: /* glsl */ `
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+    fragmentShader: /* glsl */ `
+
+		#include <common>
+
+		varying vec2 vUv;
+
+		uniform sampler2D tColor;
+		uniform sampler2D tDepth;
+
+		uniform float maxblur; // max blur amount
+		uniform float aperture; // aperture - bigger values for shallower depth of field
+
+		uniform float nearClip;
+		uniform float farClip;
+
+		uniform float focus;
+		uniform float aspect;
+
+		#include <packing>
+
+		float getDepth( const in vec2 screenPosition ) {
+			#if DEPTH_PACKING == 1
+			return unpackRGBAToDepth( texture2D( tDepth, screenPosition ) );
+			#else
+			return texture2D( tDepth, screenPosition ).x;
+			#endif
+		}
+
+		float getViewZ( const in float depth ) {
+			#if PERSPECTIVE_CAMERA == 1
+			return perspectiveDepthToViewZ( depth, nearClip, farClip );
+			#else
+			return orthographicDepthToViewZ( depth, nearClip, farClip );
+			#endif
+		}
+
+
+		void main() {
+
+			vec2 aspectcorrect = vec2( 1.0, aspect );
+
+			float viewZ = getViewZ( getDepth( vUv ) );
+
+			float factor = ( focus + viewZ ); // viewZ is <= 0, so this is a difference equation
+
+			vec2 dofblur = vec2 ( clamp( factor * aperture, -maxblur, maxblur ) );
+
+			vec2 dofblur9 = dofblur * 0.9;
+			vec2 dofblur7 = dofblur * 0.7;
+			vec2 dofblur4 = dofblur * 0.4;
+
+			vec4 col = vec4( 0.0 );
+
+			col += texture2D( tColor, vUv.xy );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,   0.4  ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.15,  0.37 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29,  0.29 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.37,  0.15 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.40,  0.0  ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.37, -0.15 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29, -0.29 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.15, -0.37 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,  -0.4  ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.15,  0.37 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29,  0.29 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.37,  0.15 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.4,   0.0  ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.37, -0.15 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29, -0.29 ) * aspectcorrect ) * dofblur );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.15, -0.37 ) * aspectcorrect ) * dofblur );
+
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.15,  0.37 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.37,  0.15 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.37, -0.15 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.15, -0.37 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.15,  0.37 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.37,  0.15 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.37, -0.15 ) * aspectcorrect ) * dofblur9 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.15, -0.37 ) * aspectcorrect ) * dofblur9 );
+
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29,  0.29 ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.40,  0.0  ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29, -0.29 ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,  -0.4  ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29,  0.29 ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.4,   0.0  ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29, -0.29 ) * aspectcorrect ) * dofblur7 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,   0.4  ) * aspectcorrect ) * dofblur7 );
+
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29,  0.29 ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.4,   0.0  ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.29, -0.29 ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,  -0.4  ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29,  0.29 ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.4,   0.0  ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2( -0.29, -0.29 ) * aspectcorrect ) * dofblur4 );
+			col += texture2D( tColor, vUv.xy + ( vec2(  0.0,   0.4  ) * aspectcorrect ) * dofblur4 );
+
+			gl_FragColor = col / 41.0;
+			gl_FragColor.a = 1.0;
+
+		}`
+};
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bggV1":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "OutputPass", ()=>OutputPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+var _outputShaderJs = require("../shaders/OutputShader.js");
+class OutputPass extends (0, _passJs.Pass) {
+    constructor(){
+        super();
+        //
+        const shader = (0, _outputShaderJs.OutputShader);
+        this.uniforms = (0, _three.UniformsUtils).clone(shader.uniforms);
+        this.material = new (0, _three.RawShaderMaterial)({
+            uniforms: this.uniforms,
+            vertexShader: shader.vertexShader,
+            fragmentShader: shader.fragmentShader
+        });
+        this.fsQuad = new (0, _passJs.FullScreenQuad)(this.material);
+        // internal cache
+        this._outputColorSpace = null;
+        this._toneMapping = null;
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
+        this.uniforms["tDiffuse"].value = readBuffer.texture;
+        this.uniforms["toneMappingExposure"].value = renderer.toneMappingExposure;
+        // rebuild defines if required
+        if (this._outputColorSpace !== renderer.outputColorSpace || this._toneMapping !== renderer.toneMapping) {
+            this._outputColorSpace = renderer.outputColorSpace;
+            this._toneMapping = renderer.toneMapping;
+            this.material.defines = {};
+            if (this._outputColorSpace == (0, _three.SRGBColorSpace)) this.material.defines.SRGB_COLOR_SPACE = "";
+            if (this._toneMapping === (0, _three.LinearToneMapping)) this.material.defines.LINEAR_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.ReinhardToneMapping)) this.material.defines.REINHARD_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.CineonToneMapping)) this.material.defines.CINEON_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.ACESFilmicToneMapping)) this.material.defines.ACES_FILMIC_TONE_MAPPING = "";
+            this.material.needsUpdate = true;
+        }
+        //
+        if (this.renderToScreen === true) {
+            renderer.setRenderTarget(null);
+            this.fsQuad.render(renderer);
+        } else {
+            renderer.setRenderTarget(writeBuffer);
+            if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+            this.fsQuad.render(renderer);
+        }
+    }
+    dispose() {
+        this.material.dispose();
+        this.fsQuad.dispose();
+    }
+}
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/OutputShader.js":"76ZI2","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"76ZI2":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "OutputShader", ()=>OutputShader);
+var _three = require("three");
+const OutputShader = {
+    uniforms: {
+        "tDiffuse": {
+            value: null
+        },
+        "toneMappingExposure": {
+            value: 1
+        }
+    },
+    vertexShader: /* glsl */ `
+		precision highp float;
+
+		uniform mat4 modelViewMatrix;
+		uniform mat4 projectionMatrix;
+
+		attribute vec3 position;
+		attribute vec2 uv;
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+    fragmentShader: /* glsl */ `
+	
+		precision highp float;
+
+		uniform sampler2D tDiffuse;
+
+		` + (0, _three.ShaderChunk)["tonemapping_pars_fragment"] + (0, _three.ShaderChunk)["colorspace_pars_fragment"] + `
+
+		varying vec2 vUv;
+
+		void main() {
+
+			gl_FragColor = texture2D( tDiffuse, vUv );
+
+			// tone mapping
+
+			#ifdef LINEAR_TONE_MAPPING
+
+				gl_FragColor.rgb = LinearToneMapping( gl_FragColor.rgb );
+
+			#elif defined( REINHARD_TONE_MAPPING )
+
+				gl_FragColor.rgb = ReinhardToneMapping( gl_FragColor.rgb );
+
+			#elif defined( CINEON_TONE_MAPPING )
+
+				gl_FragColor.rgb = OptimizedCineonToneMapping( gl_FragColor.rgb );
+
+			#elif defined( ACES_FILMIC_TONE_MAPPING )
+
+				gl_FragColor.rgb = ACESFilmicToneMapping( gl_FragColor.rgb );
+
+			#endif
+
+			// color space
+
+			#ifdef SRGB_COLOR_SPACE
+
+				gl_FragColor = LinearTosRGB( gl_FragColor );
+
+			#endif
+
+		}`
+};
+
 },{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7DfAI":[function(require,module,exports) {
 /**
  * The Ease class provides a collection of easing functions for use with tween.js.
@@ -36258,13 +36782,13 @@ var exports = {
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bZB41":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.25;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.45)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(vColor, alpha);\n}\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\nuniform float opacityFactor;\nuniform float time;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n  vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n  float dist = length(coord);\n\n      //ajustes de particulas\n  float alpha = 0.15;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n  if(dist > 0.45)\n    discard;\n\n      // Calculamos el color final de la part\xedcula con el brillo\n\n/*\n  if(vSize < 12.0) {\n    alpha = 0.1;\n  }\n  if(vSize < 9.0) {\n    alpha = 0.15;\n  }\n  if(vSize < 6.0) {\n    alpha = 0.25;\n  }\n  if(vSize < 4.0) {\n    alpha = 1.0;\n  }\n  */\n\n      // Asignamos el color de la part\xedcula al fragmento\n  gl_FragColor = vec4(vColor, alpha * opacityFactor);\n\n}\n";
 
 },{}],"fi574":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
+module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + sin((time + vSize) ) *  turbulence + z;\n  newPosition.z =z + sin((time + vSize) ) *  turbulence -x;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  //newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = 15.0; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
 
 },{}],"2Trgk":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.1;\n      float lightIntensity = 5.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      vec3 finalColor = vColor * brightness;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha);\n}\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.15;\n      float lightIntensity = 1.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      //si es menor\n      if(vSize < 8.0){\n        alpha = 2.0;\n      }\n\n      vec3 finalColor = vColor * 0.3;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha);\n}\n";
 
 },{}],"52tUs":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\n\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vSize = particleSize;\n  float intensity = 0.5;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.y =  newPosition.y + sin((time * animTime) * vSize) * intensity;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
@@ -36281,10 +36805,10 @@ module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almace
 },{}],"11q8G":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\n// Vertex Shader\n\nuniform float time; // Tiempo para controlar la rotaci\xf3n\nuniform float velocity; // Tiempo para controlar la rotaci\xf3n\n\nvoid main() {\n  float angle = time * velocity;\n  float radius = 20.0;\n\n  vec3 newPosition = position;\n\n  newPosition.x += velocity * time;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = 5.0;\n}\n";
 
-},{}],"6xN1R":[function(require,module,exports) {
-module.exports = require("81735b0b520cd661").getBundleURL("bbaCV") + "particle.47990137.png" + "?" + Date.now();
+},{}],"bP2Tp":[function(require,module,exports) {
+module.exports = require("dea53b666c31fddb").getBundleURL("ClsRA") + "particle.47990137.png" + "?" + Date.now();
 
-},{"81735b0b520cd661":"lgJ39"}],"lgJ39":[function(require,module,exports) {
+},{"dea53b666c31fddb":"lgJ39"}],"lgJ39":[function(require,module,exports) {
 "use strict";
 var bundleURL = {};
 function getBundleURLCached(id) {
@@ -36319,6 +36843,6 @@ exports.getBundleURL = getBundleURLCached;
 exports.getBaseURL = getBaseURL;
 exports.getOrigin = getOrigin;
 
-},{}]},["eRtbY","kOjux"], "kOjux", "parcelRequire94c2")
+},{}]},["6Ut5D","iRoLN"], "iRoLN", "parcelRequire94c2")
 
-//# sourceMappingURL=index.4029fab8.js.map
+//# sourceMappingURL=index.6b1e834e.js.map
