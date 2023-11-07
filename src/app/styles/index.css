@@ -178,6 +178,7 @@ box-shadow:        0px 0px 25px 1px rgba(99,232,255,0.3);
 /*Drag Drop effects*/
 .dg.ac{
     z-index: 100 !important ;
+    display: none;
 }
 
 #cortain{

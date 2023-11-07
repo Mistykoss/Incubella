@@ -648,6 +648,7 @@ let s_colors = null;
 let sp_ParticlesCount = 1200;
 let sp_ParticlesGeometry = new (0, _three.BufferGeometry)();
 let sp_ParticlesPosition = new Float32Array(sp_ParticlesCount);
+let sp_ParticlesPositionTarget = new Float32Array(sp_ParticlesCount);
 let sp_Particles = null;
 let sp_ParticlesMaterial = new (0, _three.PointsMaterial)({
     color: 0x0dd5fd,
@@ -670,6 +671,7 @@ let sp_linesMaterial = new (0, _three.LineBasicMaterial)({
 let sp_linesPositions = new Float32Array(sp_segments * 3);
 let sp_linesColors = new Float32Array(sp_segments * 3);
 let sp_linesParticles = null;
+let positions = null;
 const minDistance = 3.5;
 const maxConnections = 2;
 const particleSpeed = 150; // valor mas alto, mas lento
@@ -688,6 +690,9 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
         sp_ParticlesPosition[i * 3] = x;
         sp_ParticlesPosition[i * 3 + 1] = y;
         sp_ParticlesPosition[i * 3 + 2] = z;
+        sp_ParticlesPositionTarget[i * 3] = x * 500;
+        sp_ParticlesPositionTarget[i * 3 + 1] = y * 500;
+        sp_ParticlesPositionTarget[i * 3 + 2] = z * 500;
         const v = new (0, _three.Vector3)(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2);
         const velocity = new (0, _three.Vector3)(v.x, v.y, v.z);
         velocity.normalize().divideScalar(particleSpeed);
@@ -727,7 +732,8 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
         0x2573b0
     ];
     const sizeArray = new Float32Array(particleCount);
-    const positions = new Float32Array(particleCount * 3);
+    positions = new Float32Array(particleCount * 3);
+    const targetPos = new Float32Array(particleCount * 3);
     const colorsArray = new Float32Array(particleCount * 3);
     const area = 1; //ajusta el area ocmpleta de la nube de particulas
     const centerSize = 3;
@@ -787,6 +793,9 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             positions[rIndex * 3] = x * area;
             positions[rIndex * 3 + 1] = y;
             positions[rIndex * 3 + 2] = z * area;
+            targetPos[rIndex * 3] = (Math.random() - 0.5) * Math.tan(index + rIndex + random) * 4000;
+            targetPos[rIndex * 3 + 1] = (Math.random() - 0.5) * Math.cos(index + rIndex + random) * 4000;
+            targetPos[rIndex * 3 + 2] = (Math.random() - 0.5) * Math.tan(index + rIndex + random) * 4000;
         //particlePositions.push(x*area, y *area, z*area)
         }
     }
@@ -828,7 +837,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     //ESCONDER
     p_rellenoGeometry.setAttribute("color", new (0, _three.BufferAttribute)(n_colorsArray, 3));
     p_rellenoGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(n_sizeArray, 1));
-    particleGeometry.setAttribute("position", new (0, _three.BufferAttribute)(positions, 3));
+    particleGeometry.setAttribute("position", new (0, _three.BufferAttribute)(targetPos, 3));
     particleGeometry.setAttribute("color", new (0, _three.BufferAttribute)(colorsArray, 3));
     particleGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(sizeArray, 1).setUsage((0, _three.DynamicDrawUsage)));
     console.log(particleGeometry);
@@ -848,6 +857,9 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             },
             opacityFactor: {
                 value: particleProps.opacity
+            },
+            targetPos: {
+                value: targetPos
             }
         },
         vertexShader: (0, _vParticlesGlslDefault.default),
@@ -1036,6 +1048,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     particles.visible = false;
     secondParticles.visible = false;
     plane.visible = false;
+    axisHelper.visible = false;
     web.add(axisHelper);
 });
 const segundaVista = new (0, _three.Vector3)(0, 30, 0);
@@ -1161,8 +1174,36 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
     }
 });
 const sp_V = new (0, _three.Vector3)();
+//ANIMACION DE PUNTOS
+function updateParticlesPositions(geometry, newparticlesPositions, intensity) {
+    let newCount = newparticlesPositions.length;
+    let newPoints = newparticlesPositions;
+    const oldPositions = geometry.attributes.position.array;
+    for(let i = 0; i < newCount; i++){
+        const i3 = i * 3;
+        const x = newPoints[i3] === undefined ? newPoints[i3 % newCount] : newPoints[i3];
+        const y = newPoints[i3 + 1] === undefined ? newPoints[i3 % newCount + 1] : newPoints[i3 + 1];
+        const z = newPoints[i3 + 2] === undefined ? newPoints[i3 % newCount + 2] : newPoints[i3 + 2];
+        geometry.attributes.position.array[i3] += (x - oldPositions[i3]) * intensity;
+        geometry.attributes.position.array[i3 + 1] += (y - oldPositions[i3 + 1]) * intensity;
+        geometry.attributes.position.array[i3 + 2] += (z - oldPositions[i3 + 2]) * intensity;
+    // Set color and alpha to particles
+    /*
+      const mixedColor = colorInside.clone()
+      mixedColor.lerp(colorOutside, (y + 1) / 2)
+      particlesGeometry.attributes.color.array[i3] = mixedColor.r
+      particlesGeometry.attributes.color.array[i3 + 1] = mixedColor.g
+      particlesGeometry.attributes.color.array[i3 + 2] = mixedColor.b
+      */ }
+    geometry.attributes.position.needsUpdate = true;
+}
 webManager.setAnimations((delta)=>{
     (0, _tweenJsDefault.default).update();
+    if (10 > delta) {
+        console.log("animando : ", delta);
+        //position de las particulas
+        updateParticlesPositions(particleGeometry, positions, 0.065);
+    }
     let vertexpos = 0;
     let colorpos = 0;
     let numConnected = 0;
@@ -36787,13 +36828,13 @@ var exports = {
 module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\nuniform float opacityFactor;\nuniform float time;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n  vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n  float dist = length(coord);\n\n  //cantidad de blur\n  float details = pow(dist,  2.5);\n  //blurAmount = 0.0;\n\n      //ajustes de particulas\n  float alpha = 0.15;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n  if(dist > 0.45)\n    discard;\n\n      // Calculamos el color final de la part\xedcula con el brillo\n  if(vSize < 15.0){\n    alpha = 0.05;\n  }\n  if(vSize < 12.0) {\n    alpha = 0.15;\n  }\n  if(vSize < 9.0) {\n    alpha = 0.20;\n  }\n  if(vSize < 6.0) {\n    alpha = 0.35;\n  }\n  if(vSize < 4.0) {\n    alpha = 0.5;\n  }\n  \n  if(opacityFactor < 0.6){\n    details *= opacityFactor;\n  }\n\n      // Asignamos el color de la part\xedcula al fragmento\n  gl_FragColor = vec4(vColor, alpha * opacityFactor + details);\n\n}\n";
 
 },{}],"fi574":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nfloat noise1d(float v){\n  return cos(v + cos(v * 90.1415) * 100.1415) * 0.5 + 0.5;\n}\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.0001;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + noise1d(animTime * time + vSize) ;\n  newPosition.z =z + noise1d(animTime * time + vSize) ;\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  //newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
+module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nattribute vec3 targetPos;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nfloat noise1d(float v){\n  return cos(v + cos(v * 90.1415) * 100.1415) * 0.5 + 0.5;\n}\n\nvec3 lerp(vec3 actualPos, vec3 target, float time){\n  vec3 relative = vec3(0.0);\n\n  relative.x = actualPos.x + (target.x - actualPos.x ) * time;\n  relative.y = actualPos.y + (target.y - actualPos.y ) * time;\n  relative.z = actualPos.z + (target.z - actualPos.z ) * time;\n\n  return  (relative);\n}\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.0001;\n  vColor = color;\n\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n//vec3 targetpos = vec3(targetPos);\n\n  newPosition.x =x + noise1d(animTime * abs(time)  + vSize) * 2.0 ;\n  newPosition.z =z + noise1d(animTime * abs(time)  + vSize) * 2.0 ;\n  float relativeTime = time *.1;\n\n//newPosition = lerp (position, targetPos, relativeTime);\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  //newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
 
 },{}],"2Trgk":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.15;\n      float lightIntensity = 1.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      //si es menor\n      if(vSize < 8.0){\n        alpha = 2.0;\n      }\n\n        float details = pow(dist, 2.5);\n\n      vec3 finalColor = vColor * 0.3;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha + details);\n}\n";
 
 },{}],"52tUs":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\n\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nvoid main() {\n  vSize = particleSize;\n  float intensity = 0.5;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.y =  newPosition.y + sin((time * animTime) * vSize) * intensity;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
+module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\n\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nfloat noise1d(float v){\n  return cos(v + cos(v * 90.1415) * 100.1415) * 0.5 + 0.5;\n}\n\nvoid main() {\n  vSize = particleSize;\n  float intensity = 10.5;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + noise1d(animTime * abs(time)  + vSize) * 2.0 ;\n  newPosition.z =z + noise1d(animTime * abs(time)  + vSize) * 2.0 ;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
 
 },{}],"hQ8n0":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\nvarying vec3 vertexNormal;\n\nvoid main() {\n  float dotFunction = dot(vertexNormal, vec3(0.0, 0.0, 1.0) );\n  float intensity = pow(2.0 - dotFunction, 0.7);\n  vec3 color = vec3(0.3, 0.6, 1.0) ;\n  \n  gl_FragColor = vec4(color, 1.0) * intensity;\n}";

@@ -149,6 +149,7 @@ body {
 }
 
 .dg.ac {
+  display: none;
   z-index: 100 !important;
 }
 

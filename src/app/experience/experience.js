@@ -124,6 +124,7 @@ let numConnected = 0;
 let sp_ParticlesCount = 1200;
 let sp_ParticlesGeometry = new BufferGeometry();
 let sp_ParticlesPosition = new Float32Array(sp_ParticlesCount);
+let sp_ParticlesPositionTarget = new Float32Array(sp_ParticlesCount);
 let sp_Particles = null;
 let sp_ParticlesMaterial = new PointsMaterial( {
   color: 0x0dd5fd,
@@ -148,6 +149,8 @@ let sp_linesPositions = new Float32Array(sp_segments *3);
 let sp_linesColors = new Float32Array(sp_segments *3);
 let sp_linesParticles = null;
 
+
+let positions = null;
 
 const minDistance = 3.5;
 const maxConnections = 2;
@@ -176,6 +179,10 @@ for (let i = 0; i < sp_ParticlesCount; i++) {
   sp_ParticlesPosition[i * 3] = x;
   sp_ParticlesPosition[i * 3 + 1] = y;
   sp_ParticlesPosition[i * 3 + 2] = z;
+
+  sp_ParticlesPositionTarget[i * 3] =     x * 500;
+  sp_ParticlesPositionTarget[i * 3 + 1] = y * 500;
+  sp_ParticlesPositionTarget[i * 3 + 2] = z * 500;
 
   const v = new Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2);
   const velocity = new Vector3(v.x, v.y, v.z);
@@ -240,7 +247,8 @@ web.add(sp_linesParticles);
     // Puedes agregar más colores aquí...
   ];
   const sizeArray = new Float32Array(particleCount);
-  const positions = new Float32Array(particleCount * 3);
+  positions = new Float32Array(particleCount * 3);
+  const targetPos = new Float32Array(particleCount * 3);
   const colorsArray = new Float32Array(particleCount * 3);
 
   const area = 1; //ajusta el area ocmpleta de la nube de particulas
@@ -323,6 +331,10 @@ web.add(sp_linesParticles);
       positions[rIndex * 3] = x * area;
       positions[rIndex * 3 + 1] = y;
       positions[rIndex * 3 + 2] = z * area;
+
+      targetPos[rIndex * 3]     = (Math.random() - 0.5 ) * Math.tan(index + rIndex + random) * 4000;
+      targetPos[rIndex * 3 + 1] = (Math.random() - 0.5 ) * Math.cos(index + rIndex + random) * 4000;
+      targetPos[rIndex * 3 + 2] = (Math.random() - 0.5 ) * Math.tan(index + rIndex + random) * 4000;
       //particlePositions.push(x*area, y *area, z*area)
     }
   }
@@ -388,7 +400,7 @@ web.add(sp_linesParticles);
     new BufferAttribute(n_sizeArray, 1)
   );
 
-  particleGeometry.setAttribute("position", new BufferAttribute(positions, 3));
+  particleGeometry.setAttribute("position", new BufferAttribute(targetPos, 3));
   particleGeometry.setAttribute("color", new BufferAttribute(colorsArray, 3));
   particleGeometry.setAttribute(
     "particleSize",
@@ -407,6 +419,7 @@ const textureUrl = new URL("./effects/particle.png", import.meta.url);
       u_texture: {value: new TextureLoader().load(textureUrl.href) },
       u_mouse: {value: new Vector2()},
       opacityFactor: {value: particleProps.opacity},
+      targetPos : {value: targetPos}
     },
     vertexShader: v_Particles, // Tu vertex shader existente
     fragmentShader: f_Particles, // Tu fragment shader existente
@@ -647,6 +660,7 @@ const lines = new LineSegments(linesGeometry, linesMaterial);
   particles.visible = false;
   secondParticles.visible = false;
   plane.visible = false;
+  axisHelper.visible = false;
 
   web.add(axisHelper);
 });
@@ -826,10 +840,47 @@ webManager.setEnviroment(webManager.webHtml, (html) => {
 
 const sp_V = new Vector3();
 
+//ANIMACION DE PUNTOS
+function updateParticlesPositions (geometry, newparticlesPositions, intensity) {
+
+  let newCount = newparticlesPositions.length
+  let newPoints = newparticlesPositions
+  const oldPositions = geometry.attributes.position.array
+
+  for (let i = 0; i < newCount; i++) {
+      const i3 = i * 3
+
+      const x = newPoints[i3] === undefined ? newPoints[i3 % newCount] : newPoints[i3]
+      const y = newPoints[i3 + 1] === undefined ? newPoints[i3 % newCount + 1] : newPoints[i3 + 1]
+      const z = newPoints[i3 + 2] === undefined ? newPoints[i3 % newCount + 2] : newPoints[i3 + 2]
+
+      geometry.attributes.position.array[i3] += (x  - oldPositions[i3]) * intensity
+      geometry.attributes.position.array[i3 + 1] += (y - oldPositions[i3 + 1]) * intensity
+      geometry.attributes.position.array[i3 + 2] += (z - oldPositions[i3 + 2]) * intensity
+
+      // Set color and alpha to particles
+      /*
+      const mixedColor = colorInside.clone()
+      mixedColor.lerp(colorOutside, (y + 1) / 2)
+      particlesGeometry.attributes.color.array[i3] = mixedColor.r
+      particlesGeometry.attributes.color.array[i3 + 1] = mixedColor.g
+      particlesGeometry.attributes.color.array[i3 + 2] = mixedColor.b
+      */
+  }
+  geometry.attributes.position.needsUpdate = true
+}
+
+
 webManager.setAnimations((delta) => {
 
 
   TWEEN.update();
+  if(10 > delta){
+    console.log("animando : ", delta)
+    //position de las particulas
+    updateParticlesPositions(particleGeometry, positions, 0.065);
+    
+  }
 
 
     let vertexpos = 0
