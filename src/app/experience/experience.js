@@ -135,6 +135,7 @@ let sp_ParticlesMaterial = new PointsMaterial( {
 } );
 let sp_ParticlesData = [];
 let sp_radio = 12;
+let radio = 12;
 let sp_radioHalf = sp_radio/2;
 
 let sp_segments = sp_ParticlesCount* sp_ParticlesCount;

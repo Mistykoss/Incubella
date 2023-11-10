@@ -659,6 +659,7 @@ let sp_ParticlesMaterial = new (0, _three.PointsMaterial)({
 });
 let sp_ParticlesData = [];
 let sp_radio = 12;
+let radio = 12;
 let sp_radioHalf = sp_radio / 2;
 let sp_segments = sp_ParticlesCount * sp_ParticlesCount;
 let sp_linesGeometry = new (0, _three.BufferGeometry)();
@@ -703,7 +704,7 @@ const particleProps = {
 webManager.setEnviroment(webManager.web3d, (web)=>{
     //INICIO NUEVA ESFERA
     for(let i = 0; i < sp_ParticlesCount; i++){
-        const x = Math.random() * sp_radio - sp_radio / 2;
+        const x = Math.random() * radio - sp_radio / 2;
         const y = Math.random() * sp_radio - sp_radio / 2;
         const z = Math.random() * sp_radio - sp_radio / 2;
         sp_ParticlesPosition[i * 3] = x;

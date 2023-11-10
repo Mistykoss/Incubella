@@ -599,7 +599,10 @@ var _fPSphereGlsl = require("./scenes/shaders/f_pSphere.glsl");
 var _fPSphereGlslDefault = parcelHelpers.interopDefault(_fPSphereGlsl);
 var _vPSphereGlsl = require("./scenes/shaders/v_pSphere.glsl");
 var _vPSphereGlslDefault = parcelHelpers.interopDefault(_vPSphereGlsl);
-const camera = new (0, _three.PerspectiveCamera)(45, window.innerWidth / window.innerHeight, 0.01, 1000);
+var _holoSphere = require("./components/UI/HoloSphere");
+var _backGroundParticles = require("./components/3dWorld/BackGroundParticles");
+var _galaxyParticles = require("./components/3dWorld/GalaxyParticles");
+const camera = new (0, _three.PerspectiveCamera)(45, window.innerWidth / window.innerHeight, 0.001, 1000);
 const primeraPantalla = new (0, _three.Vector3)(0, 100, 100);
 const segundaPantalla = new (0, _three.Vector3)(0, 30, 30);
 const debugPantalla = new (0, _three.Vector3)(0, 500, 500);
@@ -609,444 +612,51 @@ const CAM_MANAGER = new (0, _cameraManager.CameraManager)(camera);
 CAM_MANAGER.container.position.copy(primeraPantalla);
 //CAM_MANAGER.container.position.set(0, 100, 100);
 const webManager = new (0, _webManager.WebManager)("Main", CAM_MANAGER);
-//global variables
-let particleGeometry;
-let particleMaterial;
-let sphere = null;
-let dotSphere = null;
-let particles = null;
-let mainSphere = null;
-let secondSphere = null;
-let sphereParticle = null;
-let secondParticles = null;
 let domItems = [];
 let domItemsSecond = [];
-let canTravelTo = false;
 let target = null;
-//nueva esfera
-let sphereGeometry = null;
-let n_Material = null;
-let p_Sphere = null;
-let p_SphereMaterial = null;
 let axisHelper = null;
 // Variables
-const maxParticleCount = 1000;
-const particleCount = 500;
-const r = 60;
-const rHalf = r / 2;
-let vertexpos = 0;
-let colorpos = 0;
-let numConnected = 0;
-// Create particles
-const particlesGeometry = new (0, _three.BufferGeometry)();
-const particlePositions = new Float32Array(maxParticleCount * 3);
-const particlesData = [];
-let linesGeometry = null;
-let linesMaterial = null;
-let s_positions = null;
-let s_colors = null;
-let sp_ParticlesCount = 1200;
-let sp_ParticlesGeometry = new (0, _three.BufferGeometry)();
-let sp_ParticlesPosition = new Float32Array(sp_ParticlesCount);
-let sp_ParticlesPositionTarget = new Float32Array(sp_ParticlesCount);
-let sp_Particles = null;
-let sp_ParticlesMaterial = new (0, _three.PointsMaterial)({
-    color: 0x0dd5fd,
-    size: 3,
-    blending: (0, _three.AdditiveBlending),
-    transparent: true,
-    sizeAttenuation: false
-});
-let sp_ParticlesData = [];
-let sp_radio = 12;
-let sp_radioHalf = sp_radio / 2;
-let sp_segments = sp_ParticlesCount * sp_ParticlesCount;
-let sp_linesGeometry = new (0, _three.BufferGeometry)();
-let sp_linesMaterial = new (0, _three.LineBasicMaterial)({
-    color: 0x0dd5fd,
-    vertexColors: true,
-    blending: (0, _three.AdditiveBlending),
-    transparent: true
-});
-let sp_linesPositions = new Float32Array(sp_segments * 3);
-let sp_linesColors = new Float32Array(sp_segments * 3);
-let sp_linesParticles = null;
-let positions = null;
-const minDistance = 3.5;
-const maxConnections = 2;
-const particleSpeed = 150; // valor mas alto, mas lento
-const colorSphere = new (0, _three.Color)(0x0dd5fd);
+const colors = [
+    0x0dd5fd,
+    0x0dd5fd,
+    0x0c94fc,
+    0x0c94fc,
+    0xa133d7,
+    0x2573b0,
+    0x2573b0
+];
 //valor de factor de las particulas
 const particleProps = {
     opacity: 1.0
 };
+//COMPONENTES
+const holoSphere = new (0, _holoSphere.HoloSphere)(1200, 12);
+//PARTICULAS
+const backgroundParticles = new (0, _backGroundParticles.BackGroundParticles)(2000, colors);
+const galaxyCout = 4000;
+const galaxyParticles = new (0, _galaxyParticles.GalaxyParticles)(galaxyCout, colors, true);
 //la escena web
 webManager.setEnviroment(webManager.web3d, (web)=>{
-    //INICIO NUEVA ESFERA
-    for(let i = 0; i < sp_ParticlesCount; i++){
-        const x = Math.random() * sp_radio - sp_radio / 2;
-        const y = Math.random() * sp_radio - sp_radio / 2;
-        const z = Math.random() * sp_radio - sp_radio / 2;
-        sp_ParticlesPosition[i * 3] = x;
-        sp_ParticlesPosition[i * 3 + 1] = y;
-        sp_ParticlesPosition[i * 3 + 2] = z;
-        sp_ParticlesPositionTarget[i * 3] = x * 500;
-        sp_ParticlesPositionTarget[i * 3 + 1] = y * 500;
-        sp_ParticlesPositionTarget[i * 3 + 2] = z * 500;
-        const v = new (0, _three.Vector3)(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2);
-        const velocity = new (0, _three.Vector3)(v.x, v.y, v.z);
-        velocity.normalize().divideScalar(particleSpeed);
-        sp_ParticlesData.push({
-            velocity: velocity,
-            numConnections: 0
-        });
-    }
-    // Luego, puedes usar particlePositions para configurar la geometría de las partículas
-    sp_ParticlesGeometry.setAttribute("position", new (0, _three.BufferAttribute)(sp_ParticlesPosition, 3));
-    // Luego, puedes usar particlePositions para configurar la geometría de las partículas
-    sp_linesGeometry.setAttribute("position", new (0, _three.BufferAttribute)(sp_linesPositions, 3).setUsage((0, _three.DynamicDrawUsage)));
-    sp_linesGeometry.setAttribute("color", new (0, _three.BufferAttribute)(sp_linesColors, 3).setUsage((0, _three.DynamicDrawUsage)));
-    sp_linesGeometry.computeBoundingSphere();
-    sp_linesGeometry.setDrawRange(0, 0);
-    //agregar 
-    sp_Particles = new (0, _three.Points)(sp_ParticlesGeometry, sp_ParticlesMaterial);
-    sp_linesParticles = new (0, _three.LineSegments)(sp_linesGeometry, sp_linesMaterial);
-    web.add(sp_Particles);
-    web.add(sp_linesParticles);
-    //FINAL DE LA NUEVA ESFERA
+    //START NUEVO
+    //3d enviroment
     const ambientLight = new (0, _three.AmbientLight)();
     ambientLight.intensity = 2;
     axisHelper = new (0, _three.AxesHelper)(20);
     axisHelper.position.copy(new (0, _three.Vector3)(0, 32, 0));
-    //web.add(axisHelper);
-    // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
-    particleGeometry = new (0, _three.BufferGeometry)();
-    const particleCount = 30000; // Cantidad de partículas
-    const colors = [
-        0x0dd5fd,
-        0x0dd5fd,
-        0x0c94fc,
-        0x0c94fc,
-        0xa133d7,
-        0x2573b0,
-        0x2573b0
-    ];
-    const sizeArray = new Float32Array(particleCount);
-    positions = new Float32Array(particleCount * 3);
-    const targetPos = new Float32Array(particleCount * 3);
-    const colorsArray = new Float32Array(particleCount * 3);
-    const area = 1; //ajusta el area ocmpleta de la nube de particulas
-    const centerSize = 3;
-    const amplitude = 0.1; // valor mas alto mas larga es el ala
-    const divisiones = 40; // mas divisiones mas colores
-    let counter = divisiones;
-    let noiseAmplitude = 10; //un valor mas alto agrega mas ruido
-    let noiseIntensity = 1; //un valor mas alto agrega mas ruido
-    let ringFrecuency = 0.1; //valor mas bajo es mas frecuencia
-    const TWO_PI = 2 * Math.PI;
-    const n_particleCount = 3000;
-    const p_rellenoGeometry = new (0, _three.BufferGeometry)();
-    const p_rellenoPosition = new Float32Array(n_particleCount * 3);
-    //generar las particulas
-    for(let index = 0; index < divisiones; index++){
-        counter--;
-        let relativeSum = particleCount / divisiones * index;
-        let relativeCount = particleCount / divisiones + relativeSum;
-        const divisionParticleCount = relativeCount - relativeSum;
-        let rIndex = relativeSum;
-        const random = Math.random() * index + centerSize;
-        const insideRadius = random;
-        for(; rIndex < relativeCount; rIndex++){
-            // Obtener el color para esta partícula
-            // Calcula la posición Y para crear la onda en el borde del círculo
-            const colorIndex = index % colors.length;
-            const colorRIndex = colorIndex % colors.length;
-            const actualColor = colors[colorRIndex];
-            const color = new (0, _three.Color)(actualColor);
-            colorsArray[rIndex * 3] = color.r;
-            colorsArray[rIndex * 3 + 1] = color.g;
-            colorsArray[rIndex * 3 + 2] = color.b;
-            //calcular anguloas reativos
-            const angleIncrement = TWO_PI / divisionParticleCount;
-            const angle = angleIncrement * rIndex;
-            const rNumber = Math.random() * 15;
-            const rMinNumber = Math.random() * 5 + 1;
-            const log = Math.abs(Math.tan(rIndex + 1) * Math.tan(index + rNumber)) * rNumber;
-            //console.log(log);
-            sizeArray[rIndex] = Math.min(Math.max(log, rMinNumber), rNumber);
-            //noise
-            if (index > divisiones - 5) {
-                noiseIntensity = noiseIntensity + 8;
-                noiseIntensity = noiseAmplitude + 5;
-                ringFrecuency = ringFrecuency + 0.5;
-            }
-            //ecuaciones
-            const xEcuation = Math.cos(rIndex * ringFrecuency) * (1 + amplitude * Math.sin(rIndex));
-            const zEcuation = Math.sin(rIndex * ringFrecuency) * (1 + amplitude * Math.sin(rIndex));
-            //plano cartesiano
-            const x = insideRadius * xEcuation * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
-            const z = insideRadius * zEcuation * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
-            let y = Math.min(Math.tan(angle + rNumber + index), 5);
-            //const x = (Math.cos(angle * ringParticleAmount) ) + (Math.sin(angle * ringParticleAmount));
-            //const y = 0;
-            //const z = insideRadius * Math.sin(angle * ringParticleAmount) + 0.5 * Math.sin(angle);
-            positions[rIndex * 3] = x * area;
-            positions[rIndex * 3 + 1] = y;
-            positions[rIndex * 3 + 2] = z * area;
-            targetPos[rIndex * 3] = (Math.random() - 0.5) * Math.tan(index + rIndex + random) * 4000;
-            targetPos[rIndex * 3 + 1] = (Math.random() - 0.5) * Math.cos(index + rIndex + random) * 4000;
-            targetPos[rIndex * 3 + 2] = (Math.random() - 0.5) * Math.tan(index + rIndex + random) * 4000;
-        //particlePositions.push(x*area, y *area, z*area)
-        }
-    }
-    console.log(sizeArray, "AQUI!!");
-    const nRadius = 150;
-    const n_colorsArray = new Float32Array(n_particleCount * 3);
-    const n_sizeArray = new Float32Array(n_particleCount);
-    // Crear un material para las partículas (puedes personalizar esto según tus necesidades)
-    n_Material = new (0, _three.ShaderMaterial)({
-        vertexShader: (0, _vRellenoGlslDefault.default),
-        fragmentShader: (0, _fRellenoGlslDefault.default),
-        transparent: true,
-        blending: (0, _three.AdditiveBlending),
-        depthWrite: false,
-        uniforms: {
-            time: {
-                value: 0
-            }
-        }
-    });
-    for(let index = 0; index < p_rellenoPosition.length; index++){
-        const x = (Math.random() - 0.5) * nRadius * 2;
-        const y = (Math.random() - 0.35) * nRadius;
-        const z = (Math.random() - 0.5) * nRadius * 2;
-        if (index > n_particleCount * 3 / 5) n_sizeArray[index] = Math.random() * (index % 15 - 1) + 2;
-        else n_sizeArray[index] = Math.random() * (index % 5 - 1) + 2;
-        const colorIndex = index % colors.length;
-        const actualColor = colors[colorIndex];
-        const color = new (0, _three.Color)(actualColor);
-        n_colorsArray[index * 3] = color.r;
-        n_colorsArray[index * 3 + 1] = color.g;
-        n_colorsArray[index * 3 + 2] = color.b;
-        p_rellenoPosition[index * 3] = x;
-        p_rellenoPosition[index * 3 + 1] = y;
-        p_rellenoPosition[index * 3 + 2] = z;
-    }
-    // Luego, puedes usar particlePositions para configurar la geometría de las partículas
-    p_rellenoGeometry.setAttribute("position", new (0, _three.BufferAttribute)(p_rellenoPosition, 3));
-    //ESCONDER
-    p_rellenoGeometry.setAttribute("color", new (0, _three.BufferAttribute)(n_colorsArray, 3));
-    p_rellenoGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(n_sizeArray, 1));
-    particleGeometry.setAttribute("position", new (0, _three.BufferAttribute)(targetPos, 3));
-    particleGeometry.setAttribute("color", new (0, _three.BufferAttribute)(colorsArray, 3));
-    particleGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(sizeArray, 1).setUsage((0, _three.DynamicDrawUsage)));
-    console.log(particleGeometry);
-    // Crear un material para las partículas (puedes personalizar esto según tus necesidades)
-    // Cargar la textura
-    const textureUrl = new URL(require("9917033fbdff724b"));
-    particleMaterial = new (0, _three.ShaderMaterial)({
-        uniforms: {
-            time: {
-                value: 0
-            },
-            u_texture: {
-                value: new (0, _three.TextureLoader)().load(textureUrl.href)
-            },
-            u_mouse: {
-                value: new (0, _three.Vector2)()
-            },
-            opacityFactor: {
-                value: particleProps.opacity
-            },
-            targetPos: {
-                value: targetPos
-            }
-        },
-        vertexShader: (0, _vParticlesGlslDefault.default),
-        fragmentShader: (0, _fParticlesGlslDefault.default),
-        transparent: true,
-        blending: (0, _three.AdditiveBlending),
-        depthWrite: false
-    });
-    //OBJETOS
-    sphere = new (0, _three.Mesh)(new (0, _three.SphereGeometry)(12, 32, 32), new (0, _three.ShaderMaterial)({
-        fragmentShader: (0, _fMainSphereGlslDefault.default),
-        vertexShader: (0, _vMainSphereGlslDefault.default),
-        side: (0, _three.BackSide)
-    }));
-    mainSphere = new (0, _three.Mesh)(new (0, _three.SphereGeometry)(10.5, 32, 32), new (0, _three.MeshBasicMaterial)({
-        color: 0x000
-    }));
-    secondSphere = new (0, _three.Mesh)(new (0, _three.SphereGeometry)(30, 60, 30), new (0, _three.MeshStandardMaterial)({
-        color: "white"
-    }));
-    sphereParticle = new (0, _three.ShaderMaterial)({
-        uniforms: {
-            time: {
-                value: 0.0
-            }
-        },
-        vertexShader: `
-      uniform float time;
-      varying vec3 vPosition;
-
-      float random(float x) {
-        return fract(sin(x * 12.9898) * 43758.5453);
-    }
-
-    
-      void main() {
-        vec3 newPosition = position + normalize(position) * (0.2 * sin(time + position.x));
-        vPosition = newPosition;
-        // Animamos el tamaño de las partículas a lo largo del tiempo
-        float noise = random(position.z);
-        float size = 0.2 + 0.1 * sin(time * 2.0) * noise; // Ajusta la frecuencia y la amplitud según tus preferencias
-
-        
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-        gl_PointSize = size * 55.0;// Tamaño de las partículas (puedes ajustarlo)
-
-      }
-    `,
-        fragmentShader: `
-      void main() {
-        vec3 color = vec3(1.0, 1.0, 1.0) ;
-        gl_FragColor = vec4(color, .3);
-      }
-    `,
-        wireframe: true
-    });
-    const fragmentShaderSphere = `
-      void main() {
-        vec3 vColor = vec3(1.0, 1.0, 1.0);
-
-        
-        // Calculamos la coordenada relativa al centro del fragmento
-        vec2 coord = gl_PointCoord - vec2(0.5);
-        
-        // Calculamos la distancia del fragmento al centro del círculo
-        float dist = length(coord);
-        
-        //ajustes de particulas
-        vec3 lightColor = vColor; // Color de la luz
-        float alpha = smoothstep(0.5, 0.1, dist);
-        float alphaIntensity = 0.01;
-        float lightIntensity = .45;
-
-        // Descartamos los fragmentos que están fuera del radio de 0.5,
-        // asignando un valor de opacidad de cero
-        if (dist > 0.5) discard;
-
-        // Calculamos el brillo de la partícula
-  float brightness = pow(1.0 - dist, 2.0) * lightIntensity;
-
-  // Calculamos el color final de la partícula con el brillo
-  vec3 finalColor = vColor + lightColor * brightness;
-      
-        // Asignamos el color de la partícula al fragmento
-        gl_FragColor = vec4(finalColor, alpha *  brightness);
-      }
-    `;
-    secondParticles = new (0, _three.Mesh)(new (0, _three.IcosahedronGeometry)(13, 5), sphereParticle);
-    dotSphere = new (0, _three.ShaderMaterial)({
-        uniforms: {
-            time: {
-                value: 0.0
-            }
-        },
-        vertexShader: sphereParticle.vertexShader,
-        fragmentShader: fragmentShaderSphere,
-        transparent: true
-    });
-    // Supongamos que tienes una geometría de referencia llamada "otraGeometria"
-    // Crear una BufferGeometry para las partículas y copiar las posiciones de otraGeometría
-    const particleSphere = new (0, _three.BufferGeometry)().copy(secondParticles.geometry);
-    // Aplicar el shader material a la geometría de las partículas
-    particleSphere.computeVertexNormals(); // Importante para los sombreados
-    particles = new (0, _three.Points)(particleSphere, dotSphere);
-    particles.position.set(0, 10, 0);
-    secondParticles.position.set(0, 10, 0);
-    sphere.position.set(0, 10, 0);
-    mainSphere.position.set(0, 10, 0);
-    // Crear un sistema de partículas
-    const particleSystem = new (0, _three.Points)(particleGeometry, particleMaterial);
-    const p_Relleno = new (0, _three.Points)(p_rellenoGeometry, n_Material);
-    //NEW SPHERE HERE!
-    sphereGeometry = new (0, _three.SphereGeometry)(20, 15, 30);
-    p_Sphere = new (0, _three.BufferGeometry)().copy(sphereGeometry);
-    p_SphereMaterial = new (0, _three.ShaderMaterial)({
-        vertexShader: (0, _vPSphereGlslDefault.default),
-        fragmentShader: (0, _fPSphereGlslDefault.default),
-        uniforms: {
-            time: {
-                value: 0.0
-            }
-        }
-    });
-    p_SphereVelocity = [];
-    for(let index = 0; index < 496; index++)p_SphereVelocity[index] = Math.random() * 2.5 + 1;
-    p_Sphere.setAttribute("velocity", new (0, _three.BufferAttribute)(new Float32Array(496), 1));
-    console.log(p_SphereVelocity);
-    console.log(p_Sphere);
-    p_Sphere = new (0, _three.Points)(p_Sphere, p_SphereMaterial);
-    //ESFER NUEVA AQUI
-    for(let i = 0; i < maxParticleCount; i++){
-        const x = Math.random() * r - r / 2;
-        const y = Math.random() * r - r / 2;
-        const z = Math.random() * r - r / 2;
-        particlePositions[i * 3] = x;
-        particlePositions[i * 3 + 1] = y;
-        particlePositions[i * 3 + 2] = z;
-        const v = new (0, _three.Vector3)(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2);
-        particlesData.push({
-            velocity: v.normalize().divideScalar(50),
-            numConnections: 0
-        });
-    }
-    const particlesMaterial = new (0, _three.PointsMaterial)({
-        color: 0xffffff,
-        size: 15,
-        blending: (0, _three.AdditiveBlending),
-        transparent: true,
-        sizeAttenuation: false
-    });
-    particlesGeometry.setAttribute("position", new (0, _three.BufferAttribute)(particlePositions, 3));
-    const s_particles = new (0, _three.Points)(particlesGeometry, particlesMaterial);
-    //web.add(s_particles);
-    // Create lines
-    linesGeometry = new (0, _three.BufferGeometry)();
-    const segments = maxParticleCount * maxParticleCount;
-    s_positions = new Float32Array(segments * 3);
-    s_colors = new Float32Array(segments * 3);
-    linesMaterial = new (0, _three.LineBasicMaterial)({
-        vertexColors: true,
-        blending: (0, _three.AdditiveBlending),
-        transparent: true
-    });
-    linesGeometry.setAttribute("position", new (0, _three.BufferAttribute)(s_positions, 3));
-    linesGeometry.setAttribute("color", new (0, _three.BufferAttribute)(s_colors, 3));
-    const lines = new (0, _three.LineSegments)(linesGeometry, linesMaterial);
-    //web.add(lines);
-    ///
-    // Agregar el sistema de partículas a la escena (suponiendo que tienes una escena)
-    //web.add(p_Sphere);
-    web.add(p_Relleno);
-    web.add(particleSystem);
+    //componentes UI
+    web.add(holoSphere.self);
+    //particulas
+    web.add(galaxyParticles.self);
+    console.log(backgroundParticles);
+    web.add(backgroundParticles.self);
+    //raycaster
     const plane = new (0, _three.Mesh)(new (0, _three.PlaneGeometry)(300, 300, 10), new (0, _three.MeshBasicMaterial)({
         wireframe: true
     }));
     CAM_MANAGER.plane = plane;
     plane.rotation.x = -Math.PI / 2;
     web.add(plane);
-    //web.add(mainSphere);
-    //web.add(sphere);
-    // Agregar el objeto Mesh (partículas) a la escena
-    //web.add(particles);
-    //web.add(secondParticles);
-    //axisHelper.position.copy(primeraPantalla)
-    //web.add(axisHelper);
-    particles.visible = false;
-    secondParticles.visible = false;
     plane.visible = false;
     axisHelper.visible = false;
     web.add(axisHelper);
@@ -1109,7 +719,6 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
         const scale = 0.1;
         header.scale.set(scale, scale, scale);
         header.position.set(1, 0, 0);
-        console.log(grupoDots);
         grupoDots.add(header);
         domItems.push(header);
     }
@@ -1144,7 +753,6 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
         const x = radioS * Math.sin(angle - fixedAngle);
         const y = radioS * Math.cos(angle - fixedAngle);
         const position = new (0, _three.Vector3)(x, y, 0);
-        console.log(position);
         position.add(centerS); // Sumar el vector del centro para obtener la posición final
         domItemsSecond[index].position.copy(position);
     }
@@ -1173,7 +781,6 @@ webManager.setEnviroment(webManager.webHtml, (html)=>{
         domItems[index].position.copy(position);
     }
 });
-const sp_V = new (0, _three.Vector3)();
 //ANIMACION DE PUNTOS
 function updateParticlesPositions(geometry, newparticlesPositions, intensity) {
     let newCount = newparticlesPositions.length;
@@ -1181,12 +788,13 @@ function updateParticlesPositions(geometry, newparticlesPositions, intensity) {
     const oldPositions = geometry.attributes.position.array;
     for(let i = 0; i < newCount; i++){
         const i3 = i * 3;
+        const lasIntensity = Math.random() * intensity;
         const x = newPoints[i3] === undefined ? newPoints[i3 % newCount] : newPoints[i3];
         const y = newPoints[i3 + 1] === undefined ? newPoints[i3 % newCount + 1] : newPoints[i3 + 1];
         const z = newPoints[i3 + 2] === undefined ? newPoints[i3 % newCount + 2] : newPoints[i3 + 2];
-        geometry.attributes.position.array[i3] += (x - oldPositions[i3]) * intensity;
-        geometry.attributes.position.array[i3 + 1] += (y - oldPositions[i3 + 1]) * intensity;
-        geometry.attributes.position.array[i3 + 2] += (z - oldPositions[i3 + 2]) * intensity;
+        geometry.attributes.position.array[i3] += (x - oldPositions[i3]) * lasIntensity;
+        geometry.attributes.position.array[i3 + 1] += (y - oldPositions[i3 + 1]) * lasIntensity;
+        geometry.attributes.position.array[i3 + 2] += (z - oldPositions[i3 + 2]) * lasIntensity;
     // Set color and alpha to particles
     /*
       const mixedColor = colorInside.clone()
@@ -1197,82 +805,20 @@ function updateParticlesPositions(geometry, newparticlesPositions, intensity) {
       */ }
     geometry.attributes.position.needsUpdate = true;
 }
+let isAnim = false;
 webManager.setAnimations((delta)=>{
+    //animar particulas
+    galaxyParticles.update(delta);
     (0, _tweenJsDefault.default).update();
-    if (10 > delta) {
-        console.log("animando : ", delta);
-        //position de las particulas
-        updateParticlesPositions(particleGeometry, positions, 0.065);
-    }
-    let vertexpos = 0;
-    let colorpos = 0;
-    let numConnected = 0;
-    for(let i = 0; i < sp_ParticlesCount; i++){
-        const particleData = sp_ParticlesData[i];
-        sp_V.set(sp_ParticlesPosition[i * 3], sp_ParticlesPosition[i * 3 + 1], sp_ParticlesPosition[i * 3 + 2]).add(particleData.velocity).setLength(sp_radio);
-        sp_ParticlesPosition[i * 3] = sp_V.x;
-        sp_ParticlesPosition[i * 3 + 1] = sp_V.y;
-        sp_ParticlesPosition[i * 3 + 2] = sp_V.z;
-        if (sp_ParticlesPosition[i * 3 + 1] < -sp_radioHalf || sp_ParticlesPosition[i * 3 + 1] > sp_radioHalf) sp_ParticlesData[i].velocity.y = -sp_ParticlesData[i].velocity.y;
-        if (sp_ParticlesPosition[i * 3] < -sp_radioHalf || sp_ParticlesPosition[i * 3] > sp_radioHalf) sp_ParticlesData[i].velocity.x = -sp_ParticlesData[i].velocity.x;
-        if (sp_ParticlesPosition[i * 3 + 2] < -sp_radioHalf || sp_ParticlesPosition[i * 3 + 2] > sp_radioHalf) sp_ParticlesData[i].velocity.z = -sp_ParticlesData[i].velocity.z;
-        //actualizar las lineas
-        for(let j = i + 1; j < sp_ParticlesCount; j++){
-            const particleDataB = sp_ParticlesData[j];
-            const dx = sp_ParticlesPosition[i * 3] - sp_ParticlesPosition[j * 3];
-            const dy = sp_ParticlesPosition[i * 3 + 1] - sp_ParticlesPosition[j * 3 + 1];
-            const dz = sp_ParticlesPosition[i * 3 + 2] - sp_ParticlesPosition[j * 3 + 2];
-            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-            if (dist < minDistance) {
-                particleData.numConnections++;
-                particleDataB.numConnections++;
-                const alpha = 0.8 - dist / minDistance;
-                //XYZ
-                sp_linesPositions[vertexpos++] = sp_ParticlesPosition[i * 3];
-                sp_linesPositions[vertexpos++] = sp_ParticlesPosition[i * 3 + 1];
-                sp_linesPositions[vertexpos++] = sp_ParticlesPosition[i * 3 + 2];
-                //XYZ
-                sp_linesPositions[vertexpos++] = sp_ParticlesPosition[j * 3];
-                sp_linesPositions[vertexpos++] = sp_ParticlesPosition[j * 3 + 1];
-                sp_linesPositions[vertexpos++] = sp_ParticlesPosition[j * 3 + 2];
-                //RGB
-                sp_linesColors[colorpos++] = alpha + colorSphere.r;
-                sp_linesColors[colorpos++] = alpha + colorSphere.g;
-                sp_linesColors[colorpos++] = alpha + colorSphere.b;
-                //RGB
-                sp_linesColors[colorpos++] = alpha + colorSphere.r;
-                sp_linesColors[colorpos++] = alpha + colorSphere.g;
-                sp_linesColors[colorpos++] = alpha + colorSphere.b;
-                numConnected++;
-            }
-        }
-    }
-    sp_ParticlesGeometry.attributes.position.needsUpdate = true;
-    sp_linesGeometry.setDrawRange(0, numConnected * 2);
-    sp_linesGeometry.attributes.position.needsUpdate = true;
-    sp_linesGeometry.attributes.color.needsUpdate = true;
-    //rotar 
-    sp_Particles.rotation.y = delta * 0.05;
-    sp_linesParticles.rotation.y = delta * 0.05;
-    //dotSphere.uniforms.time.value = delta * 0.5;
-    //dotSphere.uniforms.time.needsUpdate = true;
-    //
-    //p_SphereMaterial.uniforms.time.value = delta * 0.5;
-    //p_SphereMaterial.uniforms.time.needsUpdate = true;
-    particleMaterial.uniforms.time.value = delta;
-    particleMaterial.uniforms.time.needsUpdate = true;
-    particleMaterial.uniforms.opacityFactor.value = particleProps.opacity;
-    particleMaterial.uniforms.opacityFactor.needsUpdate = true;
-    particleMaterial.uniforms.u_mouse.value.x = CAM_MANAGER.mouseData.mouse.x;
-    particleMaterial.uniforms.u_mouse.value.y = CAM_MANAGER.mouseData.mouse.y;
-    particleMaterial.uniforms.u_mouse.needsUpdate = true;
-    //n_Material.uniforms.time.value = delta;
-    //n_Material.uniforms.time.needsUpdate = true;
-    //
-    //sphereParticle.uniforms.time.value = delta * 0.5;
-    //sphereParticle.uniforms.time.needsUpdate = true;
+    if (1.2 > delta) //position de las particulas
+    updateParticlesPositions(galaxyParticles.geometry, galaxyParticles.arrayFrames.frame_1, 0.2);
+    else if (2.5 > delta) updateParticlesPositions(galaxyParticles.geometry, galaxyParticles.arrayFrames.frame_2, 0.05);
+    else updateParticlesPositions(galaxyParticles.geometry, galaxyParticles.arrayFrames.final, 0.04);
+    console.log("animando : ", delta);
     //animar esfera
     const angular = Math.sin(delta);
+    holoSphere.update();
+    holoSphere.position.y = angular + 20;
     CAM_MANAGER.camera.lookAt(target);
     CAM_MANAGER.orbitControls.update();
     (0, _tweenJsDefault.default).update();
@@ -1297,12 +843,7 @@ webManager.setAnimations((delta)=>{
             });
         });
     } else {
-        //primera pantalla
-        if (!isInScreen) {
-            //CAM_MANAGER.update();
-            sp_Particles.position.y = angular + 20;
-            sp_linesParticles.position.y = angular + 20;
-        }
+        isInScreen;
         domItems.forEach((element)=>{
             let relative = new (0, _three.Vector3)().addVectors(CAM_MANAGER.container.position, element.position);
             let fixed = new (0, _three.Vector3)().addVectors(relative, grupoDotsContainer.position);
@@ -1377,7 +918,7 @@ cameraFolder.add(cameraControls, "positionZ", -100, 100).step(0.005).name("Z Pos
     CAM_MANAGER.container.position.z = cameraControls.positionZ;
 });
 
-},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_relleno.glsl":"2Trgk","./scenes/shaders/v_relleno.glsl":"52tUs","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","./scenes/shaders/f_pSphere.glsl":"6b176","./scenes/shaders/v_pSphere.glsl":"11q8G","9917033fbdff724b":"6xN1R","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","dat.gui":"k3xQk","./scenes/utils/WebManager":"kRk1M","./scenes/utils/CameraManager":"lnXBx","three/examples/jsm/renderers/CSS3DRenderer":"dWhzi","@tweenjs/tween.js":"7DfAI","./scenes/shaders/f_Particles.glsl":"bZB41","./scenes/shaders/v_Particles.glsl":"fi574","./scenes/shaders/f_relleno.glsl":"2Trgk","./scenes/shaders/v_relleno.glsl":"52tUs","./scenes/shaders/f_mainSphere.glsl":"hQ8n0","./scenes/shaders/v_mainSphere.glsl":"8laJk","./scenes/shaders/f_pSphere.glsl":"6b176","./scenes/shaders/v_pSphere.glsl":"11q8G","./components/UI/HoloSphere":"cz2yP","./components/3dWorld/BackGroundParticles":"gqdzN","./components/3dWorld/GalaxyParticles":"98XVr","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"ktPTu":[function(require,module,exports) {
 /**
  * @license
  * Copyright 2010-2023 Three.js Authors
@@ -33755,7 +33296,6 @@ class WebManager {
     setAnimations(callBack) {
         console.log("time");
         this.animatedFuntion = callBack;
-        console.log(this.animatedFuntion);
     }
     //renderizar escena
     renderLoop() {
@@ -36825,13 +36365,13 @@ var exports = {
 };
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bZB41":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\nuniform float opacityFactor;\nuniform float time;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n  vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n  float dist = length(coord);\n\n  //cantidad de blur\n  float details = pow(dist,  2.5);\n  //blurAmount = 0.0;\n\n      //ajustes de particulas\n  float alpha = 0.15;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n  if(dist > 0.45)\n    discard;\n\n      // Calculamos el color final de la part\xedcula con el brillo\n  if(vSize < 15.0){\n    alpha = 0.05;\n  }\n  if(vSize < 12.0) {\n    alpha = 0.15;\n  }\n  if(vSize < 9.0) {\n    alpha = 0.20;\n  }\n  if(vSize < 6.0) {\n    alpha = 0.35;\n  }\n  if(vSize < 4.0) {\n    alpha = 0.5;\n  }\n  \n  if(opacityFactor < 0.6){\n    details *= opacityFactor;\n  }\n\n      // Asignamos el color de la part\xedcula al fragmento\n  gl_FragColor = vec4(vColor, alpha * opacityFactor + details);\n\n}\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n//uniform float opacityFactor;\nuniform float time;\n\nvoid main() {\n  float opacityFactor = 1.0;\n      // Calculamos la coordenada relativa al centro del fragmento\n  vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n  float dist = length(coord);\n\n  //cantidad de blur\n  float details = pow(dist,  2.5);\n  //blurAmount = 0.0;\n\n      //ajustes de particulas\n  float alpha = 0.15;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n  if(dist > 0.45)\n    discard;\n\n      // Calculamos el color final de la part\xedcula con el brillo\n  if(vSize < 15.0){\n    alpha = 0.05;\n  }\n  if(vSize < 12.0) {\n    alpha = 0.15;\n  }\n  if(vSize < 9.0) {\n    alpha = 0.20;\n  }\n  if(vSize < 6.0) {\n    alpha = 0.35;\n  }\n  if(vSize < 4.0) {\n    alpha = 0.5;\n  }\n  \n  if(opacityFactor < 0.6){\n    details *= opacityFactor;\n  }\n\n      // Asignamos el color de la part\xedcula al fragmento\n  gl_FragColor = vec4(vColor, alpha * opacityFactor + details);\n\n}\n";
 
 },{}],"fi574":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nattribute vec3 targetPos;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nfloat noise1d(float v){\n  return cos(v + cos(v * 90.1415) * 100.1415) * 0.5 + 0.5;\n}\n\nvec3 lerp(vec3 actualPos, vec3 target, float time){\n  vec3 relative = vec3(0.0);\n\n  relative.x = actualPos.x + (target.x - actualPos.x ) * time;\n  relative.y = actualPos.y + (target.y - actualPos.y ) * time;\n  relative.z = actualPos.z + (target.z - actualPos.z ) * time;\n\n  return  (relative);\n}\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.0001;\n  vColor = color;\n\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n//vec3 targetpos = vec3(targetPos);\n\n  newPosition.x =x + noise1d(animTime * abs(time)  + vSize) * 2.0 ;\n  newPosition.z =z + noise1d(animTime * abs(time)  + vSize) * 2.0 ;\n  float relativeTime = time *.1;\n\n//newPosition = lerp (position, targetPos, relativeTime);\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  //newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
+module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\nuniform vec2 u_mouse;\n\nvarying vec2 vUv;\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nfloat noise1d(float v){\n  return cos(v + cos(v * 90.1415) * 100.1415) * 0.5 + 0.5;\n}\n\nvoid main() {\n  vUv = uv;\n\n  vSize = particleSize;\n  float intensity = 0.5;\n  float turbulence = 0.35;\n  float animTime = 0.0001;\n  vColor = color;\n\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n//vec3 targetpos = vec3(targetPos);\n\n  newPosition.x =x + noise1d(animTime * abs(time)  + vSize) * 2.0 ;\n  newPosition.z =z + noise1d(animTime * abs(time)  + vSize) * 2.0 ;\n  float relativeTime = time *.1;\n\n//newPosition = lerp (position, targetPos, relativeTime);\n\n//agregar el movimiento del mouse\nfloat relative = length(u_mouse.xy - newPosition.xz);\nfloat mouseDistance = clamp(relative, 1.5, 15.0);\n\n  //newPosition.y =  sin((mouseDistance * animTime) * vSize) * intensity;\n  float r =  x*x + z*z;\n  //newPosition.y =  cos(r) *5.0;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
 
 },{}],"2Trgk":[function(require,module,exports) {
-module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\nvarying vec2 vUv;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.15;\n      float lightIntensity = 1.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      //si es menor\n      if(vSize < 8.0){\n        alpha = 2.0;\n      }\n\n        float details = pow(dist, 2.5);\n\n      vec3 finalColor = vColor * 0.3;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha + details);\n}\n";
+module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula  \nvarying float vSize;\n\nuniform sampler2D u_texture;\n\nvoid main() {\n      // Calculamos la coordenada relativa al centro del fragmento\n      vec2 coord = gl_PointCoord - vec2(0.5);\n        // Calculamos la distancia del fragmento al centro del c\xedrculo\n      float dist = length(coord);\n\n      //ajustes de particulas\n      float alpha = 0.15;\n      float lightIntensity = 1.0;\n      float brightness = pow(1.0 - dist, 2.0) * lightIntensity;\n\n        // Descartamos los fragmentos que est\xe1n fuera del radio de 0.5,\n        // asignando un valor de opacidad de cero\n      if(dist > 0.5)\n            discard;\n\n      // Calculamos el brillo de la part\xedcula\n      // Calculamos el color final de la part\xedcula con el brillo\n      //si es menor\n      if(vSize < 8.0){\n        alpha = 2.0;\n      }\n\n        float details = pow(dist, .5);\n\n      vec3 finalColor = vColor * 0.3;\n\n      // Asignamos el color de la part\xedcula al fragmento\n      gl_FragColor = vec4(finalColor, alpha + details);\n}\n";
 
 },{}],"52tUs":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\n// Vertex shader para part\xedculas\nattribute vec3 color;\nattribute float particleSize;\nuniform float time;\n\nvarying float vSize;\nvarying vec3 vColor; // Variable que almacena el color de la part\xedcula\n\nfloat noise1d(float v){\n  return cos(v + cos(v * 90.1415) * 100.1415) * 0.5 + 0.5;\n}\n\nvoid main() {\n  vSize = particleSize;\n  float intensity = 10.5;\n  float animTime = 0.07;\n  vColor = color;\n  // Transforma la posici\xf3n de la part\xedcula\n  vec3 newPosition = position;\n  float x = position.x;\n  float z = position.z;\n\n  newPosition.x =x + noise1d(animTime * abs(time)  + vSize) * 2.0 ;\n  newPosition.z =z + noise1d(animTime * abs(time)  + vSize) * 2.0 ;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = vSize; // Tama\xf1o de las part\xedculas (puedes ajustarlo)\n}\n";
@@ -36848,44 +36388,443 @@ module.exports = "#define GLSLIFY 1\nvarying vec3 vColor; // Variable que almace
 },{}],"11q8G":[function(require,module,exports) {
 module.exports = "#define GLSLIFY 1\n// Vertex Shader\n\nuniform float time; // Tiempo para controlar la rotaci\xf3n\nuniform float velocity; // Tiempo para controlar la rotaci\xf3n\n\nvoid main() {\n  float angle = time * velocity;\n  float radius = 20.0;\n\n  vec3 newPosition = position;\n\n  newPosition.x += velocity * time;\n\n  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\n  gl_PointSize = 5.0;\n}\n";
 
-},{}],"6xN1R":[function(require,module,exports) {
-module.exports = require("81735b0b520cd661").getBundleURL("bbaCV") + "particle.47990137.png" + "?" + Date.now();
-
-},{"81735b0b520cd661":"lgJ39"}],"lgJ39":[function(require,module,exports) {
-"use strict";
-var bundleURL = {};
-function getBundleURLCached(id) {
-    var value = bundleURL[id];
-    if (!value) {
-        value = getBundleURL();
-        bundleURL[id] = value;
+},{}],"cz2yP":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "HoloSphere", ()=>HoloSphere);
+var _three = require("three");
+class HoloSphere {
+    constructor(particleCount, radius){
+        //animate funtion aux
+        this.auxVector = new (0, _three.Vector3)();
+        //valores
+        this.radius = radius;
+        this.halfRadius = radius / 2;
+        this.count = particleCount;
+        this.segmentsCount = this.count * 3;
+        this.minDistance = 3.5;
+        this.particleSpeed = 150;
+        //auxiliares
+        this.holoSphere = new (0, _three.Group)();
+        this.holoSphere.name = "HoloSphere";
+        //geometria
+        this.linesGeometry = new (0, _three.BufferGeometry)();
+        this.pointsGeometry = new (0, _three.BufferGeometry)();
+        //materiales
+        this.linesMaterial = new (0, _three.LineBasicMaterial)({
+            color: 0x0dd5fd,
+            vertexColors: true,
+            blending: (0, _three.AdditiveBlending),
+            transparent: true
+        });
+        this.pointsMaterial = new (0, _three.PointsMaterial)({
+            color: 0x0dd5fd,
+            size: 3,
+            blending: (0, _three.AdditiveBlending),
+            transparent: true,
+            sizeAttenuation: false
+        });
+        //arrays
+        this.pointsPosition = new Float32Array(this.count);
+        this.pointsDataPosition = [];
+        this.linesPosition = new Float32Array(this.segmentsCount * 3);
+        this.linesColorList = new Float32Array(this.segmentsCount * 3);
+        //objetos
+        this.linesParticle = null;
+        this.pointsParticle = null;
+        //propiedades
+        this.color = new (0, _three.Color)(0x0dd5fd);
+        this.position = this.holoSphere.position;
+        //this.rotation = this.holoSphere.rotation;
+        //crear esfera
+        this.setPositions();
+        this.setAttributes();
+        this.createObjects();
+        this.self = this.holoSphere;
     }
-    return value;
-}
-function getBundleURL() {
-    try {
-        throw new Error();
-    } catch (err) {
-        var matches = ("" + err.stack).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^)\n]+/g);
-        if (matches) // The first two stack frames will be this function and getBundleURLCached.
-        // Use the 3rd one, which will be a runtime in the original bundle.
-        return getBaseURL(matches[2]);
+    setPositions() {
+        for(let i = 0; i < this.count; i++){
+            const x = Math.random() * this.radius - this.radius / 2;
+            const y = Math.random() * this.radius - this.radius / 2;
+            const z = Math.random() * this.radius - this.radius / 2;
+            this.pointsPosition[i * 3] = x;
+            this.pointsPosition[i * 3 + 1] = y;
+            this.pointsPosition[i * 3 + 2] = z;
+            const v = new (0, _three.Vector3)(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2);
+            const velocity = new (0, _three.Vector3)(v.x, v.y, v.z);
+            velocity.normalize().divideScalar(this.particleSpeed);
+            this.pointsDataPosition.push({
+                velocity: velocity,
+                numConnections: 0
+            });
+        }
     }
-    return "/";
+    setAttributes() {
+        // Luego, puedes usar particlePositions para configurar la geometría de las partículas
+        this.pointsGeometry.setAttribute("position", new (0, _three.BufferAttribute)(this.pointsPosition, 3));
+        // Luego, puedes usar particlePositions para configurar la geometría de las partículas
+        this.linesGeometry.setAttribute("position", new (0, _three.BufferAttribute)(this.linesPosition, 3).setUsage((0, _three.DynamicDrawUsage)));
+        this.linesGeometry.setAttribute("color", new (0, _three.BufferAttribute)(this.linesColorList, 3).setUsage((0, _three.DynamicDrawUsage)));
+        this.linesGeometry.computeBoundingSphere();
+        this.linesGeometry.setDrawRange(0, 0);
+    }
+    createObjects() {
+        //agregar
+        this.pointsParticle = new (0, _three.Points)(this.pointsGeometry, this.pointsMaterial);
+        this.linesParticle = new (0, _three.LineSegments)(this.linesGeometry, this.linesMaterial);
+        this.holoSphere.add(this.pointsParticle);
+        this.holoSphere.add(this.linesParticle);
+    }
+    animate() {
+        let _vertexpos = 0;
+        let _colorpos = 0;
+        let _numConnected = 0;
+        for(let i = 0; i < this.count; i++){
+            const particleData = this.pointsDataPosition[i];
+            this.auxVector.set(this.pointsPosition[i * 3], this.pointsPosition[i * 3 + 1], this.pointsPosition[i * 3 + 2]).add(particleData.velocity).setLength(this.radius);
+            this.pointsPosition[i * 3] = this.auxVector.x;
+            this.pointsPosition[i * 3 + 1] = this.auxVector.y;
+            this.pointsPosition[i * 3 + 2] = this.auxVector.z;
+            if (this.pointsPosition[i * 3 + 1] < -this.halfRadius || this.pointsPosition[i * 3 + 1] > this.halfRadius) this.pointsDataPosition[i].velocity.y = -this.pointsDataPosition[i].velocity.y;
+            if (this.pointsPosition[i * 3] < -this.halfRadius || this.pointsPosition[i * 3] > this.halfRadius) this.pointsDataPosition[i].velocity.x = -this.pointsDataPosition[i].velocity.x;
+            if (this.pointsPosition[i * 3 + 2] < -this.halfRadius || this.pointsPosition[i * 3 + 2] > this.halfRadius) this.pointsDataPosition[i].velocity.z = -this.pointsDataPosition[i].velocity.z;
+            //actualizar las lineas
+            for(let j = i + 1; j < this.count; j++){
+                const particleDataB = this.pointsDataPosition[j];
+                const i3 = i * 3;
+                const j3 = j * 3;
+                const dx = this.pointsPosition[i3] - this.pointsPosition[j3];
+                const dy = this.pointsPosition[i3 + 1] - this.pointsPosition[j3 + 1];
+                const dz = this.pointsPosition[i3 + 2] - this.pointsPosition[j3 + 2];
+                const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                if (dist < this.minDistance) {
+                    const alpha = 0.8 - dist / this.minDistance;
+                    //XYZ I3
+                    this.linesPosition[_vertexpos++] = this.pointsPosition[i3];
+                    this.linesPosition[_vertexpos++] = this.pointsPosition[i3 + 1];
+                    this.linesPosition[_vertexpos++] = this.pointsPosition[i3 + 2];
+                    //XYZ J3
+                    this.linesPosition[_vertexpos++] = this.pointsPosition[j3];
+                    this.linesPosition[_vertexpos++] = this.pointsPosition[j3 + 1];
+                    this.linesPosition[_vertexpos++] = this.pointsPosition[j3 + 2];
+                    //RGB
+                    this.linesColorList[_colorpos++] = alpha + this.color.r;
+                    this.linesColorList[_colorpos++] = alpha + this.color.g;
+                    this.linesColorList[_colorpos++] = alpha + this.color.b;
+                    //RGB
+                    this.linesColorList[_colorpos++] = alpha + this.color.r;
+                    this.linesColorList[_colorpos++] = alpha + this.color.g;
+                    this.linesColorList[_colorpos++] = alpha + this.color.b;
+                    _numConnected++;
+                }
+            }
+        }
+        this.linesGeometry.setDrawRange(0, _numConnected * 2);
+        this.linesGeometry.attributes.position.needsUpdate = true;
+        this.linesGeometry.attributes.color.needsUpdate = true;
+        this.pointsGeometry.attributes.position.needsUpdate = true;
+    //rotar
+    //this.self.rotation.y = delta *0.05;
+    }
+    //activa las animaciones
+    update() {
+        this.animate();
+    }
 }
-function getBaseURL(url) {
-    return ("" + url).replace(/^((?:https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/.+)\/[^/]+$/, "$1") + "/";
-}
-// TODO: Replace uses with `new URL(url).origin` when ie11 is no longer supported.
-function getOrigin(url) {
-    var matches = ("" + url).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^/]+/);
-    if (!matches) throw new Error("Origin not found");
-    return matches[0];
-}
-exports.getBundleURL = getBundleURLCached;
-exports.getBaseURL = getBaseURL;
-exports.getOrigin = getOrigin;
 
-},{}]},["eRtbY","kOjux"], "kOjux", "parcelRequire94c2")
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gqdzN":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "BackGroundParticles", ()=>BackGroundParticles);
+var _three = require("three");
+var _baseParticle = require("../../effects/BaseParticle");
+//custom shader
+var _fRellenoGlsl = require("../../scenes/shaders/f_relleno.glsl");
+var _fRellenoGlslDefault = parcelHelpers.interopDefault(_fRellenoGlsl);
+var _vRellenoGlsl = require("../../scenes/shaders/v_relleno.glsl");
+var _vRellenoGlslDefault = parcelHelpers.interopDefault(_vRellenoGlsl);
+class BackGroundParticles extends (0, _baseParticle.BaseParticle) {
+    constructor(particleCount, colors){
+        //
+        super(particleCount);
+        //agignar custom shader
+        this.vertex = (0, _vRellenoGlslDefault.default);
+        this.fragment = (0, _fRellenoGlslDefault.default);
+        //propiedades
+        this.props = {
+            area: 2,
+            radius: 150,
+            arrayColors: colors
+        };
+        //asignar propiedades
+        this.init(this.props);
+        //crear particulas
+        this.setupMaterial();
+        this.createObject();
+    }
+    //override
+    setupParticles(colors, positions, sizes, props) {
+        //confiugra las particulas
+        for(let index = 0; index < this.count; index++){
+            //posicionar particulas
+            const x = (Math.random() - 0.5) * props.radius * props.area;
+            const y = (Math.random() - 0.35) * props.radius;
+            const z = (Math.random() - 0.5) * props.radius * props.area;
+            //agregar
+            //positions.push(y, z, x);
+            positions.push(x, y, z);
+            //asignar tamanos
+            if (index > this.count * 3 / 5) sizes[index] = Math.random() * (index % 15 - 1) + 2;
+            else sizes[index] = Math.random() * (index % 5 - 1) + 2;
+            //asignar colores
+            const colorIndex = index % props.arrayColors.length;
+            const actualColor = props.arrayColors[colorIndex];
+            const color = new (0, _three.Color)(actualColor);
+            colors.push(color.r, color.g, color.b);
+            colors[index * 3] = color.r;
+            colors[index * 3 + 1] = color.g;
+            colors[index * 3 + 2] = color.b;
+        }
+    }
+    setAttributes() {
+        console.log("ATRIBBUTES SOBRECARGADO");
+        // Luego, puedes usar particlePositions para configurar la geometría de las partículas
+        this.geometry.setAttribute("position", new (0, _three.BufferAttribute)(new Float32Array(this.arrayPositions), 3));
+        //ESCONDER
+        this.geometry.setAttribute("color", new (0, _three.BufferAttribute)(new Float32Array(this.arrayColors), 3));
+        this.geometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(new Float32Array(this.arraySizes), 1));
+    }
+}
+
+},{"three":"ktPTu","../../effects/BaseParticle":"9YQz9","../../scenes/shaders/f_relleno.glsl":"2Trgk","../../scenes/shaders/v_relleno.glsl":"52tUs","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"9YQz9":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "BaseParticle", ()=>BaseParticle);
+var _three = require("three");
+//clase
+class BaseParticle {
+    constructor(particleCount, isAnimated = false){
+        this.isAnimated = isAnimated;
+        //valores
+        this.count = particleCount;
+        this.relativeCount = this.count * 3;
+        //custom shaders
+        this.vertex = null;
+        this.fragment = null;
+        //propiedades
+        this.geometry = new (0, _three.BufferGeometry)();
+        this.arrayPositions = [];
+        this.arrayColors = [];
+        this.arraySizes = [];
+        this.arrayFrames = [];
+        this.props = null;
+        this.shaderMaterial = null;
+        //referencia
+        this.self = null;
+        this.position = null;
+        this.rotation = null;
+    }
+    init(props) {
+        //iniciar propiedades
+        this.props = props;
+        //crear particulas
+        this.setupParticles(this.arrayColors, this.arrayPositions, this.arraySizes, this.props, this.arrayFrames);
+        //asignar las primeras posiciones
+        if (this.isAnimated) this.arrayPositions = this.arrayFrames.start;
+        this.setAttributes(this.arrayColors, this.arrayPositions, this.arraySizes);
+    //this.debug("Posiciones  ", this.arrayPositions);
+    //this.debug("Colores", this.arrayColors);
+    //this.debug("Tamanos", this.arraySizes);
+    }
+    //positions and colors
+    setupParticles(color, positions, sizes, props) {}
+    setAttributes(colors, positions, sizes) {}
+    setupMaterial() {
+        this.shaderMaterial = new (0, _three.ShaderMaterial)({
+            vertexShader: this.vertex,
+            fragmentShader: this.fragment,
+            transparent: true,
+            blending: (0, _three.AdditiveBlending),
+            depthWrite: false,
+            uniforms: {
+                time: {
+                    value: 0
+                }
+            }
+        });
+    //console.log("Material is Ready", this.shaderMaterial)
+    }
+    createObject() {
+        this.self = new (0, _three.Points)(this.geometry, this.shaderMaterial);
+        this.position = this.self.position;
+        this.rotation = this.self.rotation;
+    }
+    //actualiza valores del material
+    update(time) {
+        this.shaderMaterial.uniforms.time.value = time;
+        this.shaderMaterial.uniforms.time.needsUpdate = true;
+    }
+    //  verificar
+    debug(name, item) {
+        if (typeof item !== "undefined" && item !== null && item !== "" && (typeof item !== "number" || !Number.isNaN(item)) && (typeof item !== "object" || Array.isArray(item) && item.length > 0)) // Tu código aquí si item pasa todas las comprobaciones
+        console.log(name, "\n[FUE CREADO CORRECTAMENTE]");
+        else console.log("Error [", item);
+    }
+}
+
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"98XVr":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "GalaxyParticles", ()=>GalaxyParticles);
+var _three = require("three");
+var _baseParticle = require("../../effects/BaseParticle");
+//custom shader
+var _vParticlesGlsl = require("../../scenes/shaders/v_Particles.glsl");
+var _vParticlesGlslDefault = parcelHelpers.interopDefault(_vParticlesGlsl);
+var _fParticlesGlsl = require("../../scenes/shaders/f_Particles.glsl");
+var _fParticlesGlslDefault = parcelHelpers.interopDefault(_fParticlesGlsl);
+class GalaxyParticles extends (0, _baseParticle.BaseParticle) {
+    constructor(particleCount, colors, isAnimated){
+        //
+        super(particleCount, isAnimated);
+        //agignar custom shader
+        this.vertex = (0, _vParticlesGlslDefault.default);
+        this.fragment = (0, _fParticlesGlslDefault.default);
+        this.arrayFrames = {
+            start: [],
+            frame_1: [],
+            frame_2: [],
+            final: []
+        };
+        //propiedades
+        this.props = {
+            arrayColors: colors,
+            area: 1.5,
+            centerSize: 1.1,
+            divisiones: 20,
+            twoPI: Math.PI * 2,
+            ringFrecuency: 7,
+            ringSmooth: 8,
+            ringNoise: 0.1,
+            ringAperture: 1,
+            noiseAmplitude: 1,
+            noiseIntensity: 0.08
+        };
+        //asignar propiedades
+        this.init(this.props);
+        //crear particulas
+        this.setupMaterial();
+        this.createObject();
+    }
+    //override
+    setupParticles(colors, positions, sizes, props, frames) {
+        let counter = 0;
+        let amount = 0;
+        let fixedIndex = 0;
+        for(let ringIndex = props.divisiones; ringIndex > 0; ringIndex--){
+            fixedIndex++;
+            //cantidad de particulas por anillo
+            const distRandom = Math.random() - 0.1;
+            const ringAmount = this.count / props.divisiones * ringIndex;
+            //calcula el radio
+            const radius = Math.random() * ringIndex + props.centerSize;
+            //asignar la posicion por cada anillo
+            for(let index = 0; index < ringAmount; index++){
+                counter = amount + index;
+                //POSICIONES
+                //calcular el angulo
+                //calcular posicion
+                /*
+        const xEquat =
+          waves * Math.cos(angle + props.ringNoise * Math.cos(index));
+        const zEquat =
+          waves * Math.sin(angle + props.ringNoise * Math.sin(index));
+        //ajustar area
+        const x = xEquat * radius * random * props.area;
+        const z = zEquat * radius * random * props.area;
+        const y = Math.min(Math.tan(angle + Math.random() * 15 + ringIndex), 5);
+        */ // Genera un ángulo aleatorio en radianes (0 a 2π).
+                let x, y, z;
+                let xEquat, zEquat;
+                //randoms
+                const random = Math.random() - 0.5 * Math.random() * props.noiseIntensity + props.noiseAmplitude;
+                const phiRandom = Math.PI * (Math.random() * 2);
+                const ringDistance = ringIndex - Math.random() + ringIndex * distRandom;
+                //angles
+                const theta = Math.acos((0, _three.MathUtils).randFloatSpread(2));
+                const phi = (0, _three.MathUtils).randFloatSpread(360);
+                const angle = props.twoPI / ringAmount * index;
+                let waves = 1 + props.ringAperture * Math.sin(angle * props.ringFrecuency) + props.ringSmooth;
+                const wVes = 0.14 * Math.sin(theta * props.ringFrecuency) + 2.1;
+                // FRAMES
+                //ajustar area
+                //FRAME DEFAULT
+                xEquat = waves * (Math.sin(theta) * Math.cos(phi));
+                zEquat = waves * (Math.sin(theta) * Math.sin(phi));
+                x = xEquat * 0.07 * ringDistance;
+                z = zEquat * 0.07 * ringDistance;
+                y = -Math.min(Math.tan(ringDistance + ringIndex), 5);
+                //asignar ejes
+                frames.start.push(x, y, z);
+                //FRAME 1
+                waves = 1.1 * Math.sin(angle * 5) + 5 + 0.3 * Math.tan(index);
+                xEquat = waves * Math.cos(angle + props.ringNoise * Math.cos(index));
+                zEquat = waves * Math.sin(angle + props.ringNoise * Math.sin(index));
+                //ajustar area
+                x = xEquat * 0.1 * random * props.area * ringDistance;
+                z = zEquat * 0.1 * random * props.area * ringDistance;
+                y = Math.tan(waves);
+                //asignar ejes
+                frames.frame_1.push(x, y, z);
+                //FRAME 2
+                waves = 1.1 * Math.sin(angle * 7) + 2 + 0.3 * Math.tan(index);
+                xEquat = waves * Math.cos(angle + props.ringNoise * Math.cos(index + random));
+                zEquat = waves * Math.sin(angle + props.ringNoise * Math.sin(index + random));
+                //ajustar area
+                x = xEquat * 0.05 * random * props.area * ringDistance;
+                z = zEquat * 0.05 * random * props.area * ringDistance;
+                y = Math.random() + -Math.sin(index);
+                //asignar ejes
+                frames.frame_2.push(x, y, z);
+                //FRAME 2
+                waves = 1 + props.ringAperture * Math.sin(angle * props.ringFrecuency) + props.ringSmooth;
+                xEquat = waves * Math.cos(angle + props.ringNoise * Math.cos(index));
+                zEquat = waves * Math.sin(angle + props.ringNoise * Math.sin(index));
+                //ajustar area
+                x = xEquat * radius * random * props.area;
+                z = zEquat * radius * random * props.area;
+                y = Math.min(Math.tan(angle + Math.random() * 15 + ringIndex), (Math.random() - 0.5) * 5);
+                //asignar ejes
+                frames.final.push(x, y, z);
+                //FIN POSICIONES
+                //COLORES
+                const colorIndex = ringIndex % props.arrayColors.length;
+                const actualColor = props.arrayColors[colorIndex];
+                const color = new (0, _three.Color)(actualColor);
+                //asginar colores
+                colors.push(color.r, color.g, color.b);
+                //FIN COLORES
+                //TAMANOS
+                const sizeMinRandom = Math.random() * 5 + 1;
+                const sizeMaxRandom = Math.random() * 15;
+                const log = Math.abs(Math.tan(index + 1) * Math.tan(ringIndex + sizeMaxRandom)) * sizeMaxRandom;
+                //asignar tamanos
+                sizes[counter] = Math.min(Math.max(log, sizeMaxRandom), sizeMaxRandom);
+            //FIN TAMANOS
+            }
+            amount += ringAmount;
+        }
+    }
+    setAttributes(colors, positions, sizes) {
+        console.log(this.arrayFrames);
+        // Luego, puedes usar particlePositions para configurar la geometría de las partículas
+        this.geometry.setAttribute("position", new (0, _three.BufferAttribute)(new Float32Array(positions), 3));
+        this.geometry.setAttribute("color", new (0, _three.BufferAttribute)(new Float32Array(colors), 3));
+        this.geometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(new Float32Array(sizes), 1));
+        console.log(this.geometry);
+    }
+}
+
+},{"three":"ktPTu","../../effects/BaseParticle":"9YQz9","../../scenes/shaders/v_Particles.glsl":"fi574","../../scenes/shaders/f_Particles.glsl":"bZB41","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["eRtbY","kOjux"], "kOjux", "parcelRequire94c2")
 
 //# sourceMappingURL=index.4029fab8.js.map
