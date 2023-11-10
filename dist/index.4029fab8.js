@@ -671,7 +671,26 @@ let sp_linesMaterial = new (0, _three.LineBasicMaterial)({
 let sp_linesPositions = new Float32Array(sp_segments * 3);
 let sp_linesColors = new Float32Array(sp_segments * 3);
 let sp_linesParticles = null;
-let positions = null;
+const pCount = 30000; // Cantidad de partículas
+const colors = [
+    0x0dd5fd,
+    0x0dd5fd,
+    0x0c94fc,
+    0x0c94fc,
+    0xa133d7,
+    0x2573b0,
+    0x2573b0
+];
+const sizeArray = new Float32Array(pCount);
+let positions = new Float32Array(pCount * 3);
+const targetPos = new Float32Array(pCount * 3);
+const colorsArray = new Float32Array(pCount * 3);
+//animaciones de puntos
+const p_animFrames = {
+    frame_1: new Float32Array(pCount * 3),
+    frame_2: new Float32Array(pCount * 3),
+    frame_3: new Float32Array(pCount * 3)
+};
 const minDistance = 3.5;
 const maxConnections = 2;
 const particleSpeed = 150; // valor mas alto, mas lento
@@ -721,20 +740,6 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     //web.add(axisHelper);
     // Crear una geometría para las partículas (por ejemplo, un BufferGeometry con muchas partículas)
     particleGeometry = new (0, _three.BufferGeometry)();
-    const particleCount = 30000; // Cantidad de partículas
-    const colors = [
-        0x0dd5fd,
-        0x0dd5fd,
-        0x0c94fc,
-        0x0c94fc,
-        0xa133d7,
-        0x2573b0,
-        0x2573b0
-    ];
-    const sizeArray = new Float32Array(particleCount);
-    positions = new Float32Array(particleCount * 3);
-    const targetPos = new Float32Array(particleCount * 3);
-    const colorsArray = new Float32Array(particleCount * 3);
     const area = 1; //ajusta el area ocmpleta de la nube de particulas
     const centerSize = 3;
     const amplitude = 0.1; // valor mas alto mas larga es el ala
@@ -750,8 +755,8 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     //generar las particulas
     for(let index = 0; index < divisiones; index++){
         counter--;
-        let relativeSum = particleCount / divisiones * index;
-        let relativeCount = particleCount / divisiones + relativeSum;
+        let relativeSum = pCount / divisiones * index;
+        let relativeCount = pCount / divisiones + relativeSum;
         const divisionParticleCount = relativeCount - relativeSum;
         let rIndex = relativeSum;
         const random = Math.random() * index + centerSize;
@@ -793,10 +798,14 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
             positions[rIndex * 3] = x * area;
             positions[rIndex * 3 + 1] = y;
             positions[rIndex * 3 + 2] = z * area;
-            targetPos[rIndex * 3] = (Math.random() - 0.5) * Math.tan(index + rIndex + random) * 4000;
-            targetPos[rIndex * 3 + 1] = (Math.random() - 0.5) * Math.cos(index + rIndex + random) * 4000;
-            targetPos[rIndex * 3 + 2] = (Math.random() - 0.5) * Math.tan(index + rIndex + random) * 4000;
-        //particlePositions.push(x*area, y *area, z*area)
+            //frame 1
+            p_animFrames.frame_1[rIndex * 3] = Math.sin(angle) * 2; //x
+            p_animFrames.frame_1[rIndex * 3 + 1] = Math.random() * 5; //y
+            p_animFrames.frame_1[rIndex * 3 + 2] = Math.cos(angle) * 2; //z
+            //frame 2
+            p_animFrames.frame_2[rIndex * 3] = Math.sin(angle) * 20; //x
+            p_animFrames.frame_2[rIndex * 3 + 1] = Math.sin(angle * 7) * 5 + Math.tan(angle * 5); //y
+            p_animFrames.frame_2[rIndex * 3 + 2] = Math.cos(angle) * 20; //z
         }
     }
     console.log(sizeArray, "AQUI!!");
@@ -837,7 +846,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     //ESCONDER
     p_rellenoGeometry.setAttribute("color", new (0, _three.BufferAttribute)(n_colorsArray, 3));
     p_rellenoGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(n_sizeArray, 1));
-    particleGeometry.setAttribute("position", new (0, _three.BufferAttribute)(targetPos, 3));
+    particleGeometry.setAttribute("position", new (0, _three.BufferAttribute)(p_animFrames.frame_2, 3));
     particleGeometry.setAttribute("color", new (0, _three.BufferAttribute)(colorsArray, 3));
     particleGeometry.setAttribute("particleSize", new (0, _three.BufferAttribute)(sizeArray, 1).setUsage((0, _three.DynamicDrawUsage)));
     console.log(particleGeometry);
@@ -1199,10 +1208,25 @@ function updateParticlesPositions(geometry, newparticlesPositions, intensity) {
 }
 webManager.setAnimations((delta)=>{
     (0, _tweenJsDefault.default).update();
-    if (10 > delta) {
+    if (80 > delta) {
         console.log("animando : ", delta);
         //position de las particulas
-        updateParticlesPositions(particleGeometry, positions, 0.065);
+        if (delta < 12) /*
+
+      for (let index = 0; index < p_animFrames.frame_2.length; index++) {
+           //frame 2
+                 //calcular anguloas reativos
+                       //calcular anguloas reativos
+      const angleIncrement = Math.PI*2 / p_animFrames.frame_2.length;
+      const angle = angleIncrement * index ;
+
+      p_animFrames.frame_2[index * 3]     = Math.sin(angle) * 20;//x
+      p_animFrames.frame_2[index * 3 + 1] = Math.sin(angle * 7 ) * 5 + Math.tan(angle * 5);//y
+      p_animFrames.frame_2[index * 3 + 2] = Math.cos(angle) * 20;//z
+        
+      }
+      */ updateParticlesPositions(particleGeometry, positions, 0.08);
+        else delta;
     }
     let vertexpos = 0;
     let colorpos = 0;
@@ -1247,10 +1271,10 @@ webManager.setAnimations((delta)=>{
             }
         }
     }
-    sp_ParticlesGeometry.attributes.position.needsUpdate = true;
     sp_linesGeometry.setDrawRange(0, numConnected * 2);
     sp_linesGeometry.attributes.position.needsUpdate = true;
     sp_linesGeometry.attributes.color.needsUpdate = true;
+    sp_ParticlesGeometry.attributes.position.needsUpdate = true;
     //rotar 
     sp_Particles.rotation.y = delta * 0.05;
     sp_linesParticles.rotation.y = delta * 0.05;
