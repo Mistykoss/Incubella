@@ -805,7 +805,7 @@ function updateParticlesPositions(geometry, newparticlesPositions, intensity) {
       */ }
     geometry.attributes.position.needsUpdate = true;
 }
-function beginAnimation(geometry, time) {
+function beginAnimation(geometry, time, obj) {
     const oldPositions = geometry.attributes.position.array;
     for(let i = 0; i < oldPositions.length; i++){
         const i3 = i * 3;
@@ -831,6 +831,11 @@ function beginAnimation(geometry, time) {
             zEquat = Math.cos(angle) * 50 * random;
             yEquat = Math.cos(angle * 5 + time) * height;
         }
+        if (time > 6) {
+            xEquat = obj.arrayFrames.final[i3];
+            zEquat = obj.arrayFrames.final[i3 + 2];
+            yEquat = obj.arrayFrames.final[i3 + 1];
+        }
         //geometry.attributes.position.array[i3] += (x - oldPositions[i3]) * lasIntensity;
         let x, y, z;
         let xOld, yOld, zOld;
@@ -853,7 +858,7 @@ webManager.setAnimations((delta)=>{
     //animar particulas
     galaxyParticles.update(delta);
     (0, _tweenJsDefault.default).update();
-    beginAnimation(galaxyParticles.geometry, delta);
+    beginAnimation(galaxyParticles.geometry, delta, galaxyParticles);
     /*
   if (1.2 > delta) {
     //position de las particulas
