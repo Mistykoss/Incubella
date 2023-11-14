@@ -805,33 +805,38 @@ function updateParticlesPositions(geometry, newparticlesPositions, intensity) {
       */ }
     geometry.attributes.position.needsUpdate = true;
 }
+function range(factor = 1, intensity, time) {
+    return Math.abs(Math.sin(time * factor) * intensity);
+}
 function beginAnimation(geometry, time, obj) {
+    const nRandom = Math.sin(time);
     const oldPositions = geometry.attributes.position.array;
     for(let i = 0; i < oldPositions.length; i++){
         const i3 = i * 3;
         const area = 20;
         const height = 2;
-        const angle = Math.PI * 2 / oldPositions.length * 3 * i;
-        const tang = Math.tan(angle);
-        const waves = Math.sin(angle * 5) + 5;
+        let circle = Math.PI * 2;
+        const angle = circle / oldPositions.length * 3 * i;
+        const tang = Math.tan(angle * 5 + time) * 1.5;
+        const waves = 0.35 * Math.sin(angle * 5 + tang) + 4.5;
         const random = Math.sin(angle + time + Math.cos(time * 2) + Math.tan(angle));
         const timeNegative = time * -1;
-        const rangA = Math.sin(time) * 25;
+        const distorsionX = Math.sin(i) * Math.tan(i);
         if (i % 2 === 0) {
             //FRAME DEFAULT
-            xEquat = Math.sin(i + time) * Math.sin(angle) * rangA;
-            zEquat = Math.sin(i + time) * Math.cos(angle) * rangA;
-            yEquat = Math.cos(angle * 5 + time) * height * 0;
+            xEquat = Math.sin(waves + angle + time * 2) * (40 + time * 0.7);
+            zEquat = Math.cos(waves + angle + time * 2) * (40 + time * 0.7);
+            yEquat = tang;
         } else if (i % 3 >= 1) {
-            xEquat = waves * Math.sin(angle + time) * 15;
-            zEquat = waves * Math.cos(angle + time) * 15;
-            yEquat = Math.cos(angle * 5 + time) * height;
+            xEquat = 0.2 * waves * Math.sin(angle + time * 0.8) * (25 + time);
+            zEquat = 0.2 * waves * Math.cos(angle + time * 0.8) * (25 + time);
+            yEquat = time * -1;
         } else {
-            xEquat = Math.sin(angle) * 50 * random;
-            zEquat = Math.cos(angle) * 50 * random;
-            yEquat = Math.cos(angle * 5 + time) * height;
+            xEquat = 0.2 * waves * Math.sin(angle + time * 0.5) * (30 + time * 0.8);
+            zEquat = 0.2 * waves * Math.cos(angle + time * 0.5) * (30 + time * 0.8);
+            yEquat = time * -1.5;
         }
-        if (time > 6) {
+        if (time > 7) {
             xEquat = obj.arrayFrames.final[i3];
             zEquat = obj.arrayFrames.final[i3 + 2];
             yEquat = obj.arrayFrames.final[i3 + 1];
@@ -845,20 +850,20 @@ function beginAnimation(geometry, time, obj) {
         xOld = geometry.attributes.position.array[i3];
         yOld = geometry.attributes.position.array[i3 + 1];
         zOld = geometry.attributes.position.array[i3 + 2];
-        const rIntensity = Math.random() * 0.05;
+        //const rIntensity = Math.sin(time) * 0.05;
+        const rIntensity = Math.random() * 0.04;
         geometry.attributes.position.array[i3] += (x - xOld) * rIntensity; //X
         geometry.attributes.position.array[i3 + 2] += (z - zOld) * rIntensity; //Z
         geometry.attributes.position.array[i3 + 1] += (y - yOld) * rIntensity; //Y
     }
     geometry.attributes.position.needsUpdate = true;
-    console.log("none");
 }
 let isAnim = false;
 webManager.setAnimations((delta)=>{
     //animar particulas
     galaxyParticles.update(delta);
     (0, _tweenJsDefault.default).update();
-    beginAnimation(galaxyParticles.geometry, delta, galaxyParticles);
+    if (delta <= 15) beginAnimation(galaxyParticles.geometry, delta, galaxyParticles);
     /*
   if (1.2 > delta) {
     //position de las particulas
