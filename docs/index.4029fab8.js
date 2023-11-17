@@ -616,6 +616,7 @@ let domItems = [];
 let domItemsSecond = [];
 let target = null;
 let axisHelper = null;
+let backGroundPos = null;
 // Variables
 const colors = [
     0x0dd5fd,
@@ -648,7 +649,7 @@ webManager.setEnviroment(webManager.web3d, (web)=>{
     web.add(holoSphere.self);
     //particulas
     web.add(galaxyParticles.self);
-    console.log(backgroundParticles);
+    backgroundParticles.arrayFrames.final = backgroundParticles.arrayPositions;
     web.add(backgroundParticles.self);
     //raycaster
     const plane = new (0, _three.Mesh)(new (0, _three.PlaneGeometry)(300, 300, 10), new (0, _three.MeshBasicMaterial)({
@@ -813,48 +814,93 @@ function beginAnimation(geometry, time, obj) {
     const oldPositions = geometry.attributes.position.array;
     for(let i = 0; i < oldPositions.length; i++){
         const i3 = i * 3;
-        const area = 20;
-        const height = 2;
         let circle = Math.PI * 2;
         const angle = circle / oldPositions.length * 3 * i;
         const tang = Math.tan(angle * 5 + time) * 1.5;
-        const waves = 0.35 * Math.sin(angle * 5 + tang) + 4.5;
-        const random = Math.sin(angle + time + Math.cos(time * 2) + Math.tan(angle));
-        const timeNegative = time * -1;
-        const distorsionX = Math.sin(i) * Math.tan(i);
-        if (i % 2 === 0) {
-            //FRAME DEFAULT
-            xEquat = Math.sin(waves + angle + time * 2) * (40 + time * 0.7);
-            zEquat = Math.cos(waves + angle + time * 2) * (40 + time * 0.7);
+        const waves1 = 0.35 * Math.sin(angle * 5 + tang) + 4.5;
+        let xEquat1 = 0, yEquat = 0, zEquat1 = 0;
+        if (time > 2) {
+            xEquat1 = Math.sin(waves1 + angle + time * 2) * (80 + time * 0.7);
+            zEquat1 = Math.cos(waves1 + angle + time * 2) * (80 + time * 0.7);
             yEquat = tang;
-        } else if (i % 3 >= 1) {
-            xEquat = 0.2 * waves * Math.sin(angle + time * 0.8) * (25 + time);
-            zEquat = 0.2 * waves * Math.cos(angle + time * 0.8) * (25 + time);
-            yEquat = time * -1;
-        } else {
-            xEquat = 0.2 * waves * Math.sin(angle + time * 0.5) * (30 + time * 0.8);
-            zEquat = 0.2 * waves * Math.cos(angle + time * 0.5) * (30 + time * 0.8);
-            yEquat = time * -1.5;
         }
-        if (time > 7) {
-            xEquat = obj.arrayFrames.final[i3];
-            zEquat = obj.arrayFrames.final[i3 + 2];
+        if (time > 5) {
+            xEquat1 = Math.sin(waves1 + angle + time * 2) * (20 + time * 0.7);
+            zEquat1 = Math.cos(waves1 + angle + time * 2) * (20 + time * 0.7);
+            yEquat = tang;
+        }
+        if (time > 10) {
+            xEquat1 = obj.arrayFrames.final[i3];
+            zEquat1 = obj.arrayFrames.final[i3 + 2];
             yEquat = obj.arrayFrames.final[i3 + 1];
         }
         //geometry.attributes.position.array[i3] += (x - oldPositions[i3]) * lasIntensity;
         let x, y, z;
         let xOld, yOld, zOld;
-        x = xEquat;
-        z = zEquat;
+        x = xEquat1;
+        z = zEquat1;
         y = yEquat;
         xOld = geometry.attributes.position.array[i3];
         yOld = geometry.attributes.position.array[i3 + 1];
         zOld = geometry.attributes.position.array[i3 + 2];
         //const rIntensity = Math.sin(time) * 0.05;
-        const rIntensity = Math.random() * 0.04;
-        geometry.attributes.position.array[i3] += (x - xOld) * rIntensity; //X
-        geometry.attributes.position.array[i3 + 2] += (z - zOld) * rIntensity; //Z
-        geometry.attributes.position.array[i3 + 1] += (y - yOld) * rIntensity; //Y
+        geometry.attributes.position.array[i3] += (x - xOld) * 0.03; //X
+        geometry.attributes.position.array[i3 + 2] += (z - zOld) * 0.03; //Z
+        geometry.attributes.position.array[i3 + 1] += (y - yOld) * 0.03; //Y
+    }
+    geometry.attributes.position.needsUpdate = true;
+}
+let isAnimated = false;
+function animRing(geometry, obj, time) {
+    const positions = geometry.attributes.position.array;
+    const count = 4000;
+    let amount = 0, i3 = 0;
+    const props = {
+        arrayColors: colors,
+        area: 1.5,
+        centerSize: 1.1,
+        divisiones: 20,
+        twoPI: Math.PI * 2,
+        ringFrecuency: 7,
+        ringSmooth: 8,
+        ringNoise: 0.1,
+        ringAperture: 1,
+        noiseAmplitude: 1,
+        noiseIntensity: 0.08
+    };
+    for(let ringIndex = 20; ringIndex > 0; ringIndex--){
+        const yAxis = Math.cos(time * .5 + ringIndex) + Math.sin(time * 2);
+        const ringAmount = count / props.divisiones * ringIndex;
+        const rRandom = Math.random();
+        for(let index = 0; index < ringAmount; index++){
+            i3 = (amount + index) * 3;
+            let x, y, z;
+            let xOld = positions[i3];
+            let yOld = positions[i3 + 1];
+            let zOld = positions[i3 + 2];
+            //nueva posicion
+            const angle = props.twoPI * yAxis / ringAmount * index;
+            const tang = Math.tan(angle * 5 + time) * 1.5;
+            const radius = 18;
+            const random = Math.tan(time);
+            waves = 1 + 0.1 * Math.sin(time - index * props.ringFrecuency) - yAxis * 2.5;
+            xEquat = Math.cos(index * 0.1 + time + yAxis) * (1 + 0.1 * Math.sin(index + ringIndex + time)) * waves;
+            zEquat = Math.sin(index * 0.1 + time + yAxis) * (1 + 0.1 * Math.sin(index + ringIndex + time)) * waves;
+            //ajustar area
+            x = xEquat * props.area * radius;
+            z = zEquat * props.area * radius;
+            y = tang;
+            if (time >= 7) {
+                x = obj.arrayFrames.final[i3];
+                z = obj.arrayFrames.final[i3 + 2];
+                y = obj.arrayFrames.final[i3 + 1];
+            }
+            //asignar position despues de cada bucle
+            geometry.attributes.position.array[i3] += (x - xOld) * 0.007; //X
+            geometry.attributes.position.array[i3 + 1] += (y - yOld) * 0.007; //Y
+            geometry.attributes.position.array[i3 + 2] += (z - zOld) * 0.007; //Z
+        }
+        amount += ringAmount;
     }
     geometry.attributes.position.needsUpdate = true;
 }
@@ -863,7 +909,10 @@ webManager.setAnimations((delta)=>{
     //animar particulas
     galaxyParticles.update(delta);
     (0, _tweenJsDefault.default).update();
-    if (delta <= 15) beginAnimation(galaxyParticles.geometry, delta, galaxyParticles);
+    if (delta <= 25) {
+        animRing(galaxyParticles.geometry, galaxyParticles, delta);
+        beginAnimation(backgroundParticles.geometry, delta, backgroundParticles);
+    }
     /*
   if (1.2 > delta) {
     //position de las particulas
@@ -33303,6 +33352,7 @@ var _cameraManager = require("./CameraManager");
 var _renderpass = require("three/examples/jsm/postprocessing/renderpass");
 var _unrealBloomPass = require("three/examples/jsm/postprocessing/UnrealBloomPass");
 var _bokehPass = require("three/examples/jsm/postprocessing/BokehPass");
+var _afterimagePass = require("three/examples/jsm/postprocessing/AfterimagePass");
 var _outputPass = require("three/examples/jsm/postprocessing/OutputPass");
 var _datGui = require("dat.gui");
 let extBoken = null;
@@ -33337,6 +33387,7 @@ class WebManager {
             aperture: 0.5,
             maxblur: 0.001
         });
+        const afterimagePass = new (0, _afterimagePass.AfterimagePass)(0.8);
         extBoken = bokehPass;
         const outputPass = new (0, _outputPass.OutputPass)();
         this.renderManager.web3DRenderer.autoClear = false;
@@ -33344,6 +33395,7 @@ class WebManager {
         this.renderManager.web3DRenderComposer.addPass(this.renderPass);
         this.renderManager.web3DRenderComposer.addPass(bloomPass);
         this.renderManager.web3DRenderComposer.addPass(bokehPass);
+        //this.renderManager.web3DRenderComposer.addPass(afterimagePass);
         this.renderManager.web3DRenderComposer.addPass(outputPass);
     }
     //init camera 
@@ -33466,7 +33518,7 @@ bokenFolder.add(boken, "maxblur", 0, 0.1).step(0.001).name("maxblur").onChange((
     change();
 });
 
-},{"three":"ktPTu","./RendererManager":"7TumE","./CameraManager":"lnXBx","three/examples/jsm/postprocessing/renderpass":"ivBs8","three/examples/jsm/postprocessing/UnrealBloomPass":"3iDYE","three/examples/jsm/postprocessing/BokehPass":"aMkgI","three/examples/jsm/postprocessing/OutputPass":"bggV1","dat.gui":"k3xQk","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7TumE":[function(require,module,exports) {
+},{"three":"ktPTu","./RendererManager":"7TumE","./CameraManager":"lnXBx","three/examples/jsm/postprocessing/renderpass":"ivBs8","three/examples/jsm/postprocessing/UnrealBloomPass":"3iDYE","three/examples/jsm/postprocessing/OutputPass":"bggV1","dat.gui":"k3xQk","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","three/examples/jsm/postprocessing/BokehPass":"aMkgI","three/examples/jsm/postprocessing/AfterimagePass":"lcsYH"}],"7TumE":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "RenderManager", ()=>RenderManager);
@@ -35340,6 +35392,136 @@ var _three = require("three");
 		}`
 };
 
+},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bggV1":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "OutputPass", ()=>OutputPass);
+var _three = require("three");
+var _passJs = require("./Pass.js");
+var _outputShaderJs = require("../shaders/OutputShader.js");
+class OutputPass extends (0, _passJs.Pass) {
+    constructor(){
+        super();
+        //
+        const shader = (0, _outputShaderJs.OutputShader);
+        this.uniforms = (0, _three.UniformsUtils).clone(shader.uniforms);
+        this.material = new (0, _three.RawShaderMaterial)({
+            uniforms: this.uniforms,
+            vertexShader: shader.vertexShader,
+            fragmentShader: shader.fragmentShader
+        });
+        this.fsQuad = new (0, _passJs.FullScreenQuad)(this.material);
+        // internal cache
+        this._outputColorSpace = null;
+        this._toneMapping = null;
+    }
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
+        this.uniforms["tDiffuse"].value = readBuffer.texture;
+        this.uniforms["toneMappingExposure"].value = renderer.toneMappingExposure;
+        // rebuild defines if required
+        if (this._outputColorSpace !== renderer.outputColorSpace || this._toneMapping !== renderer.toneMapping) {
+            this._outputColorSpace = renderer.outputColorSpace;
+            this._toneMapping = renderer.toneMapping;
+            this.material.defines = {};
+            if (this._outputColorSpace == (0, _three.SRGBColorSpace)) this.material.defines.SRGB_COLOR_SPACE = "";
+            if (this._toneMapping === (0, _three.LinearToneMapping)) this.material.defines.LINEAR_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.ReinhardToneMapping)) this.material.defines.REINHARD_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.CineonToneMapping)) this.material.defines.CINEON_TONE_MAPPING = "";
+            else if (this._toneMapping === (0, _three.ACESFilmicToneMapping)) this.material.defines.ACES_FILMIC_TONE_MAPPING = "";
+            this.material.needsUpdate = true;
+        }
+        //
+        if (this.renderToScreen === true) {
+            renderer.setRenderTarget(null);
+            this.fsQuad.render(renderer);
+        } else {
+            renderer.setRenderTarget(writeBuffer);
+            if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+            this.fsQuad.render(renderer);
+        }
+    }
+    dispose() {
+        this.material.dispose();
+        this.fsQuad.dispose();
+    }
+}
+
+},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/OutputShader.js":"76ZI2","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"76ZI2":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "OutputShader", ()=>OutputShader);
+var _three = require("three");
+const OutputShader = {
+    uniforms: {
+        "tDiffuse": {
+            value: null
+        },
+        "toneMappingExposure": {
+            value: 1
+        }
+    },
+    vertexShader: /* glsl */ `
+		precision highp float;
+
+		uniform mat4 modelViewMatrix;
+		uniform mat4 projectionMatrix;
+
+		attribute vec3 position;
+		attribute vec2 uv;
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+    fragmentShader: /* glsl */ `
+	
+		precision highp float;
+
+		uniform sampler2D tDiffuse;
+
+		` + (0, _three.ShaderChunk)["tonemapping_pars_fragment"] + (0, _three.ShaderChunk)["colorspace_pars_fragment"] + `
+
+		varying vec2 vUv;
+
+		void main() {
+
+			gl_FragColor = texture2D( tDiffuse, vUv );
+
+			// tone mapping
+
+			#ifdef LINEAR_TONE_MAPPING
+
+				gl_FragColor.rgb = LinearToneMapping( gl_FragColor.rgb );
+
+			#elif defined( REINHARD_TONE_MAPPING )
+
+				gl_FragColor.rgb = ReinhardToneMapping( gl_FragColor.rgb );
+
+			#elif defined( CINEON_TONE_MAPPING )
+
+				gl_FragColor.rgb = OptimizedCineonToneMapping( gl_FragColor.rgb );
+
+			#elif defined( ACES_FILMIC_TONE_MAPPING )
+
+				gl_FragColor.rgb = ACESFilmicToneMapping( gl_FragColor.rgb );
+
+			#endif
+
+			// color space
+
+			#ifdef SRGB_COLOR_SPACE
+
+				gl_FragColor = LinearTosRGB( gl_FragColor );
+
+			#endif
+
+		}`
+};
+
 },{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"aMkgI":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
@@ -35582,82 +35764,91 @@ const BokehShader = {
 		}`
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bggV1":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"lcsYH":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "OutputPass", ()=>OutputPass);
+parcelHelpers.export(exports, "AfterimagePass", ()=>AfterimagePass);
 var _three = require("three");
 var _passJs = require("./Pass.js");
-var _outputShaderJs = require("../shaders/OutputShader.js");
-class OutputPass extends (0, _passJs.Pass) {
-    constructor(){
+var _afterimageShaderJs = require("../shaders/AfterimageShader.js");
+class AfterimagePass extends (0, _passJs.Pass) {
+    constructor(damp = 0.96){
         super();
-        //
-        const shader = (0, _outputShaderJs.OutputShader);
-        this.uniforms = (0, _three.UniformsUtils).clone(shader.uniforms);
-        this.material = new (0, _three.RawShaderMaterial)({
-            uniforms: this.uniforms,
-            vertexShader: shader.vertexShader,
-            fragmentShader: shader.fragmentShader
+        this.shader = (0, _afterimageShaderJs.AfterimageShader);
+        this.uniforms = (0, _three.UniformsUtils).clone(this.shader.uniforms);
+        this.uniforms["damp"].value = damp;
+        this.textureComp = new (0, _three.WebGLRenderTarget)(window.innerWidth, window.innerHeight, {
+            magFilter: (0, _three.NearestFilter),
+            type: (0, _three.HalfFloatType)
         });
-        this.fsQuad = new (0, _passJs.FullScreenQuad)(this.material);
-        // internal cache
-        this._outputColorSpace = null;
-        this._toneMapping = null;
+        this.textureOld = new (0, _three.WebGLRenderTarget)(window.innerWidth, window.innerHeight, {
+            magFilter: (0, _three.NearestFilter),
+            type: (0, _three.HalfFloatType)
+        });
+        this.compFsMaterial = new (0, _three.ShaderMaterial)({
+            uniforms: this.uniforms,
+            vertexShader: this.shader.vertexShader,
+            fragmentShader: this.shader.fragmentShader
+        });
+        this.compFsQuad = new (0, _passJs.FullScreenQuad)(this.compFsMaterial);
+        this.copyFsMaterial = new (0, _three.MeshBasicMaterial)();
+        this.copyFsQuad = new (0, _passJs.FullScreenQuad)(this.copyFsMaterial);
     }
-    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
-        this.uniforms["tDiffuse"].value = readBuffer.texture;
-        this.uniforms["toneMappingExposure"].value = renderer.toneMappingExposure;
-        // rebuild defines if required
-        if (this._outputColorSpace !== renderer.outputColorSpace || this._toneMapping !== renderer.toneMapping) {
-            this._outputColorSpace = renderer.outputColorSpace;
-            this._toneMapping = renderer.toneMapping;
-            this.material.defines = {};
-            if (this._outputColorSpace == (0, _three.SRGBColorSpace)) this.material.defines.SRGB_COLOR_SPACE = "";
-            if (this._toneMapping === (0, _three.LinearToneMapping)) this.material.defines.LINEAR_TONE_MAPPING = "";
-            else if (this._toneMapping === (0, _three.ReinhardToneMapping)) this.material.defines.REINHARD_TONE_MAPPING = "";
-            else if (this._toneMapping === (0, _three.CineonToneMapping)) this.material.defines.CINEON_TONE_MAPPING = "";
-            else if (this._toneMapping === (0, _three.ACESFilmicToneMapping)) this.material.defines.ACES_FILMIC_TONE_MAPPING = "";
-            this.material.needsUpdate = true;
-        }
-        //
-        if (this.renderToScreen === true) {
+    render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive*/ ) {
+        this.uniforms["tOld"].value = this.textureOld.texture;
+        this.uniforms["tNew"].value = readBuffer.texture;
+        renderer.setRenderTarget(this.textureComp);
+        this.compFsQuad.render(renderer);
+        this.copyFsQuad.material.map = this.textureComp.texture;
+        if (this.renderToScreen) {
             renderer.setRenderTarget(null);
-            this.fsQuad.render(renderer);
+            this.copyFsQuad.render(renderer);
         } else {
             renderer.setRenderTarget(writeBuffer);
-            if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
-            this.fsQuad.render(renderer);
+            if (this.clear) renderer.clear();
+            this.copyFsQuad.render(renderer);
         }
+        // Swap buffers.
+        const temp = this.textureOld;
+        this.textureOld = this.textureComp;
+        this.textureComp = temp;
+    // Now textureOld contains the latest image, ready for the next frame.
+    }
+    setSize(width, height) {
+        this.textureComp.setSize(width, height);
+        this.textureOld.setSize(width, height);
     }
     dispose() {
-        this.material.dispose();
-        this.fsQuad.dispose();
+        this.textureComp.dispose();
+        this.textureOld.dispose();
+        this.compFsMaterial.dispose();
+        this.copyFsMaterial.dispose();
+        this.compFsQuad.dispose();
+        this.copyFsQuad.dispose();
     }
 }
 
-},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/OutputShader.js":"76ZI2","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"76ZI2":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+},{"three":"ktPTu","./Pass.js":"i2IfB","../shaders/AfterimageShader.js":"bpl9I","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"bpl9I":[function(require,module,exports) {
+/**
+ * Afterimage shader
+ * I created this effect inspired by a demo on codepen:
+ * https://codepen.io/brunoimbrizi/pen/MoRJaN?page=1&
+ */ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "OutputShader", ()=>OutputShader);
-var _three = require("three");
-const OutputShader = {
+parcelHelpers.export(exports, "AfterimageShader", ()=>AfterimageShader);
+const AfterimageShader = {
     uniforms: {
-        "tDiffuse": {
+        "damp": {
+            value: 0.96
+        },
+        "tOld": {
             value: null
         },
-        "toneMappingExposure": {
-            value: 1
+        "tNew": {
+            value: null
         }
     },
     vertexShader: /* glsl */ `
-		precision highp float;
-
-		uniform mat4 modelViewMatrix;
-		uniform mat4 projectionMatrix;
-
-		attribute vec3 position;
-		attribute vec2 uv;
 
 		varying vec2 vUv;
 
@@ -35668,51 +35859,33 @@ const OutputShader = {
 
 		}`,
     fragmentShader: /* glsl */ `
-	
-		precision highp float;
 
-		uniform sampler2D tDiffuse;
+		uniform float damp;
 
-		` + (0, _three.ShaderChunk)["tonemapping_pars_fragment"] + (0, _three.ShaderChunk)["colorspace_pars_fragment"] + `
+		uniform sampler2D tOld;
+		uniform sampler2D tNew;
 
 		varying vec2 vUv;
 
+		vec4 when_gt( vec4 x, float y ) {
+
+			return max( sign( x - y ), 0.0 );
+
+		}
+
 		void main() {
 
-			gl_FragColor = texture2D( tDiffuse, vUv );
+			vec4 texelOld = texture2D( tOld, vUv );
+			vec4 texelNew = texture2D( tNew, vUv );
 
-			// tone mapping
+			texelOld *= damp * when_gt( texelOld, 0.1 );
 
-			#ifdef LINEAR_TONE_MAPPING
-
-				gl_FragColor.rgb = LinearToneMapping( gl_FragColor.rgb );
-
-			#elif defined( REINHARD_TONE_MAPPING )
-
-				gl_FragColor.rgb = ReinhardToneMapping( gl_FragColor.rgb );
-
-			#elif defined( CINEON_TONE_MAPPING )
-
-				gl_FragColor.rgb = OptimizedCineonToneMapping( gl_FragColor.rgb );
-
-			#elif defined( ACES_FILMIC_TONE_MAPPING )
-
-				gl_FragColor.rgb = ACESFilmicToneMapping( gl_FragColor.rgb );
-
-			#endif
-
-			// color space
-
-			#ifdef SRGB_COLOR_SPACE
-
-				gl_FragColor = LinearTosRGB( gl_FragColor );
-
-			#endif
+			gl_FragColor = max(texelNew, texelOld);
 
 		}`
 };
 
-},{"three":"ktPTu","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7DfAI":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7DfAI":[function(require,module,exports) {
 /**
  * The Ease class provides a collection of easing functions for use with tween.js.
  */ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -36787,6 +36960,8 @@ class GalaxyParticles extends (0, _baseParticle.BaseParticle) {
         let fixedIndex = 0;
         for(let ringIndex = props.divisiones; ringIndex > 0; ringIndex--){
             fixedIndex++;
+            const random = Math.random() * ringIndex + props.centerSize;
+            const insideRadius = random * 5;
             //cantidad de particulas por anillo
             const distRandom = Math.random() - 0.1;
             const ringAmount = this.count / props.divisiones * ringIndex;
@@ -36827,7 +37002,7 @@ class GalaxyParticles extends (0, _baseParticle.BaseParticle) {
                 zEquat = waves * (Math.sin(theta) * Math.sin(phi));
                 x = xEquat * 0.07 * ringDistance;
                 z = zEquat * 0.07 * ringDistance;
-                y = -Math.min(Math.tan(ringDistance + ringIndex), 5);
+                y = Math.tan(angle - index) * -Math.tan(angle + index) * waves * 0.1;
                 //asignar ejes
                 frames.start.push(x, y, z);
                 //FRAME 1
@@ -36851,12 +37026,20 @@ class GalaxyParticles extends (0, _baseParticle.BaseParticle) {
                 //asignar ejes
                 frames.frame_2.push(x, y, z);
                 //FRAME 2
+                //noise
+                let noiseIntensity = 0.1;
+                let noiseAmplitude = 10;
+                if (ringIndex > props.divisiones - 5) {
+                    noiseIntensity = noiseIntensity + 8;
+                    noiseIntensity = noiseAmplitude + 5;
+                    props.ringFrecuency = props.ringFrecuency + 0.5;
+                }
                 waves = 1 + props.ringAperture * Math.sin(angle * props.ringFrecuency) + props.ringSmooth;
-                xEquat = waves * Math.cos(angle + props.ringNoise * Math.cos(index));
-                zEquat = waves * Math.sin(angle + props.ringNoise * Math.sin(index));
+                xEquat = Math.cos(index * 0.1) * (1 + 0.1 * Math.sin(index));
+                zEquat = Math.sin(index * 0.1) * (1 + 0.1 * Math.sin(index));
                 //ajustar area
-                x = xEquat * radius * random * props.area;
-                z = zEquat * radius * random * props.area;
+                x = insideRadius * xEquat * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
+                z = insideRadius * zEquat * (Math.random() - 0.5 * (Math.random() * noiseIntensity + noiseAmplitude));
                 y = Math.min(Math.tan(angle + Math.random() * 15 + ringIndex), (Math.random() - 0.5) * 5);
                 //asignar ejes
                 frames.final.push(x, y, z);
