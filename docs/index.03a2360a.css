@@ -4,6 +4,14 @@ body {
   overflow: hidden;
 }
 
+#download {
+  z-index: 100;
+  color: #000;
+  width: 60px;
+  height: 30px;
+  position: absolute;
+}
+
 :root {
   --opacity: 0;
   --position: absolute;
