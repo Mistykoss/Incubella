@@ -4,14 +4,6 @@ body {
   overflow: hidden;
 }
 
-#download {
-  z-index: 100;
-  color: #000;
-  width: 60px;
-  height: 30px;
-  position: absolute;
-}
-
 :root {
   --opacity: 0;
   --position: absolute;
@@ -20,6 +12,61 @@ body {
   --img: invert();
   --size: 0;
   --index: -1;
+  --start-btn-scale: 1;
+}
+
+.no-visible {
+  opacity: 0;
+  transition: all 1s;
+}
+
+#load-screen {
+  z-index: 100;
+  background-color: #00000081;
+  place-content: center;
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  position: absolute;
+}
+
+.load-screen .start__btn {
+  color: #fff;
+  background-color: #8080801a;
+  border: none;
+  border-radius: 50%;
+  place-content: center;
+  width: 240px;
+  height: 240px;
+  font-size: 1.5rem;
+  display: grid;
+  position: relative;
+  box-shadow: inset 0 0 15px 5px #ffffff1a;
+}
+
+.load-screen .start__btn:after {
+  content: "";
+  transform: translate(-50%, -50%) scale(var(--start-btn-scale));
+  background-color: #0000;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  width: 280px;
+  height: 280px;
+  transition: all .5s;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+.load-screen .start__btn:hover {
+  --start-btn-scale: 1.1;
+  transition: all .5s;
+  box-shadow: inset 0 0 35px 10px #ffffff1a;
+}
+
+.load-screen .start__btn:not(:hover) {
+  --start-btn-scale: 1;
+  transition: all .5s;
 }
 
 .element h2 {
