@@ -22,6 +22,15 @@ body {
   --start-btn-scale: 1;
 }
 
+#renderer {
+  transition: all 1s;
+}
+
+.dark {
+  background-color: #0000004d;
+  transition: all 1s;
+}
+
 .fade-in {
   animation: fadeIn 2s easy;
 }
@@ -218,7 +227,7 @@ body {
 }
 
 .footer {
-  color: #898888;
+  color: #aaa;
   z-index: 100;
   justify-content: space-between;
   align-items: center;
