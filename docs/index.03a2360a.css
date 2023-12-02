@@ -265,6 +265,29 @@ body {
   padding: 10px 0;
 }
 
+.footer #navigation-menu {
+  z-index: 0;
+  justify-content: space-evenly;
+  align-items: center;
+  width: -moz-fit-content;
+  width: fit-content;
+  height: 100%;
+  display: flex;
+  position: relative;
+}
+
+.navigation-menu__btn-container {
+  margin: 0, 15px;
+  height: auto;
+}
+
+.btn-container__icon {
+  z-index: 10;
+  width: auto;
+  height: 50px;
+  position: relative;
+}
+
 .load-screen {
   place-content: center;
   width: 70vw;
@@ -418,7 +441,7 @@ span.swiper-pagination-bullet {
   display: flex;
 }
 
-.content-page:not(.swiper-slide-active) {
+.swiper-slide.content-page:not(.swiper-slide-active) {
   opacity: 0 !important;
 }
 
