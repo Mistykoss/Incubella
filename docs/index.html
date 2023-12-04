@@ -19,17 +19,20 @@
       <button class="footer__action-btn footer--hide-footer-btn"></button>
       <div id="navigation-menu" class="deactive"></div>
       <span id="span-footer-text" class="footer__text">Community power the world. We empower communities</span>
-      <button class="footer__action-btn footer--sound-btn"></button>
+      <button id="sound-btn" class="footer__action-btn footer--sound-btn">
+        <span id="sound-btn__span">ON</span>
+      </button>
     </div>
 
     <div id="root" class="root">
       <section id="first-screen" class="first-screen deactive">
         <div class="first-screen__intro-container">
-          <div class="intro-container__title">
+          <div class="intro-container__title glitch" data-text="THE WEB3 &#10;COMUNITY PLATAFORM">
+
             THE WEB3 <br>
             COMUNITY PLATAFORM
           </div>
-          <div class="intro-container__sub-title">
+          <div class="intro-container__sub-title text-glitch">
             Discover token-gated communities from your favourite creators around the world.
           </div>
           <div class="intro-container__control-panel">
@@ -45,6 +48,9 @@
         </div>
       </section>
       <section id="load-screen" class="load-screen ">
+        <div class="load-screen__logo navbar__logo"></div>
+        <div id="no-audio-btn" class="load-screen__span">CONTINUE WITHOUT AUDIO</div>
+
         <div class="action-container">
             <button id="start-btn" class="action-container__start-btn">
                 <div class="start-btn__text">Begin</div>
@@ -63,5 +69,5 @@
 
  <!-- Initialize Swiper -->
 
-  <script src="index.4029fab8.js" defer=""></script>
+  <script src="/index.4029fab8.js" defer=""></script>
 </html>
