@@ -786,13 +786,14 @@ span.swiper-pagination-bullet {
 }
 
 .footer__social {
-  outline: 1px solid red;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
   width: 120px;
-  height: 80px;
+  height: -moz-fit-content;
+  height: fit-content;
   margin-right: 20px;
+  padding: 10px 0;
   display: flex;
 }
 
@@ -805,13 +806,29 @@ span.swiper-pagination-bullet {
 .social__icon-link {
   justify-content: space-around;
   align-items: center;
+  width: 100%;
   display: flex;
 }
 
 .icon-link__item {
-  outline: 1px solid red;
+  background-repeat: no-repeat;
+  background-size: contain;
   width: 25%;
   height: 30px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.icon-link__instagram {
+  background-image: url("icon_instagram.85c94aa6.png");
+}
+
+.icon-link__facebook {
+  background-image: url("icon_facebook.edc4bf2a.png");
+}
+
+.icon-link__twiter {
+  background-image: url("icon_twiter.a527a1e1.png");
 }
 
 /*# sourceMappingURL=index.03a2360a.css.map */
