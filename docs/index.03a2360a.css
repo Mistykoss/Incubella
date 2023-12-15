@@ -305,11 +305,11 @@ canvas {
 }
 
 @keyframes fadeOut {
-  0% {
+  from {
     opacity: 1;
   }
 
-  100% {
+  to {
     opacity: 0;
   }
 }
@@ -459,6 +459,16 @@ canvas {
 .navigation-menu__btn-container {
   margin: 0, 15px;
   height: auto;
+  transition: all .5s;
+}
+
+.navigation-menu__btn-container.actived {
+  margin-bottom: 25px;
+}
+
+.navigation-menu__btn-container:hover {
+  margin-bottom: 20px;
+  transition: all .5s;
 }
 
 .btn-container__icon {
@@ -513,8 +523,8 @@ canvas {
 .start-btn__text {
   color: #fff;
   font-family: az2;
-  font-size: 1.5em;
-  font-weight: 250;
+  font-size: 1.2em;
+  font-weight: 100;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -533,8 +543,13 @@ canvas {
 }
 
 .start-btn__icon:hover {
-  transition: all 1.5s;
+  background-image: url("inner_being_icon-hover.a7218c9c.png");
+  transition: all .7s;
   transform: scale(.9);
+}
+
+.start-btn__icon:after:hover {
+  transform: scale(1);
 }
 
 .start-btn__icon:after {
@@ -544,7 +559,7 @@ canvas {
   background-size: contain;
   width: 120%;
   height: 120%;
-  animation: 15s linear infinite rotate360;
+  animation: 160s linear infinite rotate360;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -711,6 +726,7 @@ span.swiper-pagination-bullet {
   margin-bottom: 0;
   font-size: 1.2em;
   font-weight: 200;
+  line-height: 27px;
 }
 
 .content-page__span-msg {
@@ -781,6 +797,7 @@ span.swiper-pagination-bullet {
 
 .footer__watermark {
   color: #15eded;
+  margin-bottom: -10px;
   margin-left: 20px;
   left: 15px;
 }
@@ -816,7 +833,6 @@ span.swiper-pagination-bullet {
   width: 25%;
   height: 30px;
   margin-top: 10px;
-  margin-bottom: 10px;
 }
 
 .icon-link__instagram {
@@ -829,6 +845,11 @@ span.swiper-pagination-bullet {
 
 .icon-link__twiter {
   background-image: url("icon_twiter.a527a1e1.png");
+}
+
+.letter {
+  line-height: 1em;
+  display: inline-block;
 }
 
 /*# sourceMappingURL=index.03a2360a.css.map */
