@@ -146,7 +146,7 @@ body {
 }
 
 canvas {
-  filter: brightness(1.1) saturate(1.45);
+  filter: brightness(.9) saturate(1.3);
 }
 
 :root {
@@ -165,7 +165,7 @@ canvas {
 }
 
 .dark {
-  background-color: #0000004d;
+  background-color: #0006;
   transition: all 1s;
 }
 
@@ -372,8 +372,8 @@ canvas {
 .navbar__logo {
   background-image: url("logo.59c62cf4.png");
   background-repeat: no-repeat;
-  background-size: cover;
-  width: 60px;
+  background-size: contain;
+  width: 120px;
   height: 60px;
   margin: 25px;
 }
@@ -742,13 +742,13 @@ span.swiper-pagination-bullet {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 102vh;
   font-family: az2;
   font-size: 1em;
   display: flex;
   position: relative;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .credit__item {

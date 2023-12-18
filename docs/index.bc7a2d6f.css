@@ -1,0 +1,90 @@
+@media only screen and (width <= 450px) {
+  .content-page {
+    text-align: justify;
+    width: 100vw;
+    padding: 0 8em;
+  }
+
+  .content-page__title {
+    text-align: center;
+    font-size: 2.5em;
+  }
+
+  .content-page__text, .content-page__span-msg {
+    font-size: 1.4em;
+  }
+
+  .navbar__logo {
+    height: 20px;
+    margin-top: 38px;
+  }
+
+  .navbar__back-btn {
+    left: 15px;
+  }
+
+  .action-container__start-btn {
+    width: 210px;
+    height: 210px;
+  }
+
+  .first-screen__intro-container {
+    padding: 80px auto;
+  }
+
+  .intro-container__title {
+    font-size: 2.5em;
+  }
+
+  .intro-container__sub-title {
+    font-size: 1em;
+  }
+
+  .control-panel__intro-btn {
+    width: -moz-fit-content;
+    width: fit-content;
+    height: 55px;
+  }
+
+  .intro-btn__text {
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+
+  .intro-btn__icon {
+    width: 25px;
+    height: 25px;
+  }
+
+  .footer__text {
+    text-align: center;
+    font-size: .9em;
+  }
+
+  .footer__action-btn {
+    margin: 0 20px;
+  }
+
+  .element.active img {
+    width: 180px;
+  }
+
+  .element.active h2 {
+    font-size: 1.9em;
+  }
+
+  .element.active span {
+    font-size: 1.5em;
+  }
+
+  .credit__item {
+    text-align: center;
+    padding: 15px 40px;
+  }
+
+  .credit__more-info {
+    width: 90%;
+  }
+}
+
+/*# sourceMappingURL=index.bc7a2d6f.css.map */
