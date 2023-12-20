@@ -138,8 +138,9 @@
 }
 
 body {
-  width: 100vw;
-  height: 100vh;
+  background-color: #000;
+  width: 100%;
+  height: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -371,6 +372,7 @@ canvas {
 
 .navbar__logo {
   background-image: url("logo.59c62cf4.png");
+  background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
   width: 120px;
@@ -379,6 +381,7 @@ canvas {
 }
 
 .navbar__back-btn {
+  cursor: pointer;
   z-index: 100;
   background-image: url("back-btn.58d09f6e.png");
   background-size: cover;
@@ -409,6 +412,7 @@ canvas {
 }
 
 .footer__action-btn {
+  cursor: pointer;
   background-color: #0000;
   background-repeat: no-repeat;
   background-size: contain;
@@ -419,16 +423,19 @@ canvas {
 }
 
 .footer__text {
+  text-align: center;
   font-family: az2;
   font-weight: 150;
 }
 
 .footer--hide-footer-btn {
+  cursor: pointer;
   background-image: url("hide-footer-btn.4cd90797.png");
   background-position: 0;
 }
 
 .footer--sound-btn {
+  cursor: pointer;
   background-image: url("sound-btn.cb4b505f.gif");
   background-position: 100%;
   padding: 10px 0;
@@ -436,6 +443,7 @@ canvas {
 }
 
 #sound-btn__span {
+  cursor: pointer;
   color: #15eded;
   text-align: center;
   padding-top: 2px;
@@ -513,6 +521,7 @@ canvas {
 }
 
 .action-container__start-btn {
+  cursor: pointer;
   background: none;
   border: none;
   width: 260px;
@@ -620,6 +629,7 @@ canvas {
 }
 
 .control-panel__intro-btn {
+  cursor: pointer;
   color: #fff;
   background-color: #0000;
   background-repeat: no-repeat;
@@ -646,6 +656,7 @@ canvas {
 }
 
 .control-panel__intro-btn--launch-app-btn {
+  cursor: pointer;
   background-image: url("intro-btn__launch-app.e2bdbd3a.png");
 }
 
@@ -776,6 +787,7 @@ span.swiper-pagination-bullet {
 }
 
 .credit__back-btn {
+  cursor: pointer;
   content: "back";
   background-image: url("back-btn.58d09f6e.png");
   background-repeat: no-repeat;

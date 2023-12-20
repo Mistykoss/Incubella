@@ -1,8 +1,7 @@
 @media only screen and (width <= 450px) {
   .content-page {
-    text-align: justify;
     width: 100vw;
-    padding: 0 8em;
+    padding: 0 1em;
   }
 
   .content-page__title {
@@ -15,11 +14,16 @@
   }
 
   .navbar__logo {
-    height: 20px;
-    margin-top: 38px;
+    height: 15px;
+    margin-top: 25px !important;
   }
 
   .navbar__back-btn {
+    background-image: url("back-btn-v2.1c3d060c.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    height: 65px;
+    top: 0;
     left: 15px;
   }
 
