@@ -643,6 +643,7 @@ canvas {
   height: 55px;
   padding: 0 10px;
   font-size: 1em;
+  transition: all .4s;
   display: flex;
   position: relative;
 }
@@ -720,24 +721,26 @@ span.swiper-pagination-bullet {
   text-align: center;
   color: #fff;
   flex-direction: column;
-  justify-content: center;
+  justify-content: start;
   align-items: center;
-  width: 60vw;
-  padding: 0 5em;
+  width: 80vw;
+  height: 420px;
+  padding: 100px 80px;
   font-family: az2;
+  font-size: 1.5em;
   display: flex;
 }
 
 .content-page__title {
-  font-size: 3em;
+  margin: 0 0 15px;
+  font-size: 2.8em;
   font-weight: 450;
 }
 
 .content-page__text {
   margin-bottom: 0;
-  font-size: 1.2em;
   font-weight: 200;
-  line-height: 27px;
+  line-height: 30px;
 }
 
 .content-page__span-msg {
@@ -753,7 +756,7 @@ span.swiper-pagination-bullet {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 100%;
+  width: 100vw;
   height: 102vh;
   font-family: az2;
   font-size: 1em;
@@ -800,6 +803,7 @@ span.swiper-pagination-bullet {
   justify-content: space-between;
   align-items: center;
   height: 80px;
+  padding-bottom: 25px;
   display: flex;
   position: absolute;
   bottom: 0;
@@ -862,6 +866,22 @@ span.swiper-pagination-bullet {
 .letter {
   line-height: 1em;
   display: inline-block;
+}
+
+.preview-element {
+  width: 140px;
+  height: 140px;
+}
+
+.padding-extra {
+  background-image: unset;
+  margin-top: 15px;
+  padding: 10px;
+}
+
+.padding-extra:hover {
+  transition: all .4s;
+  transform: scale(1.1);
 }
 
 /*# sourceMappingURL=index.03a2360a.css.map */
