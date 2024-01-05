@@ -599,7 +599,7 @@ canvas {
 
 .intro-container__title {
   margin-bottom: 30px;
-  font-size: 5.5em;
+  font-size: 5.2em;
   font-weight: 600;
   line-height: .9;
 }
@@ -756,7 +756,8 @@ span.swiper-pagination-bullet {
   justify-content: center;
   align-items: center;
   width: 100vw;
-  height: 102vh;
+  height: 90vh;
+  padding: 5vh 6vw;
   font-family: az2;
   font-size: 1em;
   display: flex;
@@ -801,13 +802,11 @@ span.swiper-pagination-bullet {
 .credit__footer {
   justify-content: space-between;
   align-items: center;
+  width: 100vw;
   height: 80px;
-  padding-bottom: 30px;
   display: flex;
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 2vh;
 }
 
 .footer__watermark {

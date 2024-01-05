@@ -31,41 +31,60 @@
   }
 
   .action-container__start-btn {
-    width: 210px;
-    height: 210px;
+    width: 58.8235vw;
+    height: 58.8235vw;
   }
 
-  .first-screen__intro-container {
-    padding: 80px auto;
+  .first-screen .first-screen__intro-container {
+    width: 90vw;
+    padding-bottom: 10vh;
+  }
+
+  .load-screen {
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+  }
+
+  .load-screen__span {
+    width: 80%;
   }
 
   .intro-container__title {
-    font-size: 2.5em;
+    max-width: 100%;
+    font-size: calc(1.2em + 8vw);
   }
 
   .intro-container__sub-title {
     font-size: 1em;
   }
 
-  .control-panel__intro-btn {
-    width: -moz-fit-content;
-    width: fit-content;
+  .intro-container__control-panel {
+    width: 100vw;
     height: 55px;
+    padding: 0;
+  }
+
+  .control-panel__intro-btn {
+    width: 37.037%;
+    height: -moz-fit-content;
+    height: fit-content;
+    padding: 7px 0;
   }
 
   .intro-btn__text {
-    margin-top: 15px;
-    margin-bottom: 15px;
+    margin: 0;
+    font-size: 4vw;
   }
 
   .intro-btn__icon {
-    width: 25px;
-    height: 25px;
+    background-size: contain;
+    padding: 0;
   }
 
   .footer__text {
     text-align: center;
-    font-size: .9em;
+    font-size: calc(.1em + 3vw);
   }
 
   .footer__action-btn {
@@ -93,6 +112,15 @@
     font-size: 1.5em;
   }
 
+  .footer__social {
+    width: 33.3333vw;
+  }
+
+  .credit {
+    width: 88vw;
+    font-size: calc(.1em + 3vw);
+  }
+
   .credit__back-btn {
     width: 120px;
     height: 10%;
@@ -100,11 +128,16 @@
 
   .credit__item {
     text-align: center;
-    padding: 15px 40px;
+    margin-bottom: 15px;
+    font-size: calc(.1em + 4vw);
   }
 
   .credit__more-info {
     width: 90%;
+  }
+
+  .credit__footer {
+    bottom: calc(18px + 2vh);
   }
 }
 
