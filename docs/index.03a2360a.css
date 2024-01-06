@@ -723,6 +723,7 @@ span.swiper-pagination-bullet {
   justify-content: start;
   align-items: center;
   width: 80vw;
+  max-width: 1080px;
   height: 420px;
   padding: 100px 80px;
   font-family: az2;

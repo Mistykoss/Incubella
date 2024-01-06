@@ -1,4 +1,4 @@
-@media only screen and (width <= 450px) {
+@media only screen and (width <= 500px) {
   .content-page {
     width: 120vw;
   }
@@ -9,11 +9,11 @@
   }
 
   .content-page__text {
-    font-size: 1.2em;
+    font-size: calc(.1em + 6vw);
   }
 
   .content-page__span-msg {
-    font-size: 1.4em;
+    font-size: calc(.1em + 5vw);
   }
 
   .navbar__logo {
@@ -65,11 +65,25 @@
     padding: 0;
   }
 
+  .content-page .control-panel__intro-btn {
+    border: unset;
+    width: 50%;
+    height: -moz-fit-content;
+    height: fit-content;
+    margin: 10px 5px;
+    padding: 15px 0;
+    font-size: calc(.1em + 6vw) !important;
+  }
+
+  .content-page .intro-btn__text {
+    font-size: inherit;
+  }
+
   .control-panel__intro-btn {
     width: 37.037%;
     height: -moz-fit-content;
     height: fit-content;
-    padding: 7px 0;
+    padding: 10px 0;
   }
 
   .intro-btn__text {
@@ -143,7 +157,7 @@
 
 @media only screen and (width <= 375px) {
   .content-page {
-    width: 160vw;
+    width: 170vw;
   }
 
   .btn-container__icon {
