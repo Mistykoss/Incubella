@@ -703,6 +703,8 @@ span.swiper-pagination-bullet {
   background-color: #0358badf;
   border: none;
   max-height: 60px;
+  width: 80px;
+  max-width: 100px;
 }
 
 #ntf .content-page__title {
