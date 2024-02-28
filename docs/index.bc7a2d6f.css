@@ -699,13 +699,19 @@ span.swiper-pagination-bullet {
   display: flex;
 }
 
+.content-page .control-panel__intro-btn--launch-app-btn {
+  background-color: #0358badf;
+  border: none;
+  max-height: 60px;
+}
+
 #ntf .content-page__title {
-  width: 120vw;
+  width: 200vw;
 }
 
 .content-page__title {
   margin: 0 0 15px;
-  font-size: 2.8em;
+  font-size: 2.6em;
   font-weight: 450;
 }
 
