@@ -4,11 +4,11 @@
 }
 
 #main-span {
-  z-index: 100;
+  z-index: 1;
   opacity: 0;
   transition: all .8s ease-in;
   position: absolute;
-  top: 55%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
@@ -271,13 +271,18 @@ canvas {
 }
 
 .navbar__logo {
-  background-image: url("logo.59c62cf4.png");
+  background-image: url("logo-min.887259ad.png");
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
   width: 120px;
   height: 60px;
   margin: 25px;
+}
+
+.credit__logo.navbar__logo {
+  position: absolute;
+  top: 0%;
 }
 
 .navbar__back-btn {
@@ -339,7 +344,14 @@ canvas {
   cursor: pointer;
   background-image: url("sound-btn.cb4b505f.gif");
   background-position: 100%;
+  transition: all .6s;
   position: relative;
+}
+
+.footer--sound-btn.min {
+  height: 2px;
+  transition: all .6s;
+  margin: 0 !important;
 }
 
 #sound-btn__span {
@@ -566,7 +578,7 @@ canvas {
 .intro-container__control-panel {
   justify-content: space-evenly;
   align-items: center;
-  width: 40%;
+  width: 30%;
   padding: 30px 15px;
   display: flex;
 }
@@ -682,8 +694,12 @@ span.swiper-pagination-bullet {
   height: 420px;
   padding: 100px 80px;
   font-family: az2;
-  font-size: 1.5em;
+  font-size: 1.7em;
   display: flex;
+}
+
+#ntf .content-page__title {
+  width: 120vw;
 }
 
 .content-page__title {
@@ -802,6 +818,7 @@ span.swiper-pagination-bullet {
 }
 
 .icon-link__item {
+  background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
   width: 25%;
@@ -813,8 +830,8 @@ span.swiper-pagination-bullet {
   background-image: url("icon_instagram.85c94aa6.png");
 }
 
-.icon-link__facebook {
-  background-image: url("icon_facebook.edc4bf2a.png");
+.icon-link__discord {
+  background-image: url("icon_discord.2c522d25.png");
 }
 
 .icon-link__twitter {
@@ -848,8 +865,15 @@ span.swiper-pagination-bullet {
 }
 
 @media only screen and (width <= 500px) {
+  #sound-btn-bar {
+    height: 34px;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+  }
+
   .content-page {
-    width: 120vw;
+    width: 180vw;
   }
 
   .content-page__title {
@@ -862,7 +886,7 @@ span.swiper-pagination-bullet {
   }
 
   .navbar__logo {
-    height: 15px;
+    height: 40px;
     margin-top: 25px !important;
   }
 
@@ -1002,7 +1026,11 @@ span.swiper-pagination-bullet {
 
 @media only screen and (width <= 375px) {
   .content-page {
-    width: 150vw;
+    width: 190vw;
+  }
+
+  .content-page__text {
+    font-size: calc(.1em + 8vw);
   }
 
   .btn-container__icon {
