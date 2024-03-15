@@ -141,6 +141,18 @@ canvas {
   opacity: 0 !important;
 }
 
+.icon-item:after {
+  content: "";
+  filter: blur(25px);
+  background-color: #0006;
+  width: 120px;
+  height: 120px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+}
+
 .element-b:hover {
   transition: all .7s;
   transform: scale(1.1);
@@ -262,8 +274,10 @@ canvas {
 
 .navbar {
   z-index: 100;
-  place-content: center;
-  display: grid;
+  justify-content: space-around;
+  align-items: center;
+  height: 80px;
+  display: flex;
   position: fixed;
   top: 0;
   left: 0;
@@ -283,7 +297,7 @@ canvas {
 .credit__logo.navbar__logo {
   margin: 0;
   position: absolute;
-  top: 25px;
+  top: 20px;
 }
 
 .navbar__back-btn {
@@ -293,7 +307,7 @@ canvas {
   background-repeat: no-repeat;
   background-size: contain;
   width: 120px;
-  height: 60px;
+  height: 40px;
   transition: all .5s;
   position: absolute;
   top: 15px;
@@ -339,6 +353,7 @@ canvas {
   cursor: pointer;
   background-image: url("hide-footer-btn.4cd90797.png");
   background-position: 0;
+  background-size: contain;
 }
 
 .footer--sound-btn {
@@ -372,15 +387,13 @@ canvas {
   align-items: center;
   width: -moz-fit-content;
   width: fit-content;
-  height: 100%;
   display: flex;
   position: relative;
 }
 
 .navigation-menu__btn-container {
-  margin: 0, 15px;
-  height: auto;
   transition: all .5s;
+  display: flex;
 }
 
 .navigation-menu__btn-container.actived {
@@ -604,8 +617,7 @@ canvas {
   border-radius: 1em;
   justify-content: space-evenly;
   align-items: center;
-  width: -moz-fit-content;
-  width: fit-content;
+  width: 40%;
   height: 55px;
   padding: 0 10px;
   font-size: 1em;
@@ -700,10 +712,10 @@ span.swiper-pagination-bullet {
 }
 
 .content-page .control-panel__intro-btn--launch-app-btn {
-  background-color: #0358badf;
-  border: none;
+  border: 5px solid #0358badf;
+  width: 260px;
+  max-width: 280px;
   max-height: 60px;
-  width: 160px !important;
 }
 
 #ntf .content-page__title {
@@ -873,10 +885,10 @@ span.swiper-pagination-bullet {
 
 @media only screen and (width <= 500px) {
   #sound-btn-bar {
+    position: unset;
+    width: 40px;
     height: 34px;
-    position: absolute;
-    top: 15px;
-    right: 15px;
+    margin: 0 -20px 0 0;
   }
 
   .content-page {
@@ -892,18 +904,26 @@ span.swiper-pagination-bullet {
     font-size: calc(.1em + 6vw);
   }
 
+  .load-screen__logo.navbar__logo {
+    position: absolute;
+    top: 4vh;
+  }
+
   .navbar__logo {
+    position: unset;
+    width: 80px;
     height: 40px;
-    margin-top: 25px !important;
+    margin: 0;
   }
 
   .navbar__back-btn {
+    position: unset;
     background-image: url("back-btn-v2.1c3d060c.png");
     background-repeat: no-repeat;
     background-size: contain;
-    height: 65px;
-    top: 0;
-    left: 15px;
+    width: 40px;
+    height: 34px;
+    margin-left: -20px;
   }
 
   .action-container__start-btn {
@@ -942,8 +962,7 @@ span.swiper-pagination-bullet {
   }
 
   .content-page .control-panel__intro-btn {
-    border: unset;
-    width: 50%;
+    width: 33.3333%;
     height: -moz-fit-content;
     height: fit-content;
     margin: 10px 5px;
@@ -972,14 +991,26 @@ span.swiper-pagination-bullet {
     padding: 0;
   }
 
+  .footer {
+    justify-content: space-around;
+    padding: 0 15px;
+    transition: all .7s;
+  }
+
+  .footer #navigation-menu {
+    margin-right: -12vw;
+  }
+
   .footer__text {
     text-align: center;
+    width: 70vw;
     font-size: calc(.1em + 3vw);
   }
 
   .footer__action-btn {
-    height: 40%;
-    margin: 0 20px;
+    width: 31px;
+    height: 31px;
+    margin: 0;
   }
 
   .footer--sound-btn {
@@ -991,7 +1022,7 @@ span.swiper-pagination-bullet {
   }
 
   .element.active img {
-    width: 180px;
+    width: 100px;
   }
 
   .element.active h2 {
