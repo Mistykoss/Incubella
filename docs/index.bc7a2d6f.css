@@ -500,8 +500,8 @@ canvas {
   cursor: pointer;
   background: none;
   border: none;
-  width: 260px;
-  height: 260px;
+  width: 220px;
+  height: 220px;
   padding: 5px;
 }
 
@@ -701,6 +701,7 @@ span.swiper-pagination-bullet {
   align-items: center;
   width: 160vw;
   max-width: 1920px;
+  height: 480px;
   font-family: az2;
   font-size: 1.7em;
   display: flex;
@@ -883,7 +884,7 @@ span.swiper-pagination-bullet {
   }
 
   .content-page {
-    width: 180vw;
+    width: 160vw;
     margin: 0;
   }
 
