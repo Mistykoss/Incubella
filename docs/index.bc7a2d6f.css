@@ -6,7 +6,7 @@
 #main-span {
   z-index: 1;
   opacity: 0;
-  transition: all .8s ease-in;
+  transition: all .6s ease-in;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -21,13 +21,19 @@ h1, h2, h3 {
   padding: 0;
 }
 
-body {
+html {
   background-color: #000;
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
+  position: fixed;
   overflow: hidden;
+}
+
+body {
+  margin: 0;
+  padding: 0;
 }
 
 canvas {
@@ -63,7 +69,7 @@ canvas {
 }
 
 .visible {
-  transition: all .8s ease-out;
+  transition: all .6s ease-out;
   opacity: 1 !important;
 }
 
@@ -178,7 +184,7 @@ canvas {
 
 .element img {
   z-index: 3;
-  width: 120px;
+  width: 90px;
   height: auto;
   margin-bottom: 8px;
   padding: 10px;
@@ -714,7 +720,7 @@ span.swiper-pagination-bullet {
 }
 
 #ntf .content-page__title {
-  width: 200vw;
+  width: 165vw;
 }
 
 .content-page__title {
@@ -930,8 +936,7 @@ span.swiper-pagination-bullet {
   }
 
   .load-screen {
-    width: 100vw;
-    height: 100vh;
+    position: unset;
     padding: 0;
   }
 
@@ -1029,7 +1034,7 @@ span.swiper-pagination-bullet {
   }
 
   .credit {
-    width: 100vw;
+    position: unset;
     font-size: calc(.1em + 3vw);
   }
 
