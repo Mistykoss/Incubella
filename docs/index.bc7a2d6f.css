@@ -89,10 +89,9 @@ canvas {
   align-items: center;
   width: fit-content;
   height: auto;
-  padding: 15px;
   transition: all .7s;
   display: flex;
-  overflow: hidden;
+  overflow: visible;
   transform: scale(1);
 }
 
@@ -146,16 +145,14 @@ canvas {
   opacity: 0 !important;
 }
 
-.icon-item--:after {
-  content: "";
-  filter: blur(25px);
-  background-color: #0006;
-  width: 120px;
-  height: 120px;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -30%);
+.element-container {
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+}
+
+.no-blur {
+  backdrop-filter: blur();
+  transition: all 1.5s;
 }
 
 .element-b:hover {
@@ -172,7 +169,6 @@ canvas {
   --size: 18px;
   --index: 2;
   transition: all .7s;
-  overflow: hidden;
   transform: scale(1.1);
 }
 
@@ -184,16 +180,25 @@ canvas {
 
 .element img {
   z-index: 3;
-  width: 90px;
+  width: 80px;
   height: auto;
-  margin-bottom: 8px;
-  padding: 10px;
+}
+
+.dot-title {
+  flex-direction: column;
+  align-items: center;
+  width: 180%;
+  transition: all 1.5s;
+  display: flex;
+  position: absolute;
+  bottom: 100%;
 }
 
 .element h2 {
   text-align: center;
   color: #fff;
   pointer-events: none;
+  width: fit-content;
   margin: 0;
   padding: 0;
   font-family: az2;
@@ -294,8 +299,8 @@ canvas {
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-  width: 120px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
   margin-top: 25px;
 }
 
@@ -441,7 +446,7 @@ canvas {
   border-radius: .8rem;
   padding: 8px 15px 6px;
   font-family: az2;
-  font-size: .8rem;
+  font-size: min(3.5vw, .7em);
   font-weight: 150;
   transition: all .5s;
   animation: 8s infinite both focus;
@@ -564,8 +569,12 @@ canvas {
 }
 
 .first-screen {
+  width: 95vw;
+  height: 95vh;
+  padding: 5vw 5vh;
   font-family: az2;
   font-weight: 300;
+  display: flex;
 }
 
 .first-screen__intro-container {
@@ -573,30 +582,31 @@ canvas {
   text-align: center;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
-  width: fit-content;
-  padding: 80px 3.5em;
+  align-items: flex-start;
+  width: 75%;
   display: flex;
 }
 
 .intro-container__title h1 {
-  width: 80%;
-  margin: auto auto 30px;
-  font-size: 5.2em;
+  text-align: left;
+  margin-bottom: 30px;
+  font-size: 4vw;
   font-weight: 600;
-  line-height: .9;
+  line-height: 1.2;
 }
 
 .intro-container__sub-title h2 {
+  text-align: left;
+  color: #f5f5f5;
+  width: 80%;
   margin-bottom: 20px;
-  font-size: 1.2em;
+  font-size: 1.5vw;
 }
 
 .intro-container__control-panel {
-  justify-content: space-evenly;
+  justify-content: flex-start;
   align-items: center;
-  width: 30%;
-  padding: 30px 15px;
+  width: 50%;
   display: flex;
 }
 
@@ -621,7 +631,8 @@ canvas {
   justify-content: space-evenly;
   align-items: center;
   width: 40%;
-  height: 55px;
+  height: 40px;
+  margin-right: 15px;
   padding: 0 10px;
   font-size: 1em;
   transition: all .4s;
@@ -744,7 +755,7 @@ span.swiper-pagination-bullet {
 .credit {
   z-index: 100;
   color: #fff;
-  background-color: #000000f2;
+  backdrop-filter: blur(5px);
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -881,7 +892,7 @@ span.swiper-pagination-bullet {
   transform: scale(1.1);
 }
 
-@media only screen and (width <= 500px) {
+@media only screen and (width <= 650px) and (orientation: portrait) {
   #sound-btn-bar {
     position: unset;
     width: 40px;
@@ -927,26 +938,53 @@ span.swiper-pagination-bullet {
 
   .action-container__start-btn {
     width: 58.8235vw;
+    max-width: 125px;
     height: 58.8235vw;
+    max-height: 125px;
+  }
+
+  .action-container__start-btn .start-btn__text {
+    font-size: .9em;
+  }
+
+  .first-screen {
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+
+  .first-screen .intro-container__title h1, .first-screen .intro-container__sub-title h2 {
+    text-align: center;
   }
 
   .first-screen .first-screen__intro-container {
-    width: 90vw;
+    align-items: center;
+    width: 100vw;
     padding-bottom: 10vh;
   }
 
   .load-screen {
     position: unset;
+    width: 100vw;
+    height: 100vh;
     padding: 0;
   }
 
   .load-screen__span {
     width: 50%;
+    bottom: 20px;
   }
 
   .intro-container__title h1 {
     max-width: 100%;
-    font-size: calc(1.2em + 8vw);
+    font-size: calc(1.2em + 5vw);
+  }
+
+  .intro-container__sub-title {
+    place-items: center;
+    display: grid;
   }
 
   .intro-container__sub-title h2 {
@@ -954,6 +992,7 @@ span.swiper-pagination-bullet {
   }
 
   .intro-container__control-panel {
+    justify-content: center;
     width: 100vw;
     height: 55px;
     padding: 0;
