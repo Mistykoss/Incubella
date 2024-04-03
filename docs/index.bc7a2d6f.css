@@ -124,7 +124,7 @@ canvas {
 }
 
 .active {
-  transition: transform 1.5s, opacity 1.5s;
+  transition: transform 1s, opacity 1s;
   transform: scale(1);
   opacity: 1 !important;
   visibility: visible !important;
@@ -140,7 +140,7 @@ canvas {
 }
 
 .not-active {
-  transition: all .8s cubic-bezier(1, 0, .9, .4);
+  transition: all .5s cubic-bezier(1, 0, .9, .4);
   transform: scale(0);
   opacity: 0 !important;
 }
@@ -151,8 +151,8 @@ canvas {
 }
 
 .no-blur {
-  backdrop-filter: blur();
-  transition: all 1.5s;
+  backdrop-filter: unset;
+  transition: all .5s;
 }
 
 .element-b:hover {
@@ -187,7 +187,7 @@ canvas {
 .dot-title {
   flex-direction: column;
   align-items: center;
-  width: 180%;
+  width: 220%;
   transition: all 1.5s;
   display: flex;
   position: absolute;
@@ -938,9 +938,9 @@ span.swiper-pagination-bullet {
 
   .action-container__start-btn {
     width: 58.8235vw;
-    max-width: 125px;
+    max-width: 180px;
     height: 58.8235vw;
-    max-height: 125px;
+    max-height: 180px;
   }
 
   .action-container__start-btn .start-btn__text {
