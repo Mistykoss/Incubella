@@ -188,6 +188,7 @@ canvas {
   flex-direction: column;
   align-items: center;
   width: 220%;
+  margin-bottom: 12px;
   transition: all 1.5s;
   display: flex;
   position: absolute;
@@ -395,7 +396,8 @@ canvas {
   z-index: 0;
   justify-content: space-evenly;
   align-items: center;
-  width: fit-content;
+  width: 35%;
+  max-width: 360px;
   display: flex;
   position: relative;
 }
@@ -755,7 +757,7 @@ span.swiper-pagination-bullet {
 .credit {
   z-index: 100;
   color: #fff;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(30px);
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -774,6 +776,7 @@ span.swiper-pagination-bullet {
 
 .credit__text {
   width: fit-content;
+  line-height: 1.5rem;
 }
 
 .text__span {
@@ -807,7 +810,7 @@ span.swiper-pagination-bullet {
 }
 
 .credit__footer {
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   width: 100vw;
   height: 80px;
@@ -826,9 +829,8 @@ span.swiper-pagination-bullet {
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  width: 120px;
+  width: 100px;
   height: fit-content;
-  margin-right: 20px;
   padding: 10px 0;
   display: flex;
 }
@@ -1033,7 +1035,12 @@ span.swiper-pagination-bullet {
   }
 
   .footer #navigation-menu {
-    margin-right: -12vw;
+    width: 80%;
+    max-width: 310px;
+  }
+
+  .navigation-menu__btn-container img {
+    height: 35px;
   }
 
   .footer__text {
