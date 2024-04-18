@@ -176,6 +176,7 @@ canvas {
   text-align: center;
   color: #fff;
   font-family: az2;
+  font-weight: 220;
 }
 
 .element img {
@@ -204,7 +205,7 @@ canvas {
   padding: 0;
   font-family: az2;
   font-size: 1.2rem;
-  font-weight: bolder;
+  font-weight: 350;
   transition: all .7s;
 }
 
@@ -356,6 +357,7 @@ canvas {
 
 .footer__text {
   text-align: center;
+  text-transform: uppercase;
   font-family: az2;
   font-weight: 150;
 }
@@ -600,10 +602,10 @@ canvas {
 
 .intro-container__sub-title h2 {
   text-align: left;
-  color: #7c7c7c;
+  color: #f5f5f5;
   width: 80%;
   margin-bottom: 20px;
-  font-size: 1.3vw;
+  font-size: 1.5vw;
 }
 
 .intro-container__control-panel {
@@ -950,14 +952,16 @@ span.swiper-pagination-bullet {
     font-size: .9em;
   }
 
+  .element-container {
+    backdrop-filter: blur(15px);
+    background-color: #3be8ff09;
+  }
+
   .first-screen {
     align-items: center;
     width: 100vw;
     height: 100vh;
     margin: 0;
-    padding: 0 !important;
-  }
-  .first-screen__intro-container{
     padding: 0 !important;
   }
 
@@ -968,7 +972,7 @@ span.swiper-pagination-bullet {
   .first-screen .first-screen__intro-container {
     align-items: center;
     width: 100vw;
-    padding-bottom: 10vh;
+    padding: 0 0 10vh;
   }
 
   .load-screen {
@@ -1050,8 +1054,7 @@ span.swiper-pagination-bullet {
   .footer__text {
     text-align: center;
     width: 70vw;
-    text-transform: uppercase;
-    font-size: calc(.1em + 2.5vw);
+    font-size: calc(.1em + 3vw);
   }
 
   .footer__action-btn {
