@@ -1054,7 +1054,7 @@ span.swiper-pagination-bullet {
   .footer__text {
     text-align: center;
     width: 70vw;
-    font-size: calc(.1em + 3vw);
+    font-size: calc(.1em + 2.6vw);
   }
 
   .footer__action-btn {
