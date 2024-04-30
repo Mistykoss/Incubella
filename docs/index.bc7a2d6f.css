@@ -49,6 +49,8 @@ canvas {
   size: 0;
   --index: -1;
   --start-btn-scale: 1;
+  --wigth: 80px;
+  --heigh: 80px;
 }
 
 #renderer {
@@ -125,7 +127,10 @@ canvas {
 
 .active {
   transition: transform 1s, opacity 1s;
-  transform: scale(1);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: scale(1)translate(-50%, -50%);
   opacity: 1 !important;
   visibility: visible !important;
 }
@@ -136,28 +141,43 @@ canvas {
 
 .no-focus {
   opacity: .4;
-  transition: all 1.5s;
+  transition: all 3.5s;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .not-active {
   transition: all .5s cubic-bezier(1, 0, .9, .4);
-  transform: scale(0);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: scale(0)translate(-50%, -50%);
   opacity: 0 !important;
 }
 
 .element-container {
   backdrop-filter: blur(10px);
   border-radius: 10px;
+  width: 80px;
+  height: 80px;
+  transition: all .7s;
 }
 
 .no-blur {
-  backdrop-filter: unset;
   transition: all .5s;
+  backdrop-filter: unset !important;
+  background-color: #0000 !important;
 }
 
 .element-b:hover {
   transition: all .7s;
-  transform: scale(1.1);
+}
+
+.element-container:hover {
+  transition: all .7s;
+  -webkit-box-shadow: 0 0 8px 1px #00f7ff;
 }
 
 .element:hover {
@@ -169,7 +189,9 @@ canvas {
   --size: 18px;
   --index: 2;
   transition: all .7s;
-  transform: scale(1.1);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .element span {
@@ -183,13 +205,14 @@ canvas {
   z-index: 3;
   width: 80px;
   height: auto;
+  padding: 45px;
 }
 
 .dot-title {
   flex-direction: column;
   align-items: center;
   width: 220%;
-  margin-bottom: 12px;
+  margin-bottom: -30px;
   transition: all 1.5s;
   display: flex;
   position: absolute;
