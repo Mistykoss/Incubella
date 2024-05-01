@@ -162,7 +162,7 @@ canvas {
   border-radius: 10px;
   width: 80px;
   height: 80px;
-  transition: all .7s;
+  transition: -webkit-backdrop-filter .7s, backdrop-filter .7s;
 }
 
 .no-blur {
